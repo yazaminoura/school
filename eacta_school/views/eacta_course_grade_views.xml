@@ -4,10 +4,10 @@
    <field name="name">eacta.course.grade.tree</field>
    <field name="model">eacta.course.grade</field>
    <field name="arch" type="xml">
-       <tree string="Notes des étudiants">
+       <list string="Notes des étudiants">
            <field name="student_id"/>
            <field name="grade"/>
-       </tree>
+       </list>
    </field>
 </record>
 

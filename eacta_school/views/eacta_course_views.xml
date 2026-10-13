@@ -32,11 +32,11 @@
                         </page>
                         <page string="Notes des étudiants">
                             <field name="grade_ids">
-                                <tree editable="bottom">
+                                <list editable="bottom">
                                     <field name="student_id"/>
                                     <field name="exam_id"/>
                                     <field name="grade"/>
-                                </tree>
+                                </list>
                             </field>
                         </page>
                     </notebook>
@@ -50,14 +50,14 @@
         <field name="name">eacta.course.tree</field>
         <field name="model">eacta.course</field>
         <field name="arch" type="xml">
-            <tree string="Cours">
+            <list string="Cours">
                 <field name="name"/>
                 <field name="code"/>
                 <field name="teacher_id" domain="[('is_teacher', '=', True)]"/>
                 <field name="credits"/>
                 <field name="duration"/>
                 <field name="coefficient"/>
-            </tree>
+            </list>
         </field>
     </record>
 
@@ -82,7 +82,7 @@
     <record id="action_eacta_course" model="ir.actions.act_window">
         <field name="name">Cours</field>
         <field name="res_model">eacta.course</field>
-        <field name="view_mode">kanban,tree,form,calendar</field>
+        <field name="view_mode">kanban,list,form,calendar</field>
         <field name="context">{}</field>
         <field name="domain">[]</field>
         <field name="help" type="html">

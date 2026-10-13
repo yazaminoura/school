@@ -1,6 +1,6 @@
 {
     'name': 'EACTA Event',
-    'icon': 'eacta_event\static\desciption\icon.png',
+    'icon': 'eacta_event/static/desciption/icon.png',
     'version': '1.0',
     'license': 'LGPL-3',
     'depends': ['base', 'mail', 'eacta_school'],

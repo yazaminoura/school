@@ -23,11 +23,11 @@
        <field name="name">eacta.school.level.tree</field>
        <field name="model">eacta.school.level</field>
        <field name="arch" type="xml">
-           <tree>
+           <list>
                <field name="sequence" widget="handle"/>
                <field name="name"/>
                <field name="code"/>
-           </tree>
+           </list>
        </field>
    </record>
 
@@ -72,7 +72,7 @@
    <record id="action_eacta_school_level" model="ir.actions.act_window">
        <field name="name">Niveaux scolaires</field>
        <field name="res_model">eacta.school.level</field>
-       <field name="view_mode">kanban,tree,form,calendar</field>
+       <field name="view_mode">kanban,list,form,calendar</field>
    </record>
 
 

@@ -27,12 +27,12 @@ class EactaClass(models.Model):
     ]
 
     @api.depends('name', 'year', 'level')
-    def name_get(self):
-        result = []
+    def _compute_display_name(self):
         for class_ in self:
-            name = f"{class_.name} ({class_.year}) - {class_.get_level_display()}"
-            result.append((class_.id, name))
-        return result
+            class_.display_name = f"{class_.name} ({class_.year}) - {class_.get_level_display()}"
+
+    def name_get(self):
+        return [(c.id, c.display_name) for c in self]
 
     def get_level_display(self):
         return dict(self._fields['level'].selection).get(self.level)

@@ -10,9 +10,9 @@
                    <group>
                        <field name="is_teacher"/>
                        <field name="subject_ids" widget="many2many_tags" options="{'no_create': True}">
-                           <tree>
+                           <list>
                                <field name="name"/>
-                           </tree>
+                           </list>
                            <form>
                                <field name="name"/>
                            </form>

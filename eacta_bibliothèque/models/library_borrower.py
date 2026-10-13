@@ -36,7 +36,7 @@ class LibraryBorrower(models.Model):
             'type': 'ir.actions.act_window',
             'name': f'Emprunts de {self.name}',
             'res_model': 'library.loan',
-            'view_mode': 'kanban,tree,form',
+            'view_mode': 'kanban,list,form',
             'domain': [('borrower_id', '=', self.id)],
             'context': {'default_borrower_id': self.id}
         }

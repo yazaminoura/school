@@ -27,11 +27,11 @@
                     <notebook>
                         <page string="Élèves">
                             <field name="student_ids">
-                                <tree>
+                                <list>
                                     <field name="name"/>
                                     <field name="date_of_birth"/>
                                     <field name="state"/>
-                                </tree>
+                                </list>
                             </field>
                         </page>
                         <page string="Cours">
@@ -48,14 +48,14 @@
         <field name="name">eacta.class.tree</field>
         <field name="model">eacta.class</field>
         <field name="arch" type="xml">
-            <tree string="Classes">
+            <list string="Classes">
                 <field name="name"/>
                 <field name="year"/>
                 <field name="level"/>
                 <field name="teacher_id"/>
                 <field name="capacity"/>
                 <field name="student_ids" widget="many2many_tags" string="Élèves"/>
-            </tree>
+            </list>
         </field>
     </record>
 
@@ -136,7 +136,7 @@
     <record id="action_eacta_class" model="ir.actions.act_window">
         <field name="name">Classes</field>
         <field name="res_model">eacta.class</field>
-        <field name="view_mode">kanban,calendar,tree,form</field>
+        <field name="view_mode">kanban,calendar,list,form</field>
         <field name="search_view_id" ref="view_eacta_class_search"/>
         <field name="context">{'search_default_group_by_year': 1}</field>
         <field name="help" type="html">

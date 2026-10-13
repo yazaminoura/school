@@ -246,18 +246,18 @@ class EactaStudent(models.Model):
             student.current_year_class_id = current_class[0] if current_class else False
             student.current_year = current_year if current_class else False
 
-    @api.depends('name', 'current_year_class_id')
-    def name_get(self):
-        result = []
+    @api.depends('name', 'class_ids')
+    def _compute_display_name(self):
         current_year = str(fields.Date.today().year)
         for student in self:
             current_class = student.class_ids.filtered(lambda c: c.year == current_year)
             if current_class:
-                name = f"{student.name} - {current_class[0].name} ({current_year})"
+                student.display_name = f"{student.name} - {current_class[0].name} ({current_year})"
             else:
-                name = student.name
-            result.append((student.id, name))
-        return result
+                student.display_name = student.name
+
+    def name_get(self):
+        return [(s.id, s.display_name) for s in self]
 
     def action_validate_enrollment(self):
         for student in self:
@@ -314,7 +314,7 @@ class EactaStudent(models.Model):
         self.ensure_one()
         return {
             'name': "Cours de l'étudiant",
-            'view_mode': 'tree,form',
+            'view_mode': 'list,form',
             'res_model': 'eacta.course',
             'domain': [('id', 'in', self.course_ids.ids)],
             'type': 'ir.actions.act_window',
@@ -354,7 +354,7 @@ class EactaStudent(models.Model):
         self.ensure_one()
         return {
             'name': "Livres empruntés",
-            'view_mode': 'tree,form',
+            'view_mode': 'list,form',
             'res_model': 'library.loan',
             'domain': [('borrower_ref', '=', self.id)],
             'type': 'ir.actions.act_window',
@@ -401,7 +401,7 @@ class EactaStudent(models.Model):
         self.ensure_one()
         return {
             'name': "Événements participés",
-            'view_mode': 'tree,form',
+            'view_mode': 'list,form',
             'res_model': 'eacta.school.event',
             'domain': [('participant_ids', 'in', self.id)],
             'type': 'ir.actions.act_window',

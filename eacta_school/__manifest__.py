@@ -28,7 +28,7 @@
     'depends': ['base','mail'],
 
 'data': [
-        'data\school_data_classes.xml',
+        'data/school_data_classes.xml',
         'data/school_data_courses_students.xml',
         'security/eacta_school_security.xml',
         'security/eacta_school_rules.xml',

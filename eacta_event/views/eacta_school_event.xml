@@ -43,11 +43,11 @@
        <field name="name">eacta.school.event.tree</field>
        <field name="model">eacta.school.event</field>
        <field name="arch" type="xml">
-           <tree string="Événements Scolaires">
+           <list string="Événements Scolaires">
                <field name="name"/>
                <field name="date"/>
                <field name="organizer_id"/>
-           </tree>
+           </list>
        </field>
    </record>
 
@@ -95,7 +95,7 @@
    <record id="action_eacta_school_event" model="ir.actions.act_window">
        <field name="name">Événements Scolaires</field>
        <field name="res_model">eacta.school.event</field>
-       <field name="view_mode">kanban,tree,form</field>
+       <field name="view_mode">kanban,list,form</field>
    </record>
 
 

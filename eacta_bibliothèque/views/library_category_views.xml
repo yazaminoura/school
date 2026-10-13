@@ -5,11 +5,11 @@
         <field name="name">library.book.category.tree</field>
         <field name="model">library.book.category</field>
         <field name="arch" type="xml">
-            <tree>
+            <list>
                 <field name="name"/>
                 <field name="book_count" string="Total Books"/>
                 <field name="available_book_count" string="Available Books"/>
-            </tree>
+            </list>
         </field>
     </record>
 
@@ -220,7 +220,7 @@
                             </div>
 
                             <field name="book_ids" mode="tree" nolabel="1">
-                                <tree editable="bottom" class="o_kanban_view">
+                                <list editable="bottom" class="o_kanban_view">
                                     <header>
                                         <button string="Add Book" type="action"
                                                 name="%(action_library_book)d"
@@ -234,7 +234,7 @@
                                     <field name="total_quantity" string="Total"/>
                                     <field name="available_quantity" string="Available"/>
                                     <field name="is_available" invisible="1"/>
-                                </tree>
+                                </list>
                             </field>
                         </page>
                     </notebook>
@@ -513,14 +513,14 @@
     <field name="name">library.borrower.tree</field>
     <field name="model">library.borrower</field>
     <field name="arch" type="xml">
-        <tree>
+        <list>
             <field name="name"/>
             <field name="borrower_type"/>
             <field name="email"/>
             <field name="active_loans_count"/>
             <field name="overdue_loans_count"/>
             <field name="total_loans_count"/>
-        </tree>
+        </list>
     </field>
 </record>
 
@@ -554,7 +554,7 @@
                 <notebook>
                     <page string="Historique des emprunts">
                         <field name="loan_ids">
-                            <tree decoration-danger="is_overdue" decoration-success="returned">
+                            <list decoration-danger="is_overdue" decoration-success="returned">
                                 <field name="book_id"/>
                                 <field name="barcode_id"/>
                                 <field name="checkout_date"/>
@@ -562,7 +562,7 @@
                                 <field name="return_date"/>
                                 <field name="returned"/>
                                 <field name="is_overdue"/>
-                            </tree>
+                            </list>
                         </field>
                     </page>
                 </notebook>
@@ -598,7 +598,7 @@
     <record id="action_library_borrower" model="ir.actions.act_window">
         <field name="name">Emprunteurs</field>
         <field name="res_model">library.borrower</field>
-        <field name="view_mode">kanban,tree,form</field>
+        <field name="view_mode">kanban,list,form</field>
         <field name="context">{'search_default_group_by_type': 1}</field>
     </record>
 
@@ -610,7 +610,7 @@
     <record id="action_library_book_category" model="ir.actions.act_window">
         <field name="name">Book Categories</field>
         <field name="res_model">library.book.category</field>
-        <field name="view_mode">kanban,tree,form</field>
+        <field name="view_mode">kanban,list,form</field>
     </record>
 
     <!-- Menu Item for Categories -->
