@@ -21,6 +21,7 @@
         'security/ir.model.access.csv',
         'data/theme_presets.xml',
         'views/theme_config_views.xml',
+        'views/dynamic_styles.xml',
         'views/eacta_student_theme_views.xml',
         'views/eacta_class_theme_views.xml',
         'views/eacta_course_theme_views.xml',

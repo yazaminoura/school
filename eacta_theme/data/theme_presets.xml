@@ -1,6 +1,13 @@
 <?xml version="1.0" encoding="utf-8"?>
 <odoo>
     <data noupdate="1">
+        <!-- Configuration initiale dans ir.config_parameter (palette Indigo par défaut) -->
+        <function model="ir.config_parameter" name="set_param" eval="['eacta_theme.primary_color', '#4F46E5']"/>
+        <function model="ir.config_parameter" name="set_param" eval="['eacta_theme.secondary_color', '#06B6D4']"/>
+        <function model="ir.config_parameter" name="set_param" eval="['eacta_theme.accent_color', '#F59E0B']"/>
+        <function model="ir.config_parameter" name="set_param" eval="['eacta_theme.ink_color', '#1E1B4B']"/>
+        <function model="ir.config_parameter" name="set_param" eval="['eacta_theme.active_theme_name', 'E-ACTA Indigo Élégance']"/>
+
         <record id="theme_preset_indigo" model="eacta.theme.config">
             <field name="name">E-ACTA Indigo Élégance</field>
             <field name="active">1</field>
@@ -8,6 +15,7 @@
             <field name="primary_color">#4F46E5</field>
             <field name="secondary_color">#06B6D4</field>
             <field name="accent_color">#F59E0B</field>
+            <field name="ink_color">#1E1B4B</field>
             <field name="card_style">modern</field>
             <field name="card_radius">medium</field>
             <field name="badge_style">soft</field>
@@ -24,6 +32,7 @@
             <field name="primary_color">#059669</field>
             <field name="secondary_color">#10B981</field>
             <field name="accent_color">#F59E0B</field>
+            <field name="ink_color">#064E3B</field>
             <field name="card_style">modern</field>
             <field name="card_radius">medium</field>
             <field name="badge_style">soft</field>
@@ -40,6 +49,7 @@
             <field name="primary_color">#0284C7</field>
             <field name="secondary_color">#38BDF8</field>
             <field name="accent_color">#F97316</field>
+            <field name="ink_color">#0C4A6E</field>
             <field name="card_style">bordered</field>
             <field name="card_radius">large</field>
             <field name="badge_style">pill</field>
@@ -56,6 +66,7 @@
             <field name="primary_color">#7C3AED</field>
             <field name="secondary_color">#A855F7</field>
             <field name="accent_color">#EC4899</field>
+            <field name="ink_color">#3B0764</field>
             <field name="card_style">modern</field>
             <field name="card_radius">medium</field>
             <field name="badge_style">soft</field>

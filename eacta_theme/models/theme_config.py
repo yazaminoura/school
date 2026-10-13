@@ -38,6 +38,11 @@ class EactaThemeConfig(models.Model):
         string="Couleur d'Accent",
         default="#F59E0B"
     )
+    ink_color = fields.Char(
+        string="Couleur Sombre (Navbar/En-tête)",
+        default="#1E1B4B",
+        help="Couleur de base pour le fond de la barre de navigation et les éléments sombres"
+    )
 
     card_style = fields.Selection([
         ('modern', 'Cartes Modernes (Arrondis & Ombres fluides)'),
@@ -84,19 +89,48 @@ class EactaThemeConfig(models.Model):
     @api.onchange('color_scheme')
     def _onchange_color_scheme(self):
         palettes = {
-            'indigo': ('#4F46E5', '#06B6D4', '#F59E0B'),
-            'emerald': ('#059669', '#10B981', '#F59E0B'),
-            'sky': ('#0284C7', '#38BDF8', '#F97316'),
-            'violet': ('#7C3AED', '#A855F7', '#EC4899'),
-            'slate': ('#334155', '#64748B', '#0284C7'),
+            'indigo': ('#4F46E5', '#06B6D4', '#F59E0B', '#1E1B4B'),
+            'emerald': ('#059669', '#10B981', '#F59E0B', '#064E3B'),
+            'sky': ('#0284C7', '#38BDF8', '#F97316', '#0C4A6E'),
+            'violet': ('#7C3AED', '#A855F7', '#EC4899', '#3B0764'),
+            'slate': ('#334155', '#64748B', '#0284C7', '#0F172A'),
         }
         if self.color_scheme in palettes:
-            self.primary_color, self.secondary_color, self.accent_color = palettes[self.color_scheme]
+            self.primary_color, self.secondary_color, self.accent_color, self.ink_color = palettes[self.color_scheme]
+
+    def _sync_to_config_parameters(self):
+        for rec in self:
+            ICP = self.env['ir.config_parameter'].sudo()
+            ICP.set_param('eacta_theme.primary_color', rec.primary_color or '#4F46E5')
+            ICP.set_param('eacta_theme.secondary_color', rec.secondary_color or '#06B6D4')
+            ICP.set_param('eacta_theme.accent_color', rec.accent_color or '#F59E0B')
+            ICP.set_param('eacta_theme.ink_color', rec.ink_color or '#1E1B4B')
+            ICP.set_param('eacta_theme.active_theme_name', rec.name or 'E-ACTA Theme')
+            if rec.custom_css:
+                ICP.set_param('eacta_theme.custom_css', rec.custom_css)
+            else:
+                ICP.set_param('eacta_theme.custom_css', '')
+
+    @api.model_create_multi
+    def create(self, vals_list):
+        records = super().create(vals_list)
+        for rec in records:
+            if rec.active:
+                rec._sync_to_config_parameters()
+        return records
+
+    def write(self, vals):
+        res = super().write(vals)
+        for rec in self:
+            if rec.active:
+                rec._sync_to_config_parameters()
+        return res
 
     def action_set_active(self):
         self.ensure_one()
         self.search([('id', '!=', self.id)]).write({'active': False})
         self.write({'active': True})
+        self._sync_to_config_parameters()
 
     def action_reset_defaults(self):
         for rec in self:
@@ -104,6 +138,7 @@ class EactaThemeConfig(models.Model):
             rec.primary_color = '#4F46E5'
             rec.secondary_color = '#06B6D4'
             rec.accent_color = '#F59E0B'
+            rec.ink_color = '#1E1B4B'
             rec.card_style = 'modern'
             rec.card_radius = 'medium'
             rec.badge_style = 'soft'
@@ -111,3 +146,6 @@ class EactaThemeConfig(models.Model):
             rec.show_capacity_bar = True
             rec.show_avatar_glow = True
             rec.school_header_banner = True
+            if rec.active:
+                rec._sync_to_config_parameters()
+

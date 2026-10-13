@@ -452,3 +452,225 @@
         }
     }
 }
+
+/* --------------------------------------------------------------------------
+   9. NAVBAR & MENUITEMS DISPLAY (ODOO 18)
+   -------------------------------------------------------------------------- */
+.o_main_navbar {
+    background: var(--eacta-navbar-bg, linear-gradient(135deg, #1E1B4B 0%, #312E81 100%)) !important;
+    border-bottom: 3px solid var(--eacta-secondary, #06B6D4) !important;
+    box-shadow: 0 4px 18px rgba(0, 0, 0, 0.12) !important;
+    height: 48px !important;
+    display: flex !important;
+    align-items: center !important;
+    padding: 0 0.75rem !important;
+
+    /* App Brand / Title */
+    .o_menu_brand {
+        color: #FFFFFF !important;
+        font-weight: 700 !important;
+        font-size: 1.05rem !important;
+        letter-spacing: 0.02em !important;
+        padding: 6px 14px !important;
+        border-radius: 8px !important;
+        background: transparent !important;
+        transition: all 0.2s ease !important;
+
+        &:hover {
+            background: rgba(255, 255, 255, 0.15) !important;
+            transform: translateY(-1px);
+        }
+    }
+
+    /* Top-Level Menu Sections */
+    .o_menu_sections {
+        display: flex !important;
+        align-items: center !important;
+        gap: 3px !important;
+
+        > button,
+        > a,
+        .dropdown > button,
+        .dropdown > a {
+            color: rgba(255, 255, 255, 0.92) !important;
+            font-weight: 500 !important;
+            font-size: 0.88rem !important;
+            padding: 7px 13px !important;
+            border-radius: 6px !important;
+            border: none !important;
+            background: transparent !important;
+            transition: all 0.2s ease !important;
+            display: inline-flex !important;
+            align-items: center !important;
+            gap: 5px !important;
+
+            &:hover {
+                color: #FFFFFF !important;
+                background: rgba(255, 255, 255, 0.18) !important;
+                transform: translateY(-1px) !important;
+                box-shadow: 0 2px 8px rgba(0, 0, 0, 0.12) !important;
+            }
+        }
+
+        .dropdown > button::after,
+        .dropdown > a::after {
+            content: '▾' !important;
+            font-size: 11px !important;
+            margin-left: 4px !important;
+            opacity: 0.8 !important;
+            transition: transform 0.2s ease !important;
+        }
+
+        .dropdown > button[aria-expanded="true"]::after,
+        .dropdown > a[aria-expanded="true"]::after {
+            transform: rotate(180deg) !important;
+        }
+    }
+
+    /* Dropdown Sub-Menus */
+    .dropdown-menu {
+        background: #FFFFFF !important;
+        border: 1px solid #E2E8F0 !important;
+        border-radius: 12px !important;
+        box-shadow: 0 12px 28px rgba(15, 23, 42, 0.12), 0 4px 10px rgba(15, 23, 42, 0.06) !important;
+        padding: 6px !important;
+        margin-top: 6px !important;
+        min-width: 200px !important;
+
+        .dropdown-item {
+            color: #1E293B !important;
+            font-size: 0.875rem !important;
+            font-weight: 500 !important;
+            padding: 8px 14px !important;
+            border-radius: 8px !important;
+            transition: all 0.18s ease !important;
+            display: flex !important;
+            align-items: center !important;
+            justify-content: space-between !important;
+
+            &:hover,
+            &:focus {
+                background-color: color-mix(in srgb, var(--eacta-primary) 12%, transparent) !important;
+                color: var(--eacta-primary) !important;
+                font-weight: 600 !important;
+                padding-left: 20px !important;
+                transform: translateX(2px) !important;
+            }
+        }
+    }
+
+    /* Hamburger & Systray */
+    .o_menu_toggle {
+        background: rgba(255, 255, 255, 0.15) !important;
+        border: 1px solid rgba(255, 255, 255, 0.28) !important;
+        border-radius: 8px !important;
+        color: #FFFFFF !important;
+        padding: 6px 10px !important;
+        margin-right: 6px !important;
+        cursor: pointer !important;
+        transition: all 0.2s ease !important;
+
+        &:hover {
+            background: rgba(255, 255, 255, 0.25) !important;
+            transform: scale(1.05);
+        }
+    }
+
+    .o_menu_systray,
+    .o_navbar_systray {
+        display: flex !important;
+        align-items: center !important;
+        margin-left: auto !important;
+        gap: 4px !important;
+
+        > * {
+            color: #FFFFFF !important;
+        }
+
+        button,
+        a {
+            color: #FFFFFF !important;
+            border-radius: 6px !important;
+            padding: 6px 10px !important;
+            transition: all 0.2s ease !important;
+
+            &:hover {
+                background: rgba(255, 255, 255, 0.15) !important;
+            }
+        }
+    }
+}
+
+/* --------------------------------------------------------------------------
+   10. SYSTEM-WIDE COLORS OVERRIDE (BOOTSTRAP & ODOO COMPONENTS)
+   -------------------------------------------------------------------------- */
+.btn-primary {
+    background: linear-gradient(135deg, var(--eacta-primary) 0%, color-mix(in srgb, var(--eacta-primary) 75%, black) 100%) !important;
+    border-color: color-mix(in srgb, var(--eacta-primary) 75%, black) !important;
+    color: #FFFFFF !important;
+    font-weight: 600 !important;
+    box-shadow: 0 2px 6px color-mix(in srgb, var(--eacta-primary) 30%, transparent) !important;
+    transition: all 0.2s ease !important;
+
+    &:hover,
+    &:focus {
+        background: linear-gradient(135deg, color-mix(in srgb, var(--eacta-primary) 85%, black) 0%, color-mix(in srgb, var(--eacta-primary) 65%, black) 100%) !important;
+        border-color: color-mix(in srgb, var(--eacta-primary) 65%, black) !important;
+        color: #FFFFFF !important;
+        transform: translateY(-1px) !important;
+        box-shadow: 0 4px 12px color-mix(in srgb, var(--eacta-primary) 40%, transparent) !important;
+    }
+}
+
+.btn-secondary {
+    background: var(--eacta-secondary) !important;
+    border-color: color-mix(in srgb, var(--eacta-secondary) 80%, black) !important;
+    color: #FFFFFF !important;
+    font-weight: 600 !important;
+    transition: all 0.2s ease !important;
+
+    &:hover,
+    &:focus {
+        background: color-mix(in srgb, var(--eacta-secondary) 80%, black) !important;
+        color: #FFFFFF !important;
+        transform: translateY(-1px) !important;
+    }
+}
+
+/* Form inputs on focus */
+input:focus,
+textarea:focus,
+select:focus,
+.o_field_widget:focus-within input {
+    border-color: var(--eacta-primary) !important;
+    box-shadow: 0 0 0 3px color-mix(in srgb, var(--eacta-primary) 22%, transparent) !important;
+    outline: none !important;
+}
+
+/* Checkboxes and switches */
+.form-check-input:checked {
+    background-color: var(--eacta-primary) !important;
+    border-color: var(--eacta-primary) !important;
+}
+
+/* Search facets in control panel */
+.o_searchview .o_facet {
+    border-color: color-mix(in srgb, var(--eacta-primary) 35%, transparent) !important;
+    background-color: color-mix(in srgb, var(--eacta-primary) 8%, white) !important;
+
+    .o_facet_values {
+        color: var(--eacta-primary) !important;
+    }
+}
+
+/* Pagination */
+.page-item.active .page-link {
+    background-color: var(--eacta-primary) !important;
+    border-color: var(--eacta-primary) !important;
+}
+
+/* Progress bar */
+.progress-bar {
+    background-color: var(--eacta-primary) !important;
+}
+

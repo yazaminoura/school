@@ -48,6 +48,7 @@
                             <field name="primary_color" widget="color"/>
                             <field name="secondary_color" widget="color"/>
                             <field name="accent_color" widget="color"/>
+                            <field name="ink_color" widget="color"/>
                         </group>
                         <group string="Apparence des Composants">
                             <field name="card_style"/>
