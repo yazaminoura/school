@@ -1,0 +1,102 @@
+<?xml version="1.0" encoding="utf-8"?>
+<odoo>
+
+    <!-- ================================================================
+         ATTESTATION DE SCOLARITÉ (PDF)
+         ================================================================ -->
+    <record id="action_report_student_certificate" model="ir.actions.report">
+        <field name="name">Attestation de scolarité</field>
+        <field name="model">eacta.student</field>
+        <field name="report_type">qweb-pdf</field>
+        <field name="report_name">eacta_school.report_student_certificate_document</field>
+        <field name="report_file">eacta_school.report_student_certificate_document</field>
+        <field name="print_report_name">'Attestation_Scolarite_' + (object.code or object.name).replace(' ', '_')</field>
+        <field name="binding_model_id" ref="model_eacta_student"/>
+        <field name="binding_type">report</field>
+    </record>
+
+    <template id="report_student_certificate_document">
+        <t t-call="web.html_container">
+            <t t-foreach="docs" t-as="o">
+                <t t-call="web.external_layout">
+                    <div class="page" style="font-family: 'Inter', 'Segoe UI', Arial, sans-serif; color: #1e293b; padding: 25px 20px;">
+                        
+                        <!-- Header / Title -->
+                        <div style="text-align: center; margin-top: 30px; margin-bottom: 40px; border-bottom: 3px double #0B6E4F; padding-bottom: 20px;">
+                            <h1 style="font-size: 26px; font-weight: 800; color: #06392A; text-transform: uppercase; letter-spacing: 2px; margin: 0;">
+                                Attestation de Scolarité
+                            </h1>
+                            <div style="font-size: 14px; color: #0B6E4F; font-weight: 600; margin-top: 6px;">
+                                Année académique : <span t-out="o.current_year or (o.current_class_id.year if o.current_class_id else '-')"/>
+                            </div>
+                        </div>
+
+                        <!-- Certification Body -->
+                        <div style="font-size: 15px; line-height: 1.8; margin-bottom: 30px; text-align: justify;">
+                            <p style="margin-bottom: 25px;">
+                                La Direction de l'établissement <strong>NR School</strong> atteste par la présente que l'élève mentionné(e) ci-dessous est régulièrement inscrit(e) et poursuit son cursus scolaire au sein de notre établissement :
+                            </p>
+
+                            <!-- Identity Box -->
+                            <div style="background: #f8fafc; border: 1.5px solid #cbd5e1; border-radius: 12px; padding: 22px 28px; margin: 25px 0;">
+                                <table style="width: 100%; border-collapse: collapse; font-size: 14px;">
+                                    <tr>
+                                        <td style="width: 35%; padding: 8px 0; color: #64748b; font-weight: 600; text-transform: uppercase; font-size: 12px;">Nom et Prénom :</td>
+                                        <td style="width: 65%; padding: 8px 0; font-size: 16px; font-weight: 700; color: #0f172a;" t-field="o.name"/>
+                                    </tr>
+                                    <tr t-if="o.code">
+                                        <td style="padding: 8px 0; color: #64748b; font-weight: 600; text-transform: uppercase; font-size: 12px;">Matricule officiel :</td>
+                                        <td style="padding: 8px 0; font-weight: 700; color: #0B6E4F;" t-field="o.code"/>
+                                    </tr>
+                                    <tr t-if="o.date_of_birth">
+                                        <td style="padding: 8px 0; color: #64748b; font-weight: 600; text-transform: uppercase; font-size: 12px;">Date de naissance :</td>
+                                        <td style="padding: 8px 0; font-weight: 600; color: #1e293b;">
+                                            <span t-field="o.date_of_birth"/>
+                                            <t t-if="o.age"> (<t t-out="o.age"/> ans)</t>
+                                        </td>
+                                    </tr>
+                                    <tr>
+                                        <td style="padding: 8px 0; color: #64748b; font-weight: 600; text-transform: uppercase; font-size: 12px;">Classe / Niveau :</td>
+                                        <td style="padding: 8px 0; font-size: 15px; font-weight: 700; color: #0F172A;" t-out="o.current_class_id.name if o.current_class_id else 'En cours d\'affectation'"/>
+                                    </tr>
+                                    <tr t-if="o.enrollment_date">
+                                        <td style="padding: 8px 0; color: #64748b; font-weight: 600; text-transform: uppercase; font-size: 12px;">Date d'admission :</td>
+                                        <td style="padding: 8px 0; font-weight: 500; color: #1e293b;" t-field="o.enrollment_date"/>
+                                    </tr>
+                                    <tr t-if="o.honor_mention and o.honor_mention != 'none'">
+                                        <td style="padding: 8px 0; color: #64748b; font-weight: 600; text-transform: uppercase; font-size: 12px;">Distinction :</td>
+                                        <td style="padding: 8px 0; font-weight: 700; color: #E9A23B;" t-field="o.honor_mention"/>
+                                    </tr>
+                                </table>
+                            </div>
+
+                            <p style="margin-top: 25px;">
+                                En foi de quoi, la présente attestation lui est délivrée pour servir et valoir ce que de droit auprès de toute administration ou organisme habilité.
+                            </p>
+                        </div>
+
+                        <!-- Date & Signatures Block -->
+                        <div style="margin-top: 60px; display: table; width: 100%;">
+                            <div style="display: table-cell; width: 50%; vertical-align: top;">
+                                <div style="font-size: 13px; color: #64748b;">
+                                    Fait à : <strong>Casablanca</strong><br/>
+                                    Le : <span t-out="context_timestamp(datetime.datetime.now()).strftime('%d/%m/%Y')"/>
+                                </div>
+                            </div>
+                            <div style="display: table-cell; width: 50%; text-align: center; vertical-align: top;">
+                                <div style="font-size: 14px; font-weight: 700; color: #06392A; margin-bottom: 70px;">
+                                    La Direction Générale
+                                </div>
+                                <div style="border: 1px dashed #94a3b8; border-radius: 8px; height: 80px; width: 220px; margin: 0 auto; display: flex; align-items: center; justify-content: center; font-size: 11px; color: #94a3b8;">
+                                    [ Cachet &amp; Signature ]
+                                </div>
+                            </div>
+                        </div>
+
+                    </div>
+                </t>
+            </t>
+        </t>
+    </template>
+
+</odoo>

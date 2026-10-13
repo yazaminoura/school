@@ -1,0 +1,143 @@
+<?xml version="1.0" encoding="utf-8"?>
+<odoo>
+
+    <!-- ============================= LIST ============================= -->
+    <record id="view_eacta_attendance_list" model="ir.ui.view">
+        <field name="name">eacta.attendance.list</field>
+        <field name="model">eacta.attendance</field>
+        <field name="arch" type="xml">
+            <list string="Assiduité &amp; Absences" sample="1" multi_edit="1" decoration-danger="attendance_type == 'absent' and not justified" decoration-warning="attendance_type == 'late'">
+                <field name="date" widget="date"/>
+                <field name="student_id" widget="many2one_avatar"/>
+                <field name="student_code" optional="show"/>
+                <field name="class_id"/>
+                <field name="attendance_type" widget="badge"
+                       decoration-danger="attendance_type == 'absent'"
+                       decoration-warning="attendance_type == 'late'"
+                       decoration-success="attendance_type == 'present'"/>
+                <field name="session" optional="show"/>
+                <field name="duration_hours" string="Durée (h)" optional="hide"/>
+                <field name="justified" widget="boolean_toggle"/>
+                <field name="reason" optional="show"/>
+                <field name="justification_note" optional="hide"/>
+            </list>
+        </field>
+    </record>
+
+    <!-- ============================= FORM ============================= -->
+    <record id="view_eacta_attendance_form" model="ir.ui.view">
+        <field name="name">eacta.attendance.form</field>
+        <field name="model">eacta.attendance</field>
+        <field name="arch" type="xml">
+            <form string="Assiduité &amp; Absence">
+                <header>
+                    <button name="action_mark_justified" string="Valider le justificatif" type="object"
+                            class="btn-primary" invisible="justified"/>
+                    <button name="action_mark_unjustified" string="Marquer non justifié" type="object"
+                            class="btn-secondary" invisible="not justified"/>
+                </header>
+                <sheet>
+                    <field name="student_image" widget="image" class="oe_avatar" options="{'zoom': true}"/>
+                    <div class="oe_title">
+                        <label for="name" string="Référence" class="oe_edit_only"/>
+                        <h1><field name="name" readonly="1"/></h1>
+                    </div>
+                    <group>
+                        <group string="Élève &amp; Classe">
+                            <field name="student_id" widget="many2one_avatar"/>
+                            <field name="student_code"/>
+                            <field name="class_id" options="{'no_create': True}"/>
+                            <field name="date"/>
+                        </group>
+                        <group string="Détails de l'événement">
+                            <field name="attendance_type" widget="radio" options="{'horizontal': true}"/>
+                            <field name="session"/>
+                            <field name="duration_hours" invisible="attendance_type == 'present'"/>
+                            <field name="justified" widget="boolean_toggle"/>
+                            <field name="reason" invisible="attendance_type == 'present'"/>
+                        </group>
+                    </group>
+                    <group string="Justificatif &amp; Observations" invisible="attendance_type == 'present'">
+                        <field name="justification_note" placeholder="Détails du motif, certificat médical reçu, appel téléphonique des parents..."/>
+                    </group>
+                </sheet>
+                <chatter/>
+            </form>
+        </field>
+    </record>
+
+    <!-- ============================= CALENDAR ============================= -->
+    <record id="view_eacta_attendance_calendar" model="ir.ui.view">
+        <field name="name">eacta.attendance.calendar</field>
+        <field name="model">eacta.attendance</field>
+        <field name="arch" type="xml">
+            <calendar string="Calendrier de l'assiduité" date_start="date" color="attendance_type" mode="month" quick_create="0">
+                <field name="student_id"/>
+                <field name="class_id"/>
+                <field name="attendance_type"/>
+                <field name="justified"/>
+            </calendar>
+        </field>
+    </record>
+
+    <!-- ============================= PIVOT ============================= -->
+    <record id="view_eacta_attendance_pivot" model="ir.ui.view">
+        <field name="name">eacta.attendance.pivot</field>
+        <field name="model">eacta.attendance</field>
+        <field name="arch" type="xml">
+            <pivot string="Analyse de l'assiduité" sample="1">
+                <field name="class_id" type="row"/>
+                <field name="student_id" type="row"/>
+                <field name="attendance_type" type="col"/>
+            </pivot>
+        </field>
+    </record>
+
+    <!-- ============================= SEARCH ============================= -->
+    <record id="view_eacta_attendance_search" model="ir.ui.view">
+        <field name="name">eacta.attendance.search</field>
+        <field name="model">eacta.attendance</field>
+        <field name="arch" type="xml">
+            <search string="Rechercher dans l'assiduité">
+                <field name="student_id"/>
+                <field name="student_code"/>
+                <field name="class_id"/>
+                <field name="reason"/>
+                <filter string="Aujourd'hui" name="today" domain="[('date', '=', context_today())]"/>
+                <filter string="Ce mois" name="this_month"
+                        domain="[('date', '&gt;=', (context_today().replace(day=1)).strftime('%Y-%m-%d'))]"/>
+                <separator/>
+                <filter string="Absences" name="absent" domain="[('attendance_type', '=', 'absent')]"/>
+                <filter string="Retards" name="late" domain="[('attendance_type', '=', 'late')]"/>
+                <separator/>
+                <filter string="Non justifiées" name="unjustified" domain="[('justified', '=', False), ('attendance_type', '!=', 'present')]"/>
+                <filter string="Justifiées" name="justified" domain="[('justified', '=', True)]"/>
+                <group expand="0" string="Regrouper par">
+                    <filter string="Élève" name="group_by_student" context="{'group_by': 'student_id'}"/>
+                    <filter string="Classe" name="group_by_class" context="{'group_by': 'class_id'}"/>
+                    <filter string="Date" name="group_by_date" context="{'group_by': 'date:day'}"/>
+                    <filter string="Mois" name="group_by_month" context="{'group_by': 'date:month'}"/>
+                    <filter string="Type" name="group_by_type" context="{'group_by': 'attendance_type'}"/>
+                    <filter string="Motif" name="group_by_reason" context="{'group_by': 'reason'}"/>
+                </group>
+            </search>
+        </field>
+    </record>
+
+    <!-- ============================= ACTION ============================= -->
+    <record id="action_eacta_attendance" model="ir.actions.act_window">
+        <field name="name">Assiduité &amp; Absences</field>
+        <field name="res_model">eacta.attendance</field>
+        <field name="view_mode">list,calendar,pivot,form</field>
+        <field name="context">{'search_default_this_month': 1}</field>
+        <field name="help" type="html">
+            <p class="o_view_nocontent_smiling_face">
+                Enregistrez une première absence ou un retard.
+            </p>
+            <p>
+                Suivez en temps réel l'assiduité, les absences justifiées ou injustifiées et les retards des élèves par classe.
+            </p>
+        </field>
+    </record>
+
+</odoo>

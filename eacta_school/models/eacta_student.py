@@ -81,6 +81,46 @@ class EactaStudent(models.Model):
     selected_year_average = fields.Float(string="Moyenne de l'année", digits=(4, 2),
                                          compute='_compute_selected_year_info')
 
+    # ------------------------------------------------------------------
+    # Assiduité & Absences
+    # ------------------------------------------------------------------
+    attendance_ids = fields.One2many('eacta.attendance', 'student_id', string='Assiduité')
+    absence_count = fields.Integer(string='Absences', compute='_compute_attendance_stats')
+    unjustified_absence_count = fields.Integer(string='Absences non justifiées', compute='_compute_attendance_stats')
+    late_count = fields.Integer(string='Retards', compute='_compute_attendance_stats')
+
+    # ------------------------------------------------------------------
+    # Santé, Urgence & Services
+    # ------------------------------------------------------------------
+    emergency_contact_name = fields.Char(string="Contact d'urgence")
+    emergency_contact_phone = fields.Char(string="Tél. urgence")
+    emergency_contact_relation = fields.Char(string="Lien de parenté")
+    blood_group = fields.Selection([
+        ('A+', 'A+'), ('A-', 'A-'),
+        ('B+', 'B+'), ('B-', 'B-'),
+        ('AB+', 'AB+'), ('AB-', 'AB-'),
+        ('O+', 'O+'), ('O-', 'O-'),
+    ], string='Groupe sanguin')
+    allergies = fields.Text(string='Allergies & Intolérances')
+    medical_notes = fields.Text(string='Suivi médical / PAI')
+    transport_mode = fields.Selection([
+        ('bus', 'Transport scolaire (Bus)'),
+        ('parents', 'Déposé par les parents'),
+        ('autonomous', 'Autonome (Pied / Vélo)'),
+    ], string='Mode de transport', default='parents')
+    canteen = fields.Boolean(string='Demi-pensionnaire / Cantine', default=False)
+
+    # ------------------------------------------------------------------
+    # Distinctions & Mention du conseil
+    # ------------------------------------------------------------------
+    honor_mention = fields.Selection([
+        ('felicitations', 'Félicitations'),
+        ('tableau_honneur', "Tableau d'honneur"),
+        ('compliments', 'Compliments'),
+        ('encouragements', 'Encouragements'),
+        ('none', 'Sans distinction'),
+    ], string='Distinction du conseil', compute='_compute_honor_mention', store=True)
+
     _sql_constraints = [
         ('code_unique', 'UNIQUE(code)', "Ce matricule est déjà attribué à un autre élève."),
     ]
@@ -163,6 +203,28 @@ class EactaStudent(models.Model):
             ordered, size = cache[klass.id]
             student.class_rank = ordered.index(student.id) + 1 if student.id in ordered else 0
             student.class_size = size
+
+    @api.depends('attendance_ids.attendance_type', 'attendance_ids.justified')
+    def _compute_attendance_stats(self):
+        for student in self:
+            absences = student.attendance_ids.filtered(lambda a: a.attendance_type == 'absent')
+            student.absence_count = len(absences)
+            student.unjustified_absence_count = len(absences.filtered(lambda a: not a.justified))
+            student.late_count = len(student.attendance_ids.filtered(lambda a: a.attendance_type == 'late'))
+
+    @api.depends('average', 'grade_count')
+    def _compute_honor_mention(self):
+        for student in self:
+            if not student.grade_count or student.average < 12:
+                student.honor_mention = 'none'
+            elif student.average >= 16:
+                student.honor_mention = 'felicitations'
+            elif student.average >= 14:
+                student.honor_mention = 'tableau_honneur'
+            elif student.average >= 13:
+                student.honor_mention = 'compliments'
+            else:
+                student.honor_mention = 'encouragements'
 
     @api.depends('selected_year', 'current_year', 'class_ids', 'course_ids', 'course_grade_ids')
     def _compute_selected_year_info(self):
@@ -275,6 +337,23 @@ class EactaStudent(models.Model):
     def action_print_report_card(self):
         return self.env.ref('eacta_school.action_report_student_card').report_action(self)
 
+    def action_view_attendances(self):
+        self.ensure_one()
+        return {
+            'name': f"Assiduité - {self.name}",
+            'type': 'ir.actions.act_window',
+            'res_model': 'eacta.attendance',
+            'view_mode': 'list,calendar,pivot,form',
+            'domain': [('student_id', '=', self.id)],
+            'context': {
+                'default_student_id': self.id,
+                'default_class_id': self.current_class_id.id if self.current_class_id else False,
+            },
+        }
+
+    def action_print_certificate(self):
+        return self.env.ref('eacta_school.action_report_student_certificate').report_action(self)
+
     # ------------------------------------------------------------------
     # Bulletin
     # ------------------------------------------------------------------
@@ -312,6 +391,10 @@ class EactaStudent(models.Model):
             'total_coefficient': total_coef,
             'average': average,
             'appreciation': appreciation_labels.get(appreciation_for(average)) if lines else False,
+            'honor_mention': dict(self._fields['honor_mention'].selection).get(self.honor_mention) if self.honor_mention != 'none' else False,
+            'absence_count': self.absence_count,
+            'unjustified_absence_count': self.unjustified_absence_count,
+            'late_count': self.late_count,
             'rank': self.class_rank if klass == self.current_class_id else False,
             'class_size': len(klass.student_ids) if klass else 0,
             'class_average': klass.average if klass else False,
@@ -348,6 +431,9 @@ class EactaStudent(models.Model):
         to_grade = Exam.search_count([('state', '=', 'grading')])
         top = Student.search([('grade_count', '>', 0)], order='average desc', limit=6)
         courses = self.env['eacta.course'].search([('grade', '>', 0)], order='grade desc')
+        Attendance = self.env['eacta.attendance']
+        today_absences = Attendance.search_count([('date', '=', today), ('attendance_type', '=', 'absent')])
+        unjustified_total = Attendance.search_count([('attendance_type', '=', 'absent'), ('justified', '=', False)])
 
         return {
             'kpis': {
@@ -362,6 +448,8 @@ class EactaStudent(models.Model):
                 'average': round(sum(values) / len(values), 2) if values else 0.0,
                 'success_rate': round(100.0 * len([v for v in values if v >= 10]) / len(values), 1) if values else 0.0,
                 'grades': len(values),
+                'today_absences': today_absences,
+                'unjustified_absences': unjustified_total,
             },
             'states': [
                 {'key': key, 'label': state_labels[key], 'count': by_state.get(key, 0)}

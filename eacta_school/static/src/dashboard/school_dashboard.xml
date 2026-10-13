@@ -73,6 +73,15 @@
                             <div class="o_eacta_dash_kpi_hint"><t t-out="kpis.exams_upcoming"/> examen(s) à venir</div>
                         </div>
                     </div>
+                    <div class="o_eacta_dash_kpi"
+                         t-on-click="() => this.openAction('eacta_school.action_eacta_attendance')">
+                        <div class="o_eacta_dash_kpi_icon o_eacta_tone_danger"><i class="fa fa-calendar-times-o"/></div>
+                        <div>
+                            <div class="o_eacta_dash_kpi_value" t-out="kpis.today_absences"/>
+                            <div class="o_eacta_dash_kpi_label">Absences du jour</div>
+                            <div class="o_eacta_dash_kpi_hint"><t t-out="kpis.unjustified_absences"/> non justifiée(s)</div>
+                        </div>
+                    </div>
                 </div>
 
                 <div class="o_eacta_dash_grid">

@@ -180,6 +180,8 @@
                             groups="eacta_school.group_eacta_school_manager" invisible="state != 'graduated'"/>
                     <button name="action_print_report_card" string="Bulletin" type="object" icon="fa-print"
                             invisible="not grade_count"/>
+                    <button name="action_print_certificate" string="Attestation" type="object" icon="fa-file-text-o"
+                            class="btn-secondary" invisible="state == 'draft'"/>
                     <button name="action_draft" string="Remettre en pré-inscription" type="object"
                             groups="eacta_school.group_eacta_school_manager" invisible="state == 'draft'"
                             confirm="Remettre cet élève en pré-inscription ?"/>
@@ -192,6 +194,9 @@
                         </button>
                         <button name="action_view_grades" type="object" class="oe_stat_button" icon="fa-pencil-square-o">
                             <field name="grade_count" widget="statinfo" string="Notes"/>
+                        </button>
+                        <button name="action_view_attendances" type="object" class="oe_stat_button" icon="fa-clock-o">
+                            <field name="absence_count" widget="statinfo" string="Absences"/>
                         </button>
                     </div>
                     <widget name="web_ribbon" title="Diplômé" bg_color="text-bg-info" invisible="state != 'graduated'"/>
@@ -207,6 +212,7 @@
                             <field name="current_class_id" class="o_eacta_chip" invisible="not current_class_id"
                                    options="{'no_open': False}" readonly="1"/>
                             <field name="appreciation" class="o_eacta_chip" invisible="not appreciation"/>
+                            <field name="honor_mention" class="o_eacta_chip" invisible="honor_mention == 'none' or not honor_mention"/>
                         </div>
                     </div>
 
@@ -297,6 +303,52 @@
                                     <field name="teacher_id"/>
                                 </list>
                             </field>
+                        </page>
+                        <page string="Assiduité" name="attendances" icon="fa-calendar-check-o">
+                            <div class="d-flex gap-3 mb-3">
+                                <span class="badge bg-danger-subtle text-danger border p-2">
+                                    <i class="fa fa-times-circle me-1" title="Absences"/> Non justifiées : <field name="unjustified_absence_count" class="fw-bold"/>
+                                </span>
+                                <span class="badge bg-warning-subtle text-warning border p-2">
+                                    <i class="fa fa-clock-o me-1" title="Retards"/> Retards : <field name="late_count" class="fw-bold"/>
+                                </span>
+                            </div>
+                            <field name="attendance_ids">
+                                <list editable="bottom" decoration-danger="attendance_type == 'absent' and not justified" decoration-warning="attendance_type == 'late'">
+                                    <field name="date"/>
+                                    <field name="attendance_type" widget="badge"
+                                           decoration-danger="attendance_type == 'absent'"
+                                           decoration-warning="attendance_type == 'late'"
+                                           decoration-success="attendance_type == 'present'"/>
+                                    <field name="session"/>
+                                    <field name="duration_hours" string="Durée (h)"/>
+                                    <field name="justified" widget="boolean_toggle"/>
+                                    <field name="reason"/>
+                                    <field name="justification_note"/>
+                                </list>
+                            </field>
+                        </page>
+                        <page string="Santé &amp; Urgence" name="health_emergency" icon="fa-heartbeat">
+                            <group>
+                                <group string="Urgence">
+                                    <field name="emergency_contact_name"/>
+                                    <field name="emergency_contact_phone" widget="phone"/>
+                                    <field name="emergency_contact_relation"/>
+                                </group>
+                                <group string="Médical">
+                                    <field name="blood_group"/>
+                                    <field name="allergies" placeholder="Allergies connues..."/>
+                                    <field name="medical_notes" placeholder="Protocole médical, PAI..."/>
+                                </group>
+                            </group>
+                            <group string="Logistique &amp; Services">
+                                <group>
+                                    <field name="transport_mode" widget="radio"/>
+                                </group>
+                                <group>
+                                    <field name="canteen" widget="boolean_toggle"/>
+                                </group>
+                            </group>
                         </page>
                         <page string="Commentaire" name="comment" icon="fa-comment-o">
                             <field name="student_comment" placeholder="Observations, besoins particuliers…"/>

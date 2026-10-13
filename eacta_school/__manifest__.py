@@ -1,16 +1,17 @@
 {
     'name': 'NR School',
-    'version': '18.0.2.0',
-    'summary': 'Gestion scolaire : élèves, classes, cours, examens, notes et bulletins',
+    'version': '18.0.2.1',
+    'summary': 'Gestion scolaire : élèves, classes, cours, examens, notes, assiduité et attestations',
     'description': """
 NR School - Gestion scolaire
 ============================
 - Tableau de bord : effectifs, remplissage des classes, examens à venir, répartition des notes
-- Élèves : matricule automatique, parents/tuteurs, parcours, moyenne pondérée, rang, appréciation
+- Élèves : matricule automatique, parents/tuteurs, parcours, moyenne pondérée, rang, assiduité, santé
+- Assiduité & Absences : suivi des absences justifiées/non justifiées, retards, créneaux
 - Classes : capacité et remplissage, contrôle « une classe par année », résultats de la classe
 - Cours & examens : coefficients, crédits, types d'examen, feuille de notes générée en un clic
 - Notes : statuts (à noter, noté, absent, dispensé), analyse pivot / graphique
-- Rapports : bulletin scolaire et relevé des résultats de la classe
+- Rapports officiels : bulletin scolaire et attestation de scolarité en un clic
     """,
     'category': 'Education',
     'author': 'NR School',
@@ -25,7 +26,9 @@ NR School - Gestion scolaire
         'data/eacta_school_config_data.xml',
         'reports/report_assets.xml',
         'reports/student_report.xml',
+        'reports/student_certificate_report.xml',
         'views/eacta_student_views.xml',
+        'views/eacta_attendance_views.xml',
         'views/eacta_class_views.xml',
         'views/eacta_course_views.xml',
         'views/eacta_exam_views.xml',

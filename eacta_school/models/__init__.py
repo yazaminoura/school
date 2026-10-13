@@ -7,3 +7,4 @@ from . import res_partner
 from . import res_users
 from . import eacta_course_grade
 from . import eacta_exam
+from . import eacta_attendance

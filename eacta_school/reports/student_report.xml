@@ -85,13 +85,24 @@
                         <div class="eacta_label">Appréciation</div>
                         <div class="eacta_big" t-out="card['appreciation']"/>
                     </div>
+                    <div t-if="card['honor_mention']">
+                        <div class="eacta_label">Distinction</div>
+                        <div class="eacta_big text-warning" t-out="card['honor_mention']"/>
+                    </div>
                     <div t-if="card['rank']">
                         <div class="eacta_label">Rang</div>
                         <div class="eacta_big"><t t-out="card['rank']"/><small> / <t t-out="card['class_size']"/></small></div>
                     </div>
                     <div t-if="card['class_average']">
-                        <div class="eacta_label">Moyenne de la classe</div>
+                        <div class="eacta_label">Moyenne classe</div>
                         <div class="eacta_big" t-out="'%.2f' % card['class_average']"/>
+                    </div>
+                    <div>
+                        <div class="eacta_label">Assiduité</div>
+                        <div style="font-size: 12px; font-weight: 600; padding-top: 4px;">
+                            <span t-out="card['absence_count']"/> abs. (<span class="text-danger" t-out="card['unjustified_absence_count']"/> nj)
+                            <t t-if="card['late_count']"> · <span class="text-warning" t-out="card['late_count']"/> ret.</t>
+                        </div>
                     </div>
                     <div>
                         <div class="eacta_label">Décision</div>

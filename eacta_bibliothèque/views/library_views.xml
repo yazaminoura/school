@@ -376,7 +376,7 @@
                             <div class="loan-borrower-info mb-3">
                                 <div class="d-flex align-items-center">
                                     <div class="borrower-icon me-2">
-                                        <i class="fa fa-user text-secondary"></i>
+                                        <i class="fa fa-user text-secondary" title="Emprunteur" aria-label="Emprunteur" role="img"></i>
                                     </div>
                                     <div class="borrower-info flex-grow-1">
                                         <span class="borrower-name text-truncate d-block small">
