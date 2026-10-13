@@ -37,6 +37,17 @@ class EactaClass(models.Model):
     def get_level_display(self):
         return dict(self._fields['level'].selection).get(self.level)
 
+    def action_view_courses(self):
+        self.ensure_one()
+        return {
+            'name': 'Cours',
+            'type': 'ir.actions.act_window',
+            'res_model': 'eacta.course',
+            'view_mode': 'kanban,list,form,calendar',
+            'domain': [('id', 'in', self.course_ids.ids)],
+            'context': {'default_class_ids': [(4, self.id)]},
+        }
+
     @api.constrains('student_ids')
     def _check_student_year_uniqueness(self):
         """Ensure a student is only in one class per year"""

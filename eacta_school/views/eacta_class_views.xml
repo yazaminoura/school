@@ -8,11 +8,10 @@
         <field name="arch" type="xml">
             <form string="Classe">
                 <header>
-                    <button name="%(action_eacta_course)d"
+                    <button name="action_view_courses"
                             string="Voir les cours"
-                            type="action"
-                            class="btn-primary"
-                            context="{'default_class_id': active_id, 'search_default_class_id': active_id}"/>
+                            type="object"
+                            class="btn-primary"/>
                 </header>
                 <sheet>
                     <group>

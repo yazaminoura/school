@@ -219,12 +219,12 @@
                                 </div>
                             </div>
 
-                            <field name="book_ids" mode="tree" nolabel="1">
+                            <field name="book_ids" mode="list" nolabel="1">
                                 <list editable="bottom" class="o_kanban_view">
                                     <header>
                                         <button string="Add Book" type="action"
                                                 name="%(action_library_book)d"
-                                                context="{'default_category_id': active_id}"
+                                                context="{'default_category_id': parent.id}"
                                                 class="btn btn-primary"/>
                                     </header>
                                     <field name="name"/>
