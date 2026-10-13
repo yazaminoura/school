@@ -1,0 +1,29 @@
+/* Kanban grid container */
+.eacta_kanban_grid .o_kanban_group {
+    display: flex;           /* horizontal alignment */
+    flex-wrap: wrap;         /* allow wrapping to next row */
+    gap: 15px;               /* spacing between cards */
+}
+
+/* Each card */
+.eacta_kanban_grid .eacta_class_card {
+    flex: 0 1 250px;         /* card width ~250px, flexible */
+    display: flex;
+    flex-direction: column;
+    border-left: 4px solid;
+    border-radius: 8px;
+    box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+    padding: 10px;
+    background-color: #fff;
+    transition: transform 0.2s ease, box-shadow 0.2s ease;
+}
+
+.eacta_kanban_grid .eacta_class_card:hover {
+    transform: translateY(-2px);
+    box-shadow: 0 4px 8px rgba(0,0,0,0.15);
+}
+
+/* Card color by level */
+.eacta_class_card[data-level="primary"] { border-left-color: #4CAF50; }
+.eacta_class_card[data-level="secondary"] { border-left-color: #2196F3; }
+.eacta_class_card[data-level="higher"] { border-left-color: #9C27B0; }

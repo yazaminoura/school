@@ -1,0 +1,154 @@
+<?xml version="1.0" encoding="utf-8"?>
+<odoo>
+<data>
+    <!-- Vue de formulaire pour les cours -->
+    <record id="view_eacta_course_form" model="ir.ui.view">
+        <field name="name">eacta.course.form</field>
+        <field name="model">eacta.course</field>
+        <field name="arch" type="xml">
+            <form string="Cours">
+                <sheet>
+                    <group>
+                        <field name="image_128" widget="image"/>
+                        <field name="name"/>
+                        <field name="code"/>
+                        <field name="teacher_id" domain="[('is_teacher', '=', True)]"/>
+                        <field name="credits"/>
+                        <field name="duration"/>
+                        <field name="coefficient"/>
+                    </group>
+                    <group>
+                        <field name="grade" readonly="1"/> <!-- Moyenne des notes -->
+                    </group>
+                    <notebook>
+                        <page string="Description">
+                            <field name="description"/>
+                        </page>
+                        <page string="Classes">
+                            <field name="class_ids" widget="many2many_tags"/>
+                        </page>
+                        <page string="Élèves inscrits">
+                            <field name="student_ids"/>
+                        </page>
+                        <page string="Notes des étudiants">
+                            <field name="grade_ids">
+                                <tree editable="bottom">
+                                    <field name="student_id"/>
+                                    <field name="exam_id"/>
+                                    <field name="grade"/>
+                                </tree>
+                            </field>
+                        </page>
+                    </notebook>
+                </sheet>
+            </form>
+        </field>
+    </record>
+
+    <!-- Vue arbre -->
+    <record id="view_eacta_course_tree" model="ir.ui.view">
+        <field name="name">eacta.course.tree</field>
+        <field name="model">eacta.course</field>
+        <field name="arch" type="xml">
+            <tree string="Cours">
+                <field name="name"/>
+                <field name="code"/>
+                <field name="teacher_id" domain="[('is_teacher', '=', True)]"/>
+                <field name="credits"/>
+                <field name="duration"/>
+                <field name="coefficient"/>
+            </tree>
+        </field>
+    </record>
+
+    <!-- Vue de recherche -->
+    <record id="view_eacta_course_search" model="ir.ui.view">
+        <field name="name">eacta.course.search</field>
+        <field name="model">eacta.course</field>
+        <field name="arch" type="xml">
+            <search string="Rechercher des cours">
+                <field name="name"/>
+                <field name="code"/>
+                <field name="teacher_id" domain="[('is_teacher', '=', True)]"/>
+                <group expand="0" string="Group By">
+                    <filter string="Enseignant" name="group_by_teacher" context="{'group_by': 'teacher_id'}"/>
+                    <filter string="Crédits" name="group_by_credits" context="{'group_by': 'credits'}"/>
+                </group>
+            </search>
+        </field>
+    </record>
+
+    <!-- Action pour les cours -->
+    <record id="action_eacta_course" model="ir.actions.act_window">
+        <field name="name">Cours</field>
+        <field name="res_model">eacta.course</field>
+        <field name="view_mode">kanban,tree,form,calendar</field>
+        <field name="context">{}</field>
+        <field name="domain">[]</field>
+        <field name="help" type="html">
+            <p class="o_view_nocontent_smiling_face">Créer le premier cours</p>
+        </field>
+    </record>
+
+    <!-- Vue Kanban -->
+    <record id="view_eacta_course_kanban" model="ir.ui.view">
+        <field name="name">eacta.course.kanban</field>
+        <field name="model">eacta.course</field>
+        <field name="arch" type="xml">
+            <kanban>
+                <field name="id"/>
+                <field name="image_128"/>
+                <field name="name"/>
+                <field name="code"/>
+                <field name="teacher_id" domain="[('is_teacher', '=', True)]"/>
+                <field name="credits"/>
+                <field name="coefficient"/>
+                <templates>
+                    <t t-name="kanban-box">
+                        <div class="oe_kanban_global_click o_kanban_record_has_image_fill o_eacta_course_kanban">
+                            <div class="o_kanban_image_fill_left d-none d-md-block" t-attf-style="background-image: url(#{kanban_image('eacta.course', 'image_128', record.id.raw_value)});"/>
+                            <div class="oe_kanban_details d-flex flex-column">
+                                <div>
+                                    <strong class="o_kanban_record_title"><field name="name"/></strong>
+                                </div>
+                                <div class="text-muted">
+                                    <span>Code: <field name="code"/></span>
+                                </div>
+                                <div class="text-muted">
+                                    <span>Enseignant: <field name="teacher_id"/></span>
+                                </div>
+                                <div class="text-muted mt-auto">
+                                    <span>Crédits: <field name="credits"/></span>
+                                </div>
+                                <div class="text-muted mt-auto">
+                                     <span>Coefficient: <field name="coefficient"/></span>
+                                </div>
+                            </div>
+                        </div>
+                    </t>
+                </templates>
+            </kanban>
+        </field>
+    </record>
+
+    <!-- Vue Calendrier -->
+    <record id="view_eacta_course_calendar" model="ir.ui.view">
+        <field name="name">eacta.course.calendar</field>
+        <field name="model">eacta.course</field>
+        <field name="arch" type="xml">
+            <calendar string="Cours" date_start="start_datetime" date_stop="end_datetime" color="teacher_id">
+                <field name="name"/>
+                <field name="code"/>
+                <field name="teacher_id" domain="[('is_teacher', '=', True)]"/>
+            </calendar>
+        </field>
+    </record>
+
+    <!-- Menu -->
+    <menuitem id="menu_eacta_course"
+              name="Cours"
+              parent="menu_eacta_school_root"
+              action="action_eacta_course"
+              sequence="30"/>
+</data>
+</odoo>

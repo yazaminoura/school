@@ -1,0 +1,18 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<odoo>
+    <record id="group_eacta_library" model="ir.module.category">
+        <field name="name">E-ACTA Library</field>
+        <field name="description">Gestion des utilisateurs pour le module Bibliothèque</field>
+        <field name="sequence">30</field>
+    </record>
+
+    <record id="group_eacta_library_user" model="res.groups">
+        <field name="name">Utilisateur Bibliothèque</field>
+        <field name="category_id" ref="group_eacta_library"/>
+    </record>
+
+    <record id="group_eacta_library_manager" model="res.groups">
+        <field name="name">Manager Bibliothèque</field>
+        <field name="category_id" ref="group_eacta_library"/>
+    </record>
+</odoo>

@@ -1,0 +1,62 @@
+<?xml version="1.0" encoding="utf-8"?>
+<odoo>
+    <data noupdate="1">
+        <!-- Classes for 2023 -->
+        <record id="eacta_school.class_1a_2023" model="eacta.class">
+            <field name="name">Classe 1A</field>
+            <field name="level">primary</field>
+            <field name="capacity">25</field>
+            <field name="year">2023</field>
+        </record>
+
+        <record id="eacta_school.class_1b_2023" model="eacta.class">
+            <field name="name">Classe 1B</field>
+            <field name="level">primary</field>
+            <field name="capacity">25</field>
+            <field name="year">2023</field>
+        </record>
+
+        <record id="eacta_school.class_2a_2023" model="eacta.class">
+            <field name="name">Classe 2A</field>
+            <field name="level">primary</field>
+            <field name="capacity">25</field>
+            <field name="year">2023</field>
+        </record>
+
+        <record id="eacta_school.class_2b_2023" model="eacta.class">
+            <field name="name">Classe 2B</field>
+            <field name="level">primary</field>
+            <field name="capacity">25</field>
+            <field name="year">2023</field>
+        </record>
+
+        <!-- Classes for 2024 -->
+        <record id="eacta_school.class_3a_2024" model="eacta.class">
+            <field name="name">Classe 3A</field>
+            <field name="level">secondary</field>
+            <field name="capacity">20</field>
+            <field name="year">2024</field>
+        </record>
+
+        <record id="eacta_school.class_3b_2024" model="eacta.class">
+            <field name="name">Classe 3B</field>
+            <field name="level">secondary</field>
+            <field name="capacity">20</field>
+            <field name="year">2024</field>
+        </record>
+
+        <record id="eacta_school.class_4a_2024" model="eacta.class">
+            <field name="name">Classe 4A</field>
+            <field name="level">secondary</field>
+            <field name="capacity">20</field>
+            <field name="year">2024</field>
+        </record>
+
+        <record id="eacta_school.class_4b_2024" model="eacta.class">
+            <field name="name">Classe 4B</field>
+            <field name="level">secondary</field>
+            <field name="capacity">20</field>
+            <field name="year">2024</field>
+        </record>
+    </data>
+</odoo>

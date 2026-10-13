@@ -1,0 +1,129 @@
+# English translations for E-ACTA Library Module
+# Copyright (C) 2024 E-ACTA
+# This file is distributed under the same license as the E-ACTA Library module.
+# FIRST AUTHOR <EMAIL@ADDRESS>, 2024.
+#
+msgid ""
+msgstr ""
+"Project-Id-Version: E-ACTA Library 1.0\n"
+"Report-Msgid-Bugs-To: \n"
+"POT-Creation-Date: 2024-01-01 00:00+0000\n"
+"PO-Revision-Date: 2024-01-01 00:00+0000\n"
+"Last-Translator: \n"
+"Language-Team: English \n"
+"Language: en\n"
+"MIME-Version: 1.0\n"
+"Content-Type: text/plain; charset=UTF-8\n"
+"Content-Transfer-Encoding: 8bit\n"
+"Plural-Forms: nplurals=2; plural=(n != 1);\n"
+"X-Generator: Poedit 3.0.1\n"
+
+#. module: eacta_bibliothèque
+#: model:ir.model,name:library_book.model_library_book
+msgid "Library Book"
+msgstr "Library Book"
+
+#. module: eacta_bibliothèque
+#: model:ir.model.fields,field_description:library_book.field_library_book__name
+msgid "Title"
+msgstr "Title"
+
+#. module: eacta_bibliothèque
+#: model:ir.model.fields,field_description:library_book.field_library_book__author
+msgid "Author"
+msgstr "Author"
+
+#. module: eacta_bibliothèque
+#: model:ir.model.fields,field_description:library_book.field_library_book__isbn
+msgid "ISBN"
+msgstr "ISBN"
+
+#. module: eacta_bibliothèque
+#: model:ir.model.fields,field_description:library_book.field_library_book__description
+msgid "Description"
+msgstr "Description"
+
+#. module: eacta_bibliothèque
+#: model:ir.model.fields,field_description:library_book.field_library_book__category_id
+msgid "Category"
+msgstr "Category"
+
+#. module: eacta_bibliothèque
+#: model:ir.model.fields,field_description:library_book.field_library_book__status
+msgid "Status"
+msgstr "Status"
+
+#. module: eacta_bibliothèque
+#: model:ir.model.fields.selection,name:library_book.selection__library_book__status__available
+msgid "Available"
+msgstr "Available"
+
+#. module: eacta_bibliothèque
+#: model:ir.model.fields.selection,name:library_book.selection__library_book__status__on_loan
+msgid "Borrowed"
+msgstr "Borrowed"
+
+#. module: eacta_bibliothèque
+#: model:ir.model.fields,field_description:library_book.field_library_book__total_quantity
+msgid "Total Quantity"
+msgstr "Total Quantity"
+
+#. module: eacta_bibliothèque
+#: model:ir.model.fields,field_description:library_book.field_library_book__available_quantity
+msgid "Available Quantity"
+msgstr "Available Quantity"
+
+#. module: eacta_bibliothèque
+#: model:ir.model.fields,field_description:library_book.field_library_book__is_available
+msgid "Available"
+msgstr "Available"
+
+#. module: eacta_bibliothèque
+#: model:ir.model.fields,field_description:library_book.field_library_book__loan_duration_days
+msgid "Loan Duration (days)"
+msgstr "Loan Duration (days)"
+
+#. module: eacta_bibliothèque
+#: model:ir.model,name:library_book.model_library_book_barcode
+msgid "Library Book Barcode"
+msgstr "Library Book Barcode"
+
+#. module: eacta_bibliothèque
+#: model:ir.model.fields,field_description:library_book.field_library_book_barcode__barcode
+msgid "Barcode"
+msgstr "Barcode"
+
+#. module: eacta_bibliothèque
+#: model:ir.model.fields,field_description:library_book.field_library_book_barcode__manual_barcode
+msgid "Manual Barcode"
+msgstr "Manual Barcode"
+
+#. module: eacta_bibliothèque
+#: model:ir.model.fields,field_description:library_book.field_library_book_barcode__is_available
+msgid "Available"
+msgstr "Available"
+
+#. module: eacta_bibliothèque
+#: model:ir.model,name:library_book.model_library_book_category
+msgid "Library Book Category"
+msgstr "Library Book Category"
+
+#. module: eacta_bibliothèque
+#: model:ir.model.fields,field_description:library_book.field_library_book_category__name
+msgid "Name"
+msgstr "Name"
+
+#. module: eacta_bibliothèque
+#: model:ir.model.fields,field_description:library_book.field_library_book_category__book_count
+msgid "Book Count"
+msgstr "Book Count"
+
+#. module: eacta_bibliothèque
+#: model:ir.model.fields,field_description:library_book.field_library_book_category__available_book_count
+msgid "Available Books"
+msgstr "Available Books"
+
+#. module: eacta_bibliothèque
+#: model:ir.model.fields,field_description:library_book.field_library_book_category__book_names
+msgid "Book Names"
+msgstr "Book Names"

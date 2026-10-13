@@ -1,0 +1,129 @@
+# Arabic translations for E-ACTA Library Module
+# Copyright (C) 2024 E-ACTA
+# This file is distributed under the same license as the E-ACTA Library module.
+# FIRST AUTHOR <EMAIL@ADDRESS>, 2024.
+#
+msgid ""
+msgstr ""
+"Project-Id-Version: E-ACTA Library 1.0\n"
+"Report-Msgid-Bugs-To: \n"
+"POT-Creation-Date: 2024-01-01 00:00+0000\n"
+"PO-Revision-Date: 2024-01-01 00:00+0000\n"
+"Last-Translator: \n"
+"Language-Team: Arabic \n"
+"Language: ar\n"
+"MIME-Version: 1.0\n"
+"Content-Type: text/plain; charset=UTF-8\n"
+"Content-Transfer-Encoding: 8bit\n"
+"Plural-Forms: nplurals=6; plural=n==0 ? 0 : n==1 ? 1 : n==2 ? 2 : n%100>=3 && n%100<=10 ? 3 : n%100>=11 && n%100<=99 ? 4 : 5;\n"
+"X-Generator: Poedit 3.0.1\n"
+
+#. module: eacta_bibliothèque
+#: model:ir.model,name:library_book.model_library_book
+msgid "Library Book"
+msgstr "كتاب المكتبة"
+
+#. module: eacta_bibliothèque
+#: model:ir.model.fields,field_description:library_book.field_library_book__name
+msgid "Title"
+msgstr "العنوان"
+
+#. module: eacta_bibliothèque
+#: model:ir.model.fields,field_description:library_book.field_library_book__author
+msgid "Author"
+msgstr "المؤلف"
+
+#. module: eacta_bibliothèque
+#: model:ir.model.fields,field_description:library_book.field_library_book__isbn
+msgid "ISBN"
+msgstr "الرقم الدولي"
+
+#. module: eacta_bibliothèque
+#: model:ir.model.fields,field_description:library_book.field_library_book__description
+msgid "Description"
+msgstr "الوصف"
+
+#. module: eacta_bibliothèque
+#: model:ir.model.fields,field_description:library_book.field_library_book__category_id
+msgid "Category"
+msgstr "الفئة"
+
+#. module: eacta_bibliothèque
+#: model:ir.model.fields,field_description:library_book.field_library_book__status
+msgid "Status"
+msgstr "الحالة"
+
+#. module: eacta_bibliothèque
+#: model:ir.model.fields.selection,name:library_book.selection__library_book__status__available
+msgid "Available"
+msgstr "متاح"
+
+#. module: eacta_bibliothèque
+#: model:ir.model.fields.selection,name:library_book.selection__library_book__status__on_loan
+msgid "Borrowed"
+msgstr "معار"
+
+#. module: eacta_bibliothèque
+#: model:ir.model.fields,field_description:library_book.field_library_book__total_quantity
+msgid "Total Quantity"
+msgstr "الكمية الإجمالية"
+
+#. module: eacta_bibliothèque
+#: model:ir.model.fields,field_description:library_book.field_library_book__available_quantity
+msgid "Available Quantity"
+msgstr "الكمية المتاحة"
+
+#. module: eacta_bibliothèque
+#: model:ir.model.fields,field_description:library_book.field_library_book__is_available
+msgid "Available"
+msgstr "متاح"
+
+#. module: eacta_bibliothèque
+#: model:ir.model.fields,field_description:library_book.field_library_book__loan_duration_days
+msgid "Loan Duration (days)"
+msgstr "مدة الإعارة (أيام)"
+
+#. module: eacta_bibliothèque
+#: model:ir.model,name:library_book.model_library_book_barcode
+msgid "Library Book Barcode"
+msgstr "الباركود الخاص بالكتاب"
+
+#. module: eacta_bibliothèque
+#: model:ir.model.fields,field_description:library_book.field_library_book_barcode__barcode
+msgid "Barcode"
+msgstr "الباركود"
+
+#. module: eacta_bibliothèque
+#: model:ir.model.fields,field_description:library_book.field_library_book_barcode__manual_barcode
+msgid "Manual Barcode"
+msgstr "الباركود اليدوي"
+
+#. module: eacta_bibliothèque
+#: model:ir.model.fields,field_description:library_book.field_library_book_barcode__is_available
+msgid "Available"
+msgstr "متاح"
+
+#. module: eacta_bibliothèque
+#: model:ir.model,name:library_book.model_library_book_category
+msgid "Library Book Category"
+msgstr "فئة كتاب المكتبة"
+
+#. module: eacta_bibliothèque
+#: model:ir.model.fields,field_description:library_book.field_library_book_category__name
+msgid "Name"
+msgstr "الاسم"
+
+#. module: eacta_bibliothèque
+#: model:ir.model.fields,field_description:library_book.field_library_book_category__book_count
+msgid "Book Count"
+msgstr "عدد الكتب"
+
+#. module: eacta_bibliothèque
+#: model:ir.model.fields,field_description:library_book.field_library_book_category__available_book_count
+msgid "Available Books"
+msgstr "الكتب المتاحة"
+
+#. module: eacta_bibliothèque
+#: model:ir.model.fields,field_description:library_book.field_library_book_category__book_names
+msgid "Book Names"
+msgstr "أسماء الكتب"

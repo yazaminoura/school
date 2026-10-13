@@ -1,0 +1,88 @@
+<?xml version="1.0" encoding="utf-8"?>
+<odoo>
+   <!-- Form view definition for course categories -->
+   <record id="view_eacta_course_category_form" model="ir.ui.view">
+       <field name="name">eacta.course.category.form</field>
+       <field name="model">eacta.course.category</field>
+       <field name="arch" type="xml">
+           <form>
+               <sheet>
+                   <group>
+                       <field name="name"/>
+                       <field name="code"/>
+                       <field name="description"/>
+                   </group>
+               </sheet>
+           </form>
+       </field>
+   </record>
+
+
+   <!-- Tree view definition for course categories -->
+   <record id="view_eacta_course_category_tree" model="ir.ui.view">
+       <field name="name">eacta.course.category.tree</field>
+       <field name="model">eacta.course.category</field>
+       <field name="arch" type="xml">
+           <tree>
+               <field name="name"/>
+               <field name="code"/>
+           </tree>
+       </field>
+   </record>
+
+
+   <!-- Kanban view definition for course categories -->
+   <record id="view_eacta_course_category_kanban" model="ir.ui.view">
+       <field name="name">eacta.course.category.kanban</field>
+       <field name="model">eacta.course.category</field>
+       <field name="arch" type="xml">
+           <kanban>
+               <field name="name"/>
+               <field name="code"/>
+               <templates>
+                   <t t-name="kanban-box">
+                       <div class="oe_kanban_card">
+                           <div class="oe_kanban_details">
+                               <strong><field name="name"/></strong>
+                               <div><field name="code"/></div>
+                           </div>
+                       </div>
+                   </t>
+               </templates>
+           </kanban>
+       </field>
+   </record>
+
+
+   <!-- Calendar view definition for course categories -->
+   <record id="view_eacta_course_category_calendar" model="ir.ui.view">
+       <field name="name">eacta.course.category.calendar</field>
+       <field name="model">eacta.course.category</field>
+       <field name="arch" type="xml">
+           <calendar string="Course Categories"
+                     date_start="create_date">
+               <field name="name"/>
+           </calendar>
+       </field>
+   </record>
+
+
+   <!-- Action definition for course categories -->
+   <record id="action_eacta_course_category" model="ir.actions.act_window">
+       <field name="name">Catégories de cours</field>
+       <field name="res_model">eacta.course.category</field>
+       <field name="view_mode">kanban,tree,form,calendar</field>
+   </record>
+
+
+   <!-- Parent menu item definition if it doesn't already exist -->
+   <menuitem id="menu_eacta_school_config" name="School Configuration" sequence="10"/>
+
+
+   <!-- Course category menu item definition -->
+   <menuitem id="menu_eacta_course_category"
+             name="Catégories de cours"
+             parent="menu_eacta_school_config"
+             action="action_eacta_course_category"
+             sequence="20"/>
+</odoo>

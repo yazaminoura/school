@@ -1,0 +1,311 @@
+<?xml version="1.0" encoding="utf-8"?>
+<odoo>
+<data>
+
+    <!-- 📄 Tree View -->
+    <record id="view_eacta_student_tree" model="ir.ui.view">
+        <field name="name">eacta.student.tree</field>
+        <field name="model">eacta.student</field>
+        <field name="arch" type="xml">
+            <tree string="Élèves">
+                <field name="name"/>
+                <field name="class_ids" widget="many2many_tags"/>
+                <field name="date_of_birth"/>
+                <field name="gender"/>
+                <field name="state"/>
+            </tree>
+        </field>
+    </record>
+
+    <!-- 🔍 Search View -->
+    <record id="view_eacta_student_search" model="ir.ui.view">
+        <field name="name">eacta.student.search</field>
+        <field name="model">eacta.student</field>
+        <field name="arch" type="xml">
+            <search string="Rechercher des élèves">
+                <field name="name"/>
+                <field name="class_ids"/>
+                <field name="gender"/>
+                <field name="state"/>
+                <filter string="Masculin" name="male" domain="[('gender', '=', 'male')]"/>
+                <filter string="Féminin" name="female" domain="[('gender', '=', 'female')]"/>
+                <group expand="0" string="Group By">
+                    <filter string="Classe" name="group_by_class" context="{'group_by': 'class_ids'}"/>
+                    <filter string="Genre" name="group_by_gender" context="{'group_by': 'gender'}"/>
+                    <filter string="État" name="group_by_state" context="{'group_by': 'state'}"/>
+                </group>
+            </search>
+        </field>
+    </record>
+
+    <!-- 🧭 Action -->
+    <record id="action_eacta_student" model="ir.actions.act_window">
+        <field name="name">Élèves</field>
+        <field name="res_model">eacta.student</field>
+        <field name="view_mode">kanban,tree,form,pivot,calendar</field>
+        <field name="search_view_id" ref="view_eacta_student_search"/>
+        <field name="help" type="html">
+            <p class="o_view_nocontent_smiling_face">
+                Créer le premier élève
+            </p>
+        </field>
+    </record>
+
+    <record id="view_eacta_student_kanban" model="ir.ui.view">
+        <field name="name">eacta.student.kanban</field>
+        <field name="model">eacta.student</field>
+        <field name="arch" type="xml">
+            <kanban>
+                <field name="id"/>
+                <field name="name"/>
+                <field name="phone"/>
+                <field name="date_of_birth"/>
+                <field name="image_128"/>
+                <templates>
+                    <t t-name="kanban-box">
+                        <div class="oe_kanban_global_click o_kanban_record_has_image_fill">
+                            <div class="o_kanban_image_fill_left d-none d-md-block" t-attf-style="background-image:url('#{kanban_image('eacta.student', 'image_128', record.id.raw_value)}')">
+                                <img class="o_kanban_image_inner_pic" t-if="record.image_128.raw_value" t-att-src="kanban_image('eacta.student', 'image_128', record.id.raw_value)" alt="Photo de l'élève"/>
+                            </div>
+                            <div class="oe_kanban_details">
+                                <strong class="o_kanban_record_title">
+                                    <field name="name"/>
+                                </strong>
+                                <div>
+                                    <i class="fa fa-phone" role="img" aria-label="Téléphone" title="Téléphone"/> <field name="phone"/>
+                                </div>
+                                <div>
+                                    <i class="fa fa-calendar" role="img" aria-label="Date de naissance" title="Date de naissance"/> <field name="date_of_birth"/>
+                                </div>
+                                <div>
+                                    <field name="class_ids" widget="many2many_tags"/>
+                                </div>
+                            </div>
+                        </div>
+                    </t>
+                </templates>
+            </kanban>
+        </field>
+    </record>
+
+    <record id="view_eacta_student_calendar" model="ir.ui.view">
+        <field name="name">eacta.student.calendar</field>
+        <field name="model">eacta.student</field>
+        <field name="arch" type="xml">
+            <calendar string="Calendrier des élèves" date_start="date_of_birth">
+                <field name="name"/>
+                <field name="class_ids"/>
+            </calendar>
+        </field>
+    </record>
+
+    <!-- Vue Pivot pour l'analyse des étudiants -->
+    <record id="eacta_student_view_pivot" model="ir.ui.view">
+        <field name="name">eacta.student.pivot</field>
+        <field name="model">eacta.student</field>
+        <field name="arch" type="xml">
+            <pivot string="Analyse des Élèves" sample="1">
+                <field name="class_ids" type="row"/>
+                <field name="course_ids" type="row"/>
+                <field name="gender" type="col"/>
+                <field name="state" type="col"/>
+                <field name="is_graduated" type="col"/>
+            </pivot>
+        </field>
+    </record>
+
+    <record id="view_eacta_student_form" model="ir.ui.view">
+        <field name="name">eacta.student.form</field>
+        <field name="model">eacta.student</field>
+        <field name="arch" type="xml">
+            <form string="Élève">
+                <header>
+                    <!-- Simple year selection dropdown -->
+                    <field name="available_years" invisible="1"/>
+
+                    <!-- Simple year selection dropdown -->
+                    <div class="oe_button_box" name="button_box">
+                        <div class="oe_stat_button">
+                            <div class="o_stat_text">
+                                <span>Année: </span>
+                                <field name="selected_year"
+                                       widget="selection"
+                                       options="{'no_create': True, 'no_open': True}"
+                                       context="{'available_years': available_years}"/>
+                            </div>
+                        </div>
+
+                        <button name="action_view_courses"
+                                type="object"
+                                class="oe_stat_button"
+                                icon="fa-book">
+                            <field name="course_count" widget="statinfo" string="Cours"/>
+                        </button>
+
+                        <button name="action_view_borrowed_books"
+                                type="object"
+                                class="oe_stat_button"
+                                icon="fa-book">
+                            <field name="borrowed_book_count" widget="statinfo" string="Livres"/>
+                        </button>
+                    </div>
+
+                    <!-- Existing buttons -->
+                    <button name="action_validate_enrollment"
+                            string="Valider l'inscription"
+                            type="object"
+                            class="oe_highlight"
+                            invisible="state == 'enrolled'"/>
+                    <field name="state" widget="statusbar"/>
+                    <button name="action_draft"
+                            string="Remettre en brouillon"
+                            type="object"
+                            invisible="state == 'draft'"/>
+                    <button name="action_enroll"
+                            string="Inscrire"
+                            type="object"
+                            class="oe_highlight"
+                            invisible="state != 'draft'"/>
+                    <button name="action_graduate"
+                            string="Diplômer"
+                            type="object"
+                            groups="eacta_school.group_eacta_school_manager"
+                            invisible="state == 'graduated' or state == 'draft'"/>
+                    <button name="action_confirm_edit"
+                            string="Confirmer La modification"
+                            type="object"
+                            class="oe_highlight"
+                            groups="eacta_school.group_eacta_school_manager"/>
+                    <button name="action_save"
+                            string="Enregistrer"
+                            type="object"
+                            class="btn-primary"/>
+                </header>
+
+                <!-- Year filter notification - FIXED: Using invisible instead of attrs -->
+                <div class="alert alert-info" invisible="selected_year == False">
+                    <strong>Affichage filtré pour l'année:</strong>
+                    <field name="selected_year"/>
+                    <span invisible="selected_year_class == False">
+                        - Classe: <field name="selected_year_class" widget="many2one"/>
+                    </span>
+                </div>
+
+                <sheet>
+                    <group>
+                        <field name="image_128" widget="image" options="{'size': [128, 128]}"/>
+                        <group>
+                            <field name="name"/>
+                        </group>
+
+                        <group>
+                            <field name="date_of_birth"/>
+                        </group>
+
+                        <group>
+                            <field name="gender"/>
+                        </group>
+
+                        <group>
+                            <field name="phone" widget="phone"/>
+                        </group>
+
+                        <group>
+                            <field name="address"/>
+                        </group>
+
+                        <group>
+                            <field name="selected_year_class" widget="many2one"
+                                   invisible="selected_year == False"
+                                   options="{'color_field': 'year'}"/>
+                            <field name="class_ids" widget="many2many_tags"
+                                   invisible="selected_year != False"
+                                   options="{'color_field': 'year'}"/>
+                        </group>
+
+                        <group>
+                            <field name="gpa"/>
+                        </group>
+
+                        <group>
+                            <field name="is_graduated"/>
+                        </group>
+                    </group>
+
+                    <group>
+                        <field name="average" />
+                    </group>
+
+                    <notebook>
+    <!-- 📘 Cours -->
+    <page string="Cours (Année sélectionnée)">
+    <field name="selected_year_courses" >
+        <tree>
+            <field name="name"/>
+            <field name="teacher_id"/>
+            <field name="credits"/>
+        </tree>
+    </field>
+</page>
+
+
+    <!-- 🏫 Historique des Classes -->
+    <page string="Historique des Classes">
+        <field name="class_ids">
+            <tree editable="bottom">
+                <field name="name"/>
+                <field name="year"/>   <!-- ✅ ici c’est correct car class_ids = eacta.class -->
+                <field name="level"/>
+                <field name="teacher_id"/>
+            </tree>
+        </field>
+    </page>
+
+    <!-- 📝 Notes -->
+<!-- 📝 Notes -->
+<!-- 📝 Notes - Alternative approach -->
+<!-- 📝 Notes - Fixed version -->
+<!-- 📝 Notes - Fixed to show only selected year grades -->
+<page string="Notes (Année sélectionnée)">
+    <div class="alert alert-warning" invisible="selected_year_class">
+        <strong>Avertissement:</strong> Aucune classe trouvée pour l'année sélectionnée.
+    </div>
+
+    <field name="selected_year_grades">
+        <tree editable="bottom">
+            <field name="class_id" options="{'no_open': True, 'no_create': True}"/>
+            <field name="course_id"/>
+            <field name="exam_id"/>
+            <field name="grade"/>
+        </tree>
+        <form>
+            <group>
+                <field name="class_id" options="{'no_open': True, 'no_create': True}"/>
+                <field name="course_id"/>
+                <field name="exam_id"/>
+                <field name="grade"/>
+            </group>
+        </form>
+    </field>
+</page>
+</notebook>
+
+                </sheet>
+
+                <div class="oe_chatter">
+                    <field name="message_follower_ids" widget="mail_followers"/>
+                    <field name="activity_ids" widget="mail_activity"/>
+                    <field name="message_ids" widget="mail_thread"/>
+                </div>
+            </form>
+        </field>
+    </record>
+
+    <!-- 📂 Menu -->
+    <menuitem id="menu_eacta_student"
+              name="Élèves"
+              parent="menu_eacta_school_root"
+              action="action_eacta_student"
+              sequence="20"/>
+</data>
+</odoo>

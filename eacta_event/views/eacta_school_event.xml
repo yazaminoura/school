@@ -1,0 +1,115 @@
+<?xml version="1.0" encoding="utf-8"?>
+<odoo>
+   <!-- Form View -->
+   <record id="view_eacta_school_event_form" model="ir.ui.view">
+       <field name="name">eacta.school.event.form</field>
+       <field name="model">eacta.school.event</field>
+       <field name="arch" type="xml">
+           <form string="Événement Scolaire">
+               <sheet>
+                   <field name="image" widget="image" class="oe_avatar"/>
+                   <div class="oe_title">
+                       <h1>
+                           <field name="name" placeholder="Nom de l'événement"/>
+                       </h1>
+                   </div>
+                   <group>
+                       <group>
+                           <field name="date"/>
+                           <field name="organizer_id"/>
+                       </group>
+                       <group>
+                           <field name="participant_ids" widget="many2many_tags"/>
+                       </group>
+                   </group>
+                   <notebook>
+                       <page string="Description">
+                           <field name="description"/>
+                       </page>
+                   </notebook>
+               </sheet>
+               <div class="oe_chatter">
+                   <field name="message_follower_ids"/>
+                   <field name="activity_ids"/>
+                   <field name="message_ids"/>
+               </div>
+           </form>
+       </field>
+   </record>
+
+
+   <!-- Tree View -->
+   <record id="view_eacta_school_event_tree" model="ir.ui.view">
+       <field name="name">eacta.school.event.tree</field>
+       <field name="model">eacta.school.event</field>
+       <field name="arch" type="xml">
+           <tree string="Événements Scolaires">
+               <field name="name"/>
+               <field name="date"/>
+               <field name="organizer_id"/>
+           </tree>
+       </field>
+   </record>
+
+
+   <!-- Kanban View -->
+   <record id="view_eacta_school_event_kanban" model="ir.ui.view">
+   <field name="name">eacta.school.event.kanban</field>
+   <field name="model">eacta.school.event</field>
+   <field name="arch" type="xml">
+       <kanban>
+           <field name="id"/>
+           <field name="name"/>
+           <field name="date"/>
+           <field name="organizer_id"/>
+           <field name="image" />
+           <templates>
+               <t t-name="kanban-box">
+                   <div class="oe_kanban_global_click o_kanban_record_has_image_fill">
+                       <div class="o_kanban_image_fill_left d-none d-md-block">
+                           <img t-att-src="kanban_image('eacta.school.event', 'image', record.id.raw_value)"
+                                class="o_kanban_image" alt="Event Image"/>
+                       </div>
+                       <div class="oe_kanban_details">
+                           <strong class="o_kanban_record_title">
+                               <field name="name"/>
+                           </strong>
+                           <div class="o_kanban_record_bottom">
+                               <div class="oe_kanban_bottom_left">
+                                   <field name="date"/>
+                               </div>
+                               <div class="oe_kanban_bottom_right">
+                                   <field name="organizer_id" widget="many2one_avatar_user"/>
+                               </div>
+                           </div>
+                       </div>
+                   </div>
+               </t>
+           </templates>
+       </kanban>
+   </field>
+</record>
+
+
+   <!-- Action -->
+   <record id="action_eacta_school_event" model="ir.actions.act_window">
+       <field name="name">Événements Scolaires</field>
+       <field name="res_model">eacta.school.event</field>
+       <field name="view_mode">kanban,tree,form</field>
+   </record>
+
+
+   <!-- Menu Items -->
+   <!-- Assuming you have a parent menu defined elsewhere -->
+   <record id="menu_eacta_school_root" model="ir.ui.menu">
+       <field name="name">E-ACTA Event</field>
+       <field name="sequence">10</field>
+   </record>
+
+
+   <menuitem id="menu_eacta_event"
+             name="Événements Scolaires"
+             parent="menu_eacta_school_root"
+             action="action_eacta_school_event"
+             sequence="60"/>
+</odoo>

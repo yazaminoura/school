@@ -1,0 +1,53 @@
+<?xml version="1.0" encoding="utf-8"?>
+<odoo>
+   <!-- Form examen -->
+   <record id="view_exam_form" model="ir.ui.view">
+       <field name="name">eacta.exam.form</field>
+       <field name="model">eacta.exam</field>
+       <field name="arch" type="xml">
+           <form string="Examen">
+               <sheet>
+                   <group>
+                       <field name="class_ids" string="Classe" required="True"/>
+                       <field name="course_id" string="Matière" required="True"/>
+                       <field name="name" string="Nom de l'Examen"/>
+                       <field name="date" string="Date de l'Examen"/>
+                   </group>
+               </sheet>
+</form>
+       </field>
+   </record>
+   <!-- Actions examen-->
+   <record id="action_eacta_exam" model="ir.actions.act_window">
+       <field name="name">Examen</field>
+       <field name="res_model">eacta.exam</field>
+       <field name="view_mode">tree,form</field>
+   </record>
+
+
+   <!-- Vue de la liste des examens -->
+   <record id="view_eacta_exam_tree" model="ir.ui.view">
+       <field name="name">eacta.exam.tree</field>
+       <field name="model">eacta.exam</field>
+       <field name="arch" type="xml">
+           <tree string="Liste des Examens">
+               <field name="class_ids" widget="many2many_tags" />
+               <field name="course_id"/>
+               <field name="name"/>
+               <field name="date"/>
+           </tree>
+       </field>
+   </record>
+
+
+
+
+   <!-- Menu -->
+   <menuitem id="menu_eacta_exam"
+         name="Examen"
+  parent="menu_eacta_school_root"
+         action="action_eacta_exam"
+         sequence="20"/>
+
+
+</odoo>

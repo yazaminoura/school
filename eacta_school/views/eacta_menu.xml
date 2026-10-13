@@ -1,0 +1,10 @@
+<?xml version="1.0" encoding="utf-8"?>
+<odoo>
+    <data>
+        <menuitem id="menu_eacta_school_root"
+                  name="E-ACTA School"
+                  sequence="50"
+                  web_icon="eacta_school,static/src/img/logoE.png"/>
+        <!-- Sous-menus seront ajoutés ici plus tard -->
+    </data>
+</odoo>

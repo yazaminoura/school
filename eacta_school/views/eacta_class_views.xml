@@ -1,0 +1,156 @@
+<?xml version="1.0" encoding="utf-8"?>
+<odoo>
+<data>
+    <!-- Vue de formulaire pour les classes -->
+    <record id="view_eacta_class_form" model="ir.ui.view">
+        <field name="name">eacta.class.form</field>
+        <field name="model">eacta.class</field>
+        <field name="arch" type="xml">
+            <form string="Classe">
+                <header>
+                    <button name="%(action_eacta_course)d"
+                            string="Voir les cours"
+                            type="action"
+                            class="btn-primary"
+                            context="{'default_class_id': active_id, 'search_default_class_id': active_id}"/>
+                </header>
+                <sheet>
+                    <group>
+                        <field name="name"/>
+                        <field name="year"/>
+                        <field name="level"/>
+                        <field name="teacher_id"/>
+                        <field name="capacity"/>
+                        <field name="start_date"/>
+                        <field name="end_date"/>
+                    </group>
+                    <notebook>
+                        <page string="Élèves">
+                            <field name="student_ids">
+                                <tree>
+                                    <field name="name"/>
+                                    <field name="date_of_birth"/>
+                                    <field name="state"/>
+                                </tree>
+                            </field>
+                        </page>
+                        <page string="Cours">
+                            <field name="course_ids" widget="many2many_tags"/>
+                        </page>
+                    </notebook>
+                </sheet>
+            </form>
+        </field>
+    </record>
+
+    <!-- Vue de liste pour les classes -->
+    <record id="view_eacta_class_tree" model="ir.ui.view">
+        <field name="name">eacta.class.tree</field>
+        <field name="model">eacta.class</field>
+        <field name="arch" type="xml">
+            <tree string="Classes">
+                <field name="name"/>
+                <field name="year"/>
+                <field name="level"/>
+                <field name="teacher_id"/>
+                <field name="capacity"/>
+                <field name="student_ids" widget="many2many_tags" string="Élèves"/>
+            </tree>
+        </field>
+    </record>
+
+    <!-- Vue de recherche pour les classes -->
+    <record id="view_eacta_class_search" model="ir.ui.view">
+        <field name="name">eacta.class.search</field>
+        <field name="model">eacta.class</field>
+        <field name="arch" type="xml">
+            <search string="Rechercher des classes">
+                <field name="name"/>
+                <field name="year"/>
+                <field name="level"/>
+                <field name="teacher_id"/>
+                <filter string="Primaire" name="primary" domain="[('level', '=', 'primary')]"/>
+                <filter string="Secondaire" name="secondary" domain="[('level', '=', 'secondary')]"/>
+                <filter string="Supérieur" name="higher" domain="[('level', '=', 'higher')]"/>
+                <group expand="0" string="Group By">
+                    <filter string="Année" name="group_by_year" context="{'group_by': 'year'}"/>
+                    <filter string="Niveau" name="group_by_level" context="{'group_by': 'level'}"/>
+                    <filter string="Enseignant" name="group_by_teacher" context="{'group_by': 'teacher_id'}"/>
+                </group>
+            </search>
+        </field>
+    </record>
+
+    <!-- Vue Kanban stylisée pour les classes -->
+<record id="view_eacta_class_kanban" model="ir.ui.view">
+    <field name="name">eacta.class.kanban</field>
+    <field name="model">eacta.class</field>
+    <field name="arch" type="xml">
+        <kanban default_group_by="year" class="o_kanban_class o_kanban_inline eacta_kanban_grid">
+            <field name="name"/>
+            <field name="level"/>
+            <field name="teacher_id"/>
+            <field name="student_ids"/>
+            <field name="capacity"/>
+            <field name="year"/>
+
+            <templates>
+                <t t-name="kanban-box">
+                    <div class="oe_kanban_global_click o_kanban_card eacta_class_card"
+                         t-att-data-level="record.level.raw_value">
+                        <div class="o_kanban_header">
+                            <strong><field name="name"/></strong>
+                            <span class="o_badge o_badge_primary">
+                                <field name="year"/>
+                            </span>
+                        </div>
+                        <div class="o_kanban_body">
+                            <div><b>Niveau:</b> <field name="level"/></div>
+                            <div><b>Enseignant:</b> <field name="teacher_id"/></div>
+                            <div><b>Capacité:</b> <field name="capacity"/></div>
+                        </div>
+                        <div class="o_kanban_footer">
+                            <span class="o_badge o_badge_info">
+                                Élèves: <t t-esc="record.student_ids.raw_value.length"/>
+                            </span>
+                        </div>
+                    </div>
+                </t>
+            </templates>
+        </kanban>
+    </field>
+</record>
+
+    <record id="view_eacta_class_calendar" model="ir.ui.view">
+        <field name="name">eacta.class.calendar</field>
+        <field name="model">eacta.class</field>
+        <field name="arch" type="xml">
+            <calendar string="Classes" date_start="start_date" date_stop="end_date" color="level">
+                <field name="name"/>
+                <field name="teacher_id"/>
+                <field name="student_ids" widget="many2many_tags"/>
+            </calendar>
+        </field>
+    </record>
+
+    <record id="action_eacta_class" model="ir.actions.act_window">
+        <field name="name">Classes</field>
+        <field name="res_model">eacta.class</field>
+        <field name="view_mode">kanban,calendar,tree,form</field>
+        <field name="search_view_id" ref="view_eacta_class_search"/>
+        <field name="context">{'search_default_group_by_year': 1}</field>
+        <field name="help" type="html">
+            <p class="o_view_nocontent_smiling_face">
+                Créer la première classe
+            </p>
+        </field>
+    </record>
+
+    <!-- Menu item pour les classes -->
+    <menuitem id="menu_eacta_class"
+              name="Classes"
+              parent="menu_eacta_school_root"
+              action="action_eacta_class"
+              sequence="10"/>
+</data>
+</odoo>

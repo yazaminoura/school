@@ -1,0 +1,85 @@
+<?xml version="1.0" encoding="utf-8"?>
+<odoo>
+   <!-- Form view definition for school levels -->
+   <record id="view_eacta_school_level_form" model="ir.ui.view">
+       <field name="name">eacta.school.level.form</field>
+       <field name="model">eacta.school.level</field>
+       <field name="arch" type="xml">
+           <form>
+               <sheet>
+                   <group>
+                       <field name="name"/>
+                       <field name="code"/>
+                       <field name="sequence"/>
+                   </group>
+               </sheet>
+           </form>
+       </field>
+   </record>
+
+
+   <!-- Tree view definition for school levels -->
+   <record id="view_eacta_school_level_tree" model="ir.ui.view">
+       <field name="name">eacta.school.level.tree</field>
+       <field name="model">eacta.school.level</field>
+       <field name="arch" type="xml">
+           <tree>
+               <field name="sequence" widget="handle"/>
+               <field name="name"/>
+               <field name="code"/>
+           </tree>
+       </field>
+   </record>
+
+
+   <!-- Kanban view definition for school levels -->
+   <record id="view_eacta_school_level_kanban" model="ir.ui.view">
+       <field name="name">eacta.school.level.kanban</field>
+       <field name="model">eacta.school.level</field>
+       <field name="arch" type="xml">
+           <kanban>
+               <field name="name"/>
+               <field name="code"/>
+               <templates>
+                   <t t-name="kanban-box">
+                       <div class="oe_kanban_card">
+                           <div class="oe_kanban_details">
+                               <strong><field name="name"/></strong>
+                               <div><field name="code"/></div>
+                           </div>
+                       </div>
+                   </t>
+               </templates>
+           </kanban>
+       </field>
+   </record>
+
+
+   <!-- Calendar view definition for school levels -->
+   <record id="view_eacta_school_level_calendar" model="ir.ui.view">
+       <field name="name">eacta.school.level.calendar</field>
+       <field name="model">eacta.school.level</field>
+       <field name="arch" type="xml">
+           <calendar string="School Levels"
+                     date_start="create_date">
+               <field name="name"/>
+           </calendar>
+       </field>
+   </record>
+
+
+   <!-- Action definition for school levels -->
+   <record id="action_eacta_school_level" model="ir.actions.act_window">
+       <field name="name">Niveaux scolaires</field>
+       <field name="res_model">eacta.school.level</field>
+       <field name="view_mode">kanban,tree,form,calendar</field>
+   </record>
+
+
+   <!-- Menu item definition for school levels -->
+   <menuitem id="menu_eacta_school_level"
+             name="Niveaux scolaires"
+             parent="menu_eacta_school_config"
+             action="action_eacta_school_level"
+             sequence="10"/>
+</odoo>

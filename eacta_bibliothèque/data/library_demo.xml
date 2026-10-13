@@ -1,0 +1,329 @@
+<?xml version="1.0" encoding="utf-8"?>
+<odoo>
+    <data noupdate="1">
+
+        <!-- Book Categories -->
+        <record id="category_fiction" model="library.book.category">
+            <field name="name">Fiction</field>
+        </record>
+        <record id="category_non_fiction" model="library.book.category">
+            <field name="name">Non-Fiction</field>
+        </record>
+        <record id="category_science" model="library.book.category">
+            <field name="name">Science</field>
+        </record>
+        <record id="category_history" model="library.book.category">
+            <field name="name">History</field>
+        </record>
+        <record id="category_art" model="library.book.category">
+            <field name="name">Art</field>
+        </record>
+
+        <!-- Fake Books with Barcodes -->
+        <record id="book_001" model="library.book">
+            <field name="name">The Great Gatsby</field>
+            <field name="author">F. Scott Fitzgerald</field>
+            <field name="isbn">9780743273565</field>
+            <field name="description">A classic novel about the American Dream.</field>
+            <field name="category_id" ref="category_fiction"/>
+            <field name="status">available</field>
+            <field name="total_quantity">5</field>
+            <field name="loan_duration_days">14</field>
+            <field name="image">https://covers.openlibrary.org/b/isbn/9780743273565-L.jpg</field>
+            <field name="barcode_ids" eval="[(0, 0, {'barcode': '9780743273565-001'}),
+                                             (0, 0, {'barcode': '9780743273565-002'}),
+                                             (0, 0, {'barcode': '9780743273565-003'}),
+                                             (0, 0, {'barcode': '9780743273565-004'}),
+                                             (0, 0, {'barcode': '9780743273565-005'})]"/>
+        </record>
+
+        <record id="book_002" model="library.book">
+            <field name="name">To Kill a Mockingbird</field>
+            <field name="author">Harper Lee</field>
+            <field name="isbn">9780446310789</field>
+            <field name="description">A novel about racism and innocence in the American South.</field>
+            <field name="category_id" ref="category_fiction"/>
+            <field name="status">available</field>
+            <field name="total_quantity">3</field>
+            <field name="loan_duration_days">14</field>
+            <field name="image">https://covers.openlibrary.org/b/isbn/9780446310789-L.jpg</field>
+            <field name="barcode_ids" eval="[(0, 0, {'barcode': '9780446310789-001'}),
+                                             (0, 0, {'barcode': '9780446310789-002'}),
+                                             (0, 0, {'barcode': '9780446310789-003'})]"/>
+        </record>
+
+        <record id="book_003" model="library.book">
+            <field name="name">1984</field>
+            <field name="author">George Orwell</field>
+            <field name="isbn">9780451524935</field>
+            <field name="description">A dystopian novel about totalitarianism.</field>
+            <field name="category_id" ref="category_fiction"/>
+            <field name="status">available</field>
+            <field name="total_quantity">4</field>
+            <field name="loan_duration_days">14</field>
+            <field name="image">https://covers.openlibrary.org/b/isbn/9780451524935-L.jpg</field>
+            <field name="barcode_ids" eval="[(0, 0, {'barcode': '9780451524935-001'}),
+                                             (0, 0, {'barcode': '9780451524935-002'}),
+                                             (0, 0, {'barcode': '9780451524935-003'}),
+                                             (0, 0, {'barcode': '9780451524935-004'})]"/>
+        </record>
+
+        <record id="book_004" model="library.book">
+            <field name="name">Pride and Prejudice</field>
+            <field name="author">Jane Austen</field>
+            <field name="isbn">9780141439518</field>
+            <field name="description">A romantic novel of manners.</field>
+            <field name="category_id" ref="category_fiction"/>
+            <field name="status">available</field>
+            <field name="total_quantity">3</field>
+            <field name="loan_duration_days">14</field>
+            <field name="image">https://covers.openlibrary.org/b/isbn/9780141439518-L.jpg</field>
+            <field name="barcode_ids" eval="[(0, 0, {'barcode': '9780141439518-001'}),
+                                             (0, 0, {'barcode': '9780141439518-002'}),
+                                             (0, 0, {'barcode': '9780141439518-003'})]"/>
+        </record>
+
+        <record id="book_005" model="library.book">
+            <field name="name">Sapiens: A Brief History of Humankind</field>
+            <field name="author">Yuval Noah Harari</field>
+            <field name="isbn">9780062316097</field>
+            <field name="description">A book exploring the history of our species.</field>
+            <field name="category_id" ref="category_non_fiction"/>
+            <field name="status">available</field>
+            <field name="total_quantity">2</field>
+            <field name="loan_duration_days">21</field>
+            <field name="image">https://covers.openlibrary.org/b/isbn/9780062316097-L.jpg</field>
+            <field name="barcode_ids" eval="[(0, 0, {'barcode': '9780062316097-001'}),
+                                             (0, 0, {'barcode': '9780062316097-002'})]"/>
+        </record>
+
+        <!-- Add barcode_ids for remaining books (book_006 to book_010) -->
+        <record id="book_006" model="library.book">
+            <field name="name">Educated</field>
+            <field name="author">Tara Westover</field>
+            <field name="isbn">9780399590504</field>
+            <field name="description">A memoir about a woman's quest for knowledge.</field>
+            <field name="category_id" ref="category_non_fiction"/>
+            <field name="status">available</field>
+            <field name="total_quantity">3</field>
+            <field name="loan_duration_days">21</field>
+            <field name="image">https://covers.openlibrary.org/b/isbn/9780399590504-L.jpg</field>
+            <field name="barcode_ids" eval="[(0, 0, {'barcode': '9780399590504-001'}),
+                                             (0, 0, {'barcode': '9780399590504-002'}),
+                                             (0, 0, {'barcode': '9780399590504-003'})]"/>
+        </record>
+
+        <record id="book_007" model="library.book">
+            <field name="name">The Origin of Species</field>
+            <field name="author">Charles Darwin</field>
+            <field name="isbn">9780553214635</field>
+            <field name="description">The foundational work of evolutionary biology.</field>
+            <field name="category_id" ref="category_science"/>
+            <field name="status">available</field>
+            <field name="total_quantity">2</field>
+            <field name="loan_duration_days">21</field>
+            <field name="image">https://covers.openlibrary.org/b/isbn/9780553214635-L.jpg</field>
+            <field name="barcode_ids" eval="[(0, 0, {'barcode': '9780553214635-001'}),
+                                             (0, 0, {'barcode': '9780553214635-002'})]"/>
+        </record>
+
+        <record id="book_008" model="library.book">
+            <field name="name">A Brief History of Time</field>
+            <field name="author">Stephen Hawking</field>
+            <field name="isbn">9780553380163</field>
+            <field name="description">From the Big Bang to Black Holes.</field>
+            <field name="category_id" ref="category_science"/>
+            <field name="status">available</field>
+            <field name="total_quantity">4</field>
+            <field name="loan_duration_days">21</field>
+            <field name="image">https://covers.openlibrary.org/b/isbn/9780553380163-L.jpg</field>
+            <field name="barcode_ids" eval="[(0, 0, {'barcode': '9780553380163-001'}),
+                                             (0, 0, {'barcode': '9780553380163-002'}),
+                                             (0, 0, {'barcode': '9780553380163-003'}),
+                                             (0, 0, {'barcode': '9780553380163-004'})]"/>
+        </record>
+
+        <record id="book_009" model="library.book">
+            <field name="name">The History of the World</field>
+            <field name="author">J.M. Roberts</field>
+            <field name="isbn">9780199936762</field>
+            <field name="description">A comprehensive history from prehistoric times to the present.</field>
+            <field name="category_id" ref="category_history"/>
+            <field name="status">available</field>
+            <field name="total_quantity">2</field>
+            <field name="loan_duration_days">21</field>
+            <field name="image">https://covers.openlibrary.org/b/isbn/9780199936762-L.jpg</field>
+            <field name="barcode_ids" eval="[(0, 0, {'barcode': '9780199936762-001'}),
+                                             (0, 0, {'barcode': '9780199936762-002'})]"/>
+        </record>
+
+
+        <record id="book_010" model="library.book">
+            <field name="name">Guns, Germs, and Steel</field>
+            <field name="author">Jared Diamond</field>
+            <field name="isbn">9780393317558</field>
+            <field name="description">The fates of human societies.</field>
+            <field name="category_id" ref="category_history"/>
+            <field name="status">available</field>
+            <field name="total_quantity">3</field>
+            <field name="loan_duration_days">21</field>
+            <field name="image">https://covers.openlibrary.org/b/isbn/9780393317558-L.jpg</field>
+            <field name="barcode_ids" eval="[(0, 0, {'barcode': '9780393317558-001'}),
+                                             (0, 0, {'barcode': '9780393317558-002'}),
+                                             (0, 0, {'barcode': '9780393317558-003'})]"/>
+        </record>
+                <!-- Additional Fake Books -->
+        <record id="book_011" model="library.book">
+            <field name="name">The Art of War</field>
+            <field name="author">Sun Tzu</field>
+            <field name="isbn">9781590302255</field>
+            <field name="description">Ancient Chinese military strategy treatise.</field>
+            <field name="category_id" ref="category_art"/>
+            <field name="status">available</field>
+            <field name="total_quantity">3</field>
+            <field name="loan_duration_days">14</field>
+            <field name="image">https://covers.openlibrary.org/b/isbn/9781590302255-L.jpg</field>
+            <field name="barcode_ids" eval="[(0, 0, {'barcode': '9781590302255-001'}),
+                                             (0, 0, {'barcode': '9781590302255-002'}),
+                                             (0, 0, {'barcode': '9781590302255-003'})]"/>
+        </record>
+
+        <record id="book_012" model="library.book">
+            <field name="name">The Da Vinci Code</field>
+            <field name="author">Dan Brown</field>
+            <field name="isbn">9780307474278</field>
+            <field name="description">A mystery thriller exploring art, religion, and secret societies.</field>
+            <field name="category_id" ref="category_fiction"/>
+            <field name="status">available</field>
+            <field name="total_quantity">5</field>
+            <field name="loan_duration_days">14</field>
+            <field name="image">https://covers.openlibrary.org/b/isbn/9780307474278-L.jpg</field>
+            <field name="barcode_ids" eval="[(0, 0, {'barcode': '9780307474278-001'}),
+                                             (0, 0, {'barcode': '9780307474278-002'}),
+                                             (0, 0, {'barcode': '9780307474278-003'}),
+                                             (0, 0, {'barcode': '9780307474278-004'}),
+                                             (0, 0, {'barcode': '9780307474278-005'})]"/>
+        </record>
+
+        <record id="book_013" model="library.book">
+            <field name="name">The Catcher in the Rye</field>
+            <field name="author">J.D. Salinger</field>
+            <field name="isbn">9780316769488</field>
+            <field name="description">A story about teenage angst and alienation.</field>
+            <field name="category_id" ref="category_fiction"/>
+            <field name="status">available</field>
+            <field name="total_quantity">4</field>
+            <field name="loan_duration_days">14</field>
+            <field name="image">https://covers.openlibrary.org/b/isbn/9780316769488-L.jpg</field>
+            <field name="barcode_ids" eval="[(0, 0, {'barcode': '9780316769488-001'}),
+                                             (0, 0, {'barcode': '9780316769488-002'}),
+                                             (0, 0, {'barcode': '9780316769488-003'}),
+                                             (0, 0, {'barcode': '9780316769488-004'})]"/>
+        </record>
+
+        <record id="book_014" model="library.book">
+            <field name="name">The Selfish Gene</field>
+            <field name="author">Richard Dawkins</field>
+            <field name="isbn">9780198788607</field>
+            <field name="description">An influential book on evolutionary biology.</field>
+            <field name="category_id" ref="category_science"/>
+            <field name="status">available</field>
+            <field name="total_quantity">2</field>
+            <field name="loan_duration_days">21</field>
+            <field name="image">https://covers.openlibrary.org/b/isbn/9780198788607-L.jpg</field>
+            <field name="barcode_ids" eval="[(0, 0, {'barcode': '9780198788607-001'}),
+                                             (0, 0, {'barcode': '9780198788607-002'})]"/>
+        </record>
+
+        <record id="book_015" model="library.book">
+            <field name="name">Leonardo da Vinci</field>
+            <field name="author">Walter Isaacson</field>
+            <field name="isbn">9781501139154</field>
+            <field name="description">Biography of the Renaissance genius.</field>
+            <field name="category_id" ref="category_art"/>
+            <field name="status">available</field>
+            <field name="total_quantity">3</field>
+            <field name="loan_duration_days">21</field>
+            <field name="image">https://covers.openlibrary.org/b/isbn/9781501139154-L.jpg</field>
+            <field name="barcode_ids" eval="[(0, 0, {'barcode': '9781501139154-001'}),
+                                             (0, 0, {'barcode': '9781501139154-002'}),
+                                             (0, 0, {'barcode': '9781501139154-003'})]"/>
+        </record>
+
+        <record id="book_016" model="library.book">
+            <field name="name">Thinking, Fast and Slow</field>
+            <field name="author">Daniel Kahneman</field>
+            <field name="isbn">9780374533557</field>
+            <field name="description">Exploring human decision-making and cognitive biases.</field>
+            <field name="category_id" ref="category_non_fiction"/>
+            <field name="status">available</field>
+            <field name="total_quantity">4</field>
+            <field name="loan_duration_days">21</field>
+            <field name="image">https://covers.openlibrary.org/b/isbn/9780374533557-L.jpg</field>
+            <field name="barcode_ids" eval="[(0, 0, {'barcode': '9780374533557-001'}),
+                                             (0, 0, {'barcode': '9780374533557-002'}),
+                                             (0, 0, {'barcode': '9780374533557-003'}),
+                                             (0, 0, {'barcode': '9780374533557-004'})]"/>
+        </record>
+
+        <record id="book_017" model="library.book">
+            <field name="name">The Wright Brothers</field>
+            <field name="author">David McCullough</field>
+            <field name="isbn">9781476728759</field>
+            <field name="description">The story of the pioneers of aviation.</field>
+            <field name="category_id" ref="category_history"/>
+            <field name="status">available</field>
+            <field name="total_quantity">2</field>
+            <field name="loan_duration_days">21</field>
+            <field name="image">https://covers.openlibrary.org/b/isbn/9781476728759-L.jpg</field>
+            <field name="barcode_ids" eval="[(0, 0, {'barcode': '9781476728759-001'}),
+                                             (0, 0, {'barcode': '9781476728759-002'})]"/>
+        </record>
+
+        <record id="book_018" model="library.book">
+            <field name="name">The Elements of Style</field>
+            <field name="author">William Strunk Jr. &amp; E.B. White</field>
+            <field name="isbn">9780205309023</field>
+            <field name="description">A classic guide to English writing style.</field>
+            <field name="category_id" ref="category_non_fiction"/>
+            <field name="status">available</field>
+            <field name="total_quantity">3</field>
+            <field name="loan_duration_days">14</field>
+            <field name="image">https://covers.openlibrary.org/b/isbn/9780205309023-L.jpg</field>
+            <field name="barcode_ids" eval="[(0, 0, {'barcode': '9780205309023-001'}),
+                                             (0, 0, {'barcode': '9780205309023-002'}),
+                                             (0, 0, {'barcode': '9780205309023-003'})]"/>
+        </record>
+
+        <record id="book_019" model="library.book">
+            <field name="name">Mona Lisa: The Biography</field>
+            <field name="author">Donald Sassoon</field>
+            <field name="isbn">9780300206344</field>
+            <field name="description">The story behind Leonardo da Vinci's masterpiece.</field>
+            <field name="category_id" ref="category_art"/>
+            <field name="status">available</field>
+            <field name="total_quantity">2</field>
+            <field name="loan_duration_days">21</field>
+            <field name="image">https://covers.openlibrary.org/b/isbn/9780300206344-L.jpg</field>
+            <field name="barcode_ids" eval="[(0, 0, {'barcode': '9780300206344-001'}),
+                                             (0, 0, {'barcode': '9780300206344-002'})]"/>
+        </record>
+
+        <record id="book_020" model="library.book">
+            <field name="name">The History of Art</field>
+            <field name="author">H.W. Janson</field>
+            <field name="isbn">9780131828954</field>
+            <field name="description">A comprehensive overview of art history.</field>
+            <field name="category_id" ref="category_art"/>
+            <field name="status">available</field>
+            <field name="total_quantity">3</field>
+            <field name="loan_duration_days">21</field>
+            <field name="image">https://covers.openlibrary.org/b/isbn/9780131828954-L.jpg</field>
+            <field name="barcode_ids" eval="[(0, 0, {'barcode': '9780131828954-001'}),
+                                             (0, 0, {'barcode': '9780131828954-002'}),
+                                             (0, 0, {'barcode': '9780131828954-003'})]"/>
+        </record>
+
+
+    </data>
+</odoo>

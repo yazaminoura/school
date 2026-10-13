@@ -1,0 +1,97 @@
+<?xml version="1.0" encoding="utf-8"?>
+<odoo>
+
+   <data noupdate="1">
+
+       <!-- Niveaux scolaires -->
+
+       <record id="school_level_primary" model="eacta.school.level">
+
+           <field name="name">Primaire</field>
+
+           <field name="code">PRI</field>
+
+           <field name="sequence">10</field>
+
+       </record>
+
+       <record id="school_level_secondary" model="eacta.school.level">
+
+           <field name="name">Secondaire</field>
+
+           <field name="code">SEC</field>
+
+           <field name="sequence">20</field>
+
+       </record>
+
+       <record id="school_level_super" model="eacta.school.level">
+
+           <field name="name">Superieur</field>
+
+           <field name="code">SP</field>
+
+           <field name="sequence">30</field>
+
+       </record>
+
+
+
+       <!-- Catégories de cours -->
+
+       <record id="course_category_science" model="eacta.course.category">
+
+           <field name="name">Sciences</field>
+
+           <field name="code">SCI</field>
+
+       </record>
+
+       <record id="course_category_francais" model="eacta.course.category">
+
+           <field name="name">Francais</field>
+
+           <field name="code">FR</field>
+
+       </record>
+
+       <record id="course_category_literature" model="eacta.course.category">
+
+           <field name="name">Math</field>
+
+           <field name="code">MA</field>
+
+       </record>
+
+
+
+       <!-- Séquence pour le code des élèves -->
+
+       <record id="seq_eacta_student_code" model="ir.sequence">
+
+           <field name="name">Séquence Code Élève</field>
+
+           <field name="code">eacta.student.code</field>
+
+           <field name="prefix">STU</field>
+
+           <field name="padding">5</field>
+
+       </record>
+
+
+
+       <!-- Paramètres système -->
+
+       <record id="param_max_students_per_class" model="ir.config_parameter">
+
+           <field name="key">eacta_school.max_students_per_class</field>
+
+           <field name="value">30</field>
+
+       </record>
+
+   </data>
+
+</odoo>
+

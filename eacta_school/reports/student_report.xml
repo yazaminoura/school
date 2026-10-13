@@ -1,0 +1,134 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<odoo>
+
+  <!-- Rapport Bulletin Scolaire -->
+  <template id="report_student_card">
+    <t t-call="web.html_container">
+      <t t-foreach="docs" t-as="o">
+        <t t-set="company" t-value="o.company_id or env.user.company_id"/>
+        <t t-call="web.external_layout_standard">
+          <t t-call="eacta_school.eacta_school_report_assets"/>
+
+          <div class="page">
+            <div class="eacta_school_header">
+              <h2>Bulletin Scolaire</h2>
+            </div>
+
+            <div class="row mt32 mb32">
+              <div class="col-6">
+                <strong>Nom de l'élève:</strong> <span t-field="o.name"/>
+                <br/>
+                <strong>Classe:</strong> <span t-field="o.class_id.name"/>
+              </div>
+              <div class="col-6">
+                <strong>Date de naissance:</strong> <span t-field="o.date_of_birth"/>
+              </div>
+            </div>
+
+            <table class="table table-sm">
+              <thead>
+                <tr>
+                  <th>Cours</th>
+                  <th>Note</th>
+                  <th>Commentaire</th>
+                </tr>
+              </thead>
+              <tbody>
+                <t t-foreach="o.course_ids" t-as="course">
+                  <tr>
+                    <td><span t-field="course.name"/></td>
+                    <td>
+                      <span t-field="course.grade" t-if="course.grade"/>
+                      <span t-if="not course.grade">N/A</span>
+                    </td>
+                    <td><span t-field="course.comment"/></td>
+                  </tr>
+                </t>
+              </tbody>
+            </table>
+
+            <div class="eacta_school_footer">
+              <p>© 2024 E-ACTA School. Tous droits réservés.</p>
+            </div>
+          </div>
+
+        </t>
+      </t>
+    </t>
+  </template>
+
+  <record id="action_report_student_card" model="ir.actions.report">
+    <field name="name">Bulletin Scolaire</field>
+    <field name="model">eacta.student</field>
+    <field name="report_type">qweb-pdf</field>
+    <field name="report_name">eacta_school.report_student_card</field>
+    <field name="report_file">eacta_school.report_student_card</field>
+    <field name="binding_model_id" ref="model_eacta_student"/>
+    <field name="binding_type">report</field>
+  </record>
+
+  <!-- Rapport Analyse des résultats -->
+  <template id="report_student_results">
+    <t t-call="web.html_container">
+      <t t-foreach="docs" t-as="student">
+        <t t-set="company" t-value="student.company_id or env.user.company_id"/>
+        <t t-call="web.external_layout">
+          <t t-call="eacta_school.eacta_school_report_assets"/>
+
+          <div class="page">
+            <div class="eacta_school_header">
+              <h2>Analyse des résultats de l'élève</h2>
+            </div>
+
+            <div class="row mt32 mb32">
+              <div class="col-6">
+                <strong>Nom:</strong> <span t-field="student.name"/>
+                <br/>
+                <strong>Classe:</strong> <span t-field="student.class_id.name"/>
+              </div>
+              <div class="col-6">
+                <strong>Moyenne générale:</strong> <span t-esc="get_average_grade(student)"/>
+              </div>
+            </div>
+
+            <table class="table table-sm" style="width: 100%; border-collapse: collapse;">
+              <thead>
+                <tr style="background-color: #f5f5f5;">
+                  <th style="padding: 8px; border: 1px solid #ddd;">Cours</th>
+                  <th style="padding: 8px; border: 1px solid #ddd;">Note</th>
+                </tr>
+              </thead>
+              <tbody>
+                <t t-foreach="student.course_ids" t-as="course">
+                  <tr>
+                    <td style="padding: 8px; border: 1px solid #ddd;"><span t-field="course.name"/></td>
+                    <td style="padding: 8px; border: 1px solid #ddd;">
+                      <span t-field="course.grade" t-if="course.grade"/>
+                      <span t-if="not course.grade">N/A</span>
+                    </td>
+                  </tr>
+                </t>
+              </tbody>
+            </table>
+
+            <div class="eacta_school_footer">
+              <p>© 2024 E-ACTA School. Tous droits réservés.</p>
+            </div>
+          </div>
+
+        </t>
+      </t>
+    </t>
+  </template>
+
+  <record id="action_report_student_results" model="ir.actions.report">
+    <field name="name">Analyse des résultats</field>
+    <field name="model">eacta.student</field>
+    <field name="report_type">qweb-pdf</field>
+    <field name="report_name">eacta_school.report_student_results</field>
+    <field name="report_file">eacta_school.report_student_results</field>
+    <field name="binding_model_id" ref="model_eacta_student"/>
+    <field name="binding_type">report</field>
+  </record>
+
+</odoo>
