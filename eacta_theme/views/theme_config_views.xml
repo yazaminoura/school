@@ -1,0 +1,99 @@
+<?xml version="1.0" encoding="utf-8"?>
+<odoo>
+    <!-- Vue Liste pour la Configuration du Thème -->
+    <record id="view_eacta_theme_config_list" model="ir.ui.view">
+        <field name="name">eacta.theme.config.list</field>
+        <field name="model">eacta.theme.config</field>
+        <field name="arch" type="xml">
+            <list string="Styles &amp; Thèmes E-ACTA">
+                <field name="name"/>
+                <field name="color_scheme"/>
+                <field name="primary_color" widget="color"/>
+                <field name="secondary_color" widget="color"/>
+                <field name="card_style"/>
+                <field name="badge_style"/>
+                <field name="active" widget="boolean_toggle"/>
+            </list>
+        </field>
+    </record>
+
+    <!-- Vue Formulaire pour la Configuration du Thème -->
+    <record id="view_eacta_theme_config_form" model="ir.ui.view">
+        <field name="name">eacta.theme.config.form</field>
+        <field name="model">eacta.theme.config</field>
+        <field name="arch" type="xml">
+            <form string="Configuration du Thème E-ACTA">
+                <header>
+                    <button name="action_set_active"
+                            string="Activer ce style"
+                            type="object"
+                            class="btn-primary"
+                            invisible="active == True"/>
+                    <button name="action_reset_defaults"
+                            string="Réinitialiser par défaut"
+                            type="object"
+                            class="btn-secondary"/>
+                </header>
+                <sheet>
+                    <div class="oe_title">
+                        <label for="name" string="Nom du Style"/>
+                        <h1>
+                            <field name="name" placeholder="Ex: E-ACTA Prestige"/>
+                        </h1>
+                    </div>
+
+                    <group>
+                        <group string="Palette de Couleurs">
+                            <field name="color_scheme" widget="radio"/>
+                            <field name="primary_color" widget="color"/>
+                            <field name="secondary_color" widget="color"/>
+                            <field name="accent_color" widget="color"/>
+                        </group>
+                        <group string="Apparence des Composants">
+                            <field name="card_style"/>
+                            <field name="card_radius"/>
+                            <field name="badge_style"/>
+                            <field name="active" widget="boolean_toggle"/>
+                        </group>
+                    </group>
+
+                    <group string="Options d'Affichage Visuel">
+                        <group>
+                            <field name="show_gpa_badges"/>
+                            <field name="show_capacity_bar"/>
+                        </group>
+                        <group>
+                            <field name="show_avatar_glow"/>
+                            <field name="school_header_banner"/>
+                        </group>
+                    </group>
+
+                    <notebook>
+                        <page string="CSS Personnalisé" name="custom_css_page">
+                            <field name="custom_css" placeholder="/* Ajoutez des règles CSS ou SCSS personnalisées ici */"/>
+                        </page>
+                    </notebook>
+                </sheet>
+            </form>
+        </field>
+    </record>
+
+    <!-- Action pour la Configuration du Thème -->
+    <record id="action_eacta_theme_config" model="ir.actions.act_window">
+        <field name="name">Thème &amp; Styles E-ACTA</field>
+        <field name="res_model">eacta.theme.config</field>
+        <field name="view_mode">list,form</field>
+        <field name="help" type="html">
+            <p class="o_view_nocontent_smiling_face">
+                Personnalisez le design et l'apparence de vos modules scolaires !
+            </p>
+        </field>
+    </record>
+
+    <!-- Menu Item sous Configuration -->
+    <menuitem id="menu_eacta_theme_config"
+              name="Thème &amp; Style Visuel"
+              parent="eacta_school.menu_eacta_school_config"
+              action="action_eacta_theme_config"
+              sequence="5"/>
+</odoo>

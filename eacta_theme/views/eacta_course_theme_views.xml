@@ -1,0 +1,67 @@
+<?xml version="1.0" encoding="utf-8"?>
+<odoo>
+    <!-- Amélioration visuelle de la vue Kanban des cours -->
+    <record id="view_eacta_course_kanban_theme" model="ir.ui.view">
+        <field name="name">eacta.course.kanban.theme</field>
+        <field name="model">eacta.course</field>
+        <field name="inherit_id" ref="eacta_school.view_eacta_course_kanban"/>
+        <field name="arch" type="xml">
+            <xpath expr="//field[@name='coefficient']" position="after">
+                <field name="grade"/>
+                <field name="category_id"/>
+                <field name="student_ids"/>
+            </xpath>
+            <xpath expr="//templates" position="replace">
+                <templates>
+                    <t t-name="card">
+                        <div class="oe_kanban_global_click eacta_card_custom">
+                            <!-- En-tête : Titre + Code du cours -->
+                            <div class="eacta_card_header">
+                                <h5 class="eacta_card_title mb-0 text-truncate">
+                                    <field name="name"/>
+                                </h5>
+                                <span class="eacta_pill_badge eacta_badge_primary">
+                                    <field name="code"/>
+                                </span>
+                            </div>
+
+                            <!-- Corps : Catégorie, Enseignant, Crédits & Coeff -->
+                            <div class="eacta_card_body">
+                                <div t-if="record.category_id.raw_value" class="mb-1">
+                                    <span class="eacta_pill_badge eacta_badge_accent">
+                                        <i class="fa fa-tag"/> <field name="category_id"/>
+                                    </span>
+                                </div>
+                                <div t-if="record.teacher_id.raw_value" class="text-muted d-flex align-items-center gap-2 small">
+                                    <i class="fa fa-chalkboard-teacher text-primary"/>
+                                    <span>Enseignant: <field name="teacher_id"/></span>
+                                </div>
+                                <div class="d-flex align-items-center gap-2 mt-1">
+                                    <span class="badge bg-light text-dark border">
+                                        <i class="fa fa-star text-warning"/> <field name="credits"/> Crédits
+                                    </span>
+                                    <span class="badge bg-light text-dark border">
+                                        Coeff: <field name="coefficient"/>
+                                    </span>
+                                </div>
+                            </div>
+
+                            <!-- Pied de carte : Inscrits & Moyenne générale -->
+                            <div class="eacta_card_footer">
+                                <span class="text-muted small">
+                                    <i class="fa fa-user-friends text-primary"/>
+                                    <t t-esc="record.student_ids.raw_value ? record.student_ids.raw_value.length : 0"/> inscrits
+                                </span>
+                                <div t-if="record.grade.raw_value" class="eacta_gpa_chip"
+                                     t-attf-class="eacta_gpa_chip #{record.grade.raw_value &gt;= 14 ? 'high' : (record.grade.raw_value &lt; 10 ? 'warning' : '')}">
+                                    <i class="fa fa-chart-bar"/>
+                                    <span>Moy: <field name="grade"/>/20</span>
+                                </div>
+                            </div>
+                        </div>
+                    </t>
+                </templates>
+            </xpath>
+        </field>
+    </record>
+</odoo>

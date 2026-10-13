@@ -1,0 +1,106 @@
+<?xml version="1.0" encoding="utf-8"?>
+<odoo>
+    <!-- Amélioration visuelle de la vue Kanban des élèves -->
+    <record id="view_eacta_student_kanban_theme" model="ir.ui.view">
+        <field name="name">eacta.student.kanban.theme</field>
+        <field name="model">eacta.student</field>
+        <field name="inherit_id" ref="eacta_school.view_eacta_student_kanban"/>
+        <field name="arch" type="xml">
+            <xpath expr="//field[@name='image_128']" position="after">
+                <field name="state"/>
+                <field name="average"/>
+                <field name="course_count"/>
+                <field name="gender"/>
+            </xpath>
+            <xpath expr="//templates" position="replace">
+                <templates>
+                    <t t-name="card">
+                        <div class="oe_kanban_global_click eacta_card_custom">
+                            <!-- En-tête : Avatar + Nom + Badge de Statut -->
+                            <div class="d-flex align-items-center gap-3">
+                                <div class="flex-shrink-0">
+                                    <t t-if="record.image_128.raw_value">
+                                        <img class="eacta_avatar_glow"
+                                             t-att-src="kanban_image('eacta.student', 'image_128', record.id.raw_value)"
+                                             alt="Photo de l'élève"/>
+                                    </t>
+                                    <t t-else="">
+                                        <div class="eacta_avatar_glow d-flex align-items-center justify-content-center bg-light text-primary fw-bold" style="font-size: 1.3rem;">
+                                            <i class="fa fa-user-graduate"/>
+                                        </div>
+                                    </t>
+                                </div>
+                                <div class="flex-grow-1 min-w-0">
+                                    <h5 class="eacta_card_title text-truncate mb-1">
+                                        <field name="name"/>
+                                    </h5>
+                                    <div class="d-flex align-items-center gap-2">
+                                        <span t-if="record.state.raw_value == 'draft'" class="eacta_pill_badge eacta_badge_draft">
+                                            <i class="fa fa-circle" style="font-size: 0.45rem;"/> Brouillon
+                                        </span>
+                                        <span t-if="record.state.raw_value == 'enrolled'" class="eacta_pill_badge eacta_badge_enrolled">
+                                            <i class="fa fa-check-circle"/> Inscrit
+                                        </span>
+                                        <span t-if="record.state.raw_value == 'graduated'" class="eacta_pill_badge eacta_badge_graduated">
+                                            <i class="fa fa-graduation-cap"/> Diplômé
+                                        </span>
+                                        <span t-if="record.state.raw_value == 'alumni'" class="eacta_pill_badge eacta_badge_alumni">
+                                            <i class="fa fa-user-clock"/> Ancien
+                                        </span>
+                                    </div>
+                                </div>
+                            </div>
+
+                            <!-- Corps : Coordonnées & Classes -->
+                            <div class="eacta_card_body pt-1">
+                                <div t-if="record.phone.raw_value" class="text-muted d-flex align-items-center gap-2 small">
+                                    <i class="fa fa-phone text-primary" style="width: 14px;"/>
+                                    <field name="phone"/>
+                                </div>
+                                <div t-if="record.date_of_birth.raw_value" class="text-muted d-flex align-items-center gap-2 small">
+                                    <i class="fa fa-birthday-cake text-info" style="width: 14px;"/>
+                                    <field name="date_of_birth"/>
+                                </div>
+                                <div class="mt-1">
+                                    <field name="class_ids" widget="many2many_tags"/>
+                                </div>
+                            </div>
+
+                            <!-- Pied de carte : Cours & Moyenne académique -->
+                            <div class="eacta_card_footer">
+                                <div class="d-flex align-items-center gap-1 text-muted small">
+                                    <i class="fa fa-book text-primary"/>
+                                    <span><field name="course_count"/> cours</span>
+                                </div>
+                                <div t-if="record.average.raw_value"
+                                     t-attf-class="eacta_gpa_chip #{record.average.raw_value &gt;= 14 ? 'high' : (record.average.raw_value &lt; 10 ? 'warning' : '')}">
+                                    <i class="fa fa-award"/>
+                                    <span>Moyenne: <field name="average"/></span>
+                                </div>
+                            </div>
+                        </div>
+                    </t>
+                </templates>
+            </xpath>
+        </field>
+    </record>
+
+    <!-- Amélioration visuelle de la vue Formulaire des élèves -->
+    <record id="view_eacta_student_form_theme" model="ir.ui.view">
+        <field name="name">eacta.student.form.theme</field>
+        <field name="model">eacta.student</field>
+        <field name="inherit_id" ref="eacta_school.view_eacta_student_form"/>
+        <field name="arch" type="xml">
+            <!-- Décoration et icônes sur les onglets du notebook -->
+            <xpath expr="//page[1]" position="attributes">
+                <attribute name="icon">fa-book</attribute>
+            </xpath>
+            <xpath expr="//page[2]" position="attributes">
+                <attribute name="icon">fa-users</attribute>
+            </xpath>
+            <xpath expr="//page[3]" position="attributes">
+                <attribute name="icon">fa-chart-bar</attribute>
+            </xpath>
+        </field>
+    </record>
+</odoo>

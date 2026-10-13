@@ -1,0 +1,3 @@
+id,name,model_id:id,group_id:id,perm_read,perm_write,perm_create,perm_unlink
+access_eacta_theme_config_user,eacta.theme.config.user,model_eacta_theme_config,eacta_school.group_eacta_school_user,1,0,0,0
+access_eacta_theme_config_manager,eacta.theme.config.manager,model_eacta_theme_config,eacta_school.group_eacta_school_manager,1,1,1,1
