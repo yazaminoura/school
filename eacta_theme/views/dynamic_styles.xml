@@ -1,8 +1,33 @@
 <?xml version="1.0" encoding="utf-8"?>
 <odoo>
-    <!-- Variables CSS du style appliqué, injectées dans le client web -->
+    <!-- Favicon et Titre officiels NR School pour toutes les pages Odoo (web.layout) -->
+    <template id="eacta_theme_layout_brand" name="NR School Favicon &amp; Title" inherit_id="web.layout">
+        <xpath expr="//link[@rel='shortcut icon']" position="replace">
+            <link type="image/png" rel="icon" sizes="512x512" href="/eacta_school/static/src/img/nr_school_icon.png"/>
+            <link type="image/png" rel="icon" sizes="192x192" href="/eacta_school/static/src/img/nr_school_icon_192.png"/>
+            <link type="image/png" rel="icon" sizes="32x32" href="/eacta_school/static/src/img/nr_school_icon_32.png"/>
+            <link type="image/png" rel="icon" sizes="16x16" href="/eacta_school/static/src/img/nr_school_icon_16.png"/>
+            <link type="image/x-icon" rel="shortcut icon" href="/eacta_school/static/src/img/favicon.ico"/>
+            <link rel="apple-touch-icon" href="/eacta_school/static/src/img/nr_school_icon.png"/>
+        </xpath>
+        <xpath expr="//title" position="replace">
+            <title t-esc="title or 'NR School'"/>
+        </xpath>
+    </template>
+
+    <!-- Variables CSS et branding injectés dans le client web -->
     <template id="eacta_theme_dynamic_styles" name="NR School Theme Dynamic Styles" inherit_id="web.webclient_bootstrap">
+        <xpath expr="//meta[@name='theme-color']" position="attributes">
+            <attribute name="content">#00285C</attribute>
+        </xpath>
+        <xpath expr="//link[@rel='apple-touch-icon']" position="attributes">
+            <attribute name="href">/eacta_school/static/src/img/nr_school_icon.png</attribute>
+        </xpath>
         <xpath expr="//t[@t-set='head_web']" position="inside">
+            <link type="image/png" rel="icon" sizes="512x512" href="/eacta_school/static/src/img/nr_school_icon.png"/>
+            <link type="image/png" rel="icon" sizes="192x192" href="/eacta_school/static/src/img/nr_school_icon_192.png"/>
+            <link type="image/png" rel="icon" sizes="32x32" href="/eacta_school/static/src/img/nr_school_icon_32.png"/>
+            <link type="image/x-icon" rel="shortcut icon" href="/eacta_school/static/src/img/favicon.ico"/>
             <t t-set="eacta_theme" t-value="request.env['eacta.theme.config'].sudo()"/>
             <t t-set="eacta_font_url" t-value="eacta_theme._get_font_url()"/>
             <link t-if="eacta_font_url" rel="preconnect" href="https://fonts.gstatic.com" crossorigin=""/>
@@ -11,9 +36,17 @@
         </xpath>
     </template>
 
-    <!-- Page de connexion aux couleurs de l'établissement -->
+    <!-- Page de connexion aux couleurs et logo de l'établissement -->
     <template id="eacta_theme_login_styles" name="NR School Theme Login" inherit_id="web.login_layout">
+        <xpath expr="//img[contains(@t-attf-src, 'company_logo')]" position="attributes">
+            <attribute name="t-attf-src">/eacta_school/static/src/img/nr_school_icon.png</attribute>
+            <attribute name="alt">NR School Logo</attribute>
+            <attribute name="style">max-height: 110px; max-width: 100%; width: auto; object-fit: contain;</attribute>
+        </xpath>
         <xpath expr="//div[hasclass('container')]" position="before">
+            <link type="image/png" rel="icon" sizes="512x512" href="/eacta_school/static/src/img/nr_school_icon.png"/>
+            <link type="image/png" rel="icon" sizes="32x32" href="/eacta_school/static/src/img/nr_school_icon_32.png"/>
+            <link type="image/x-icon" rel="shortcut icon" href="/eacta_school/static/src/img/favicon.ico"/>
             <t t-set="eacta_theme" t-value="request.env['eacta.theme.config'].sudo()"/>
             <t t-set="eacta_current" t-value="eacta_theme._get_current()"/>
             <t t-if="not eacta_current or eacta_current.brand_login">

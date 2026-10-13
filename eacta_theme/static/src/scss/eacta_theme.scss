@@ -4,9 +4,9 @@
 // eacta.theme.config._get_theme_css() (voir views/dynamic_styles.xml).
 // ==========================================================================
 
-$eacta-fallback-primary: #0B6E4F;
-$eacta-fallback-secondary: #E9A23B;
-$eacta-fallback-ink: #06392A;
+$eacta-fallback-primary: #00285C;
+$eacta-fallback-secondary: #00B8C8;
+$eacta-fallback-ink: #001A3D;
 
 :root {
     --eacta-primary: #{$eacta-fallback-primary};

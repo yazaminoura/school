@@ -6,9 +6,9 @@
             .eacta_report { font-size: 12px; color: #1e293b; }
             .eacta_report .eacta_report_title {
                 display: flex; justify-content: space-between; align-items: flex-end;
-                border-bottom: 3px solid #0b6e4f; padding-bottom: 8px; margin-bottom: 16px;
+                border-bottom: 3px solid #00285c; padding-bottom: 8px; margin-bottom: 16px;
             }
-            .eacta_report .eacta_report_title h2 { margin: 0; font-weight: 700; color: #06392a; }
+            .eacta_report .eacta_report_title h2 { margin: 0; font-weight: 700; color: #001a3d; }
             .eacta_report .eacta_report_title .eacta_report_sub { color: #64748b; font-size: 12px; }
             .eacta_report .eacta_identity {
                 display: table; width: 100%; background: #f8fafc; border: 1px solid #e2e8f0;
@@ -21,7 +21,7 @@
             .eacta_report .eacta_identity .eacta_value { font-weight: 600; font-size: 13px; }
             .eacta_report table.eacta_table { width: 100%; border-collapse: collapse; }
             .eacta_report table.eacta_table th {
-                background: #06392a; color: #fff; font-weight: 600; padding: 6px 8px;
+                background: #001a3d; color: #fff; font-weight: 600; padding: 6px 8px;
                 font-size: 11px; text-align: left;
             }
             .eacta_report table.eacta_table td { padding: 6px 8px; border-bottom: 1px solid #e2e8f0; }
@@ -34,7 +34,7 @@
             .eacta_report .eacta_summary > div {
                 display: table-cell; text-align: center; padding: 10px; border: 1px solid #e2e8f0;
             }
-            .eacta_report .eacta_summary .eacta_big { font-size: 20px; font-weight: 800; color: #0b6e4f; }
+            .eacta_report .eacta_summary .eacta_big { font-size: 20px; font-weight: 800; color: #00285c; }
             .eacta_report .eacta_signatures { display: table; width: 100%; margin-top: 40px; }
             .eacta_report .eacta_signatures > div {
                 display: table-cell; width: 50%; text-align: center; color: #64748b; height: 70px;
