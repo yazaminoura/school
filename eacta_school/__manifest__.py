@@ -1,69 +1,55 @@
 {
-
-    'name': 'E-ACTA School Management',
-    'icon': '/eacta_school/static/src/img/logoE.png',
-
-    'version': '1.0',
-
-    'summary': 'Gérez votre école avec E-ACTA',
-
-    'description': """ 
-
-        Module de gestion d'école pour E-ACTA : 
-
-        - Gestion des élèves 
-
-        - Gestion des classes 
-
-        - Gestion des cours 
-
+    'name': 'NR School',
+    'version': '18.0.2.0',
+    'summary': 'Gestion scolaire : élèves, classes, cours, examens, notes et bulletins',
+    'description': """
+NR School - Gestion scolaire
+============================
+- Tableau de bord : effectifs, remplissage des classes, examens à venir, répartition des notes
+- Élèves : matricule automatique, parents/tuteurs, parcours, moyenne pondérée, rang, appréciation
+- Classes : capacité et remplissage, contrôle « une classe par année », résultats de la classe
+- Cours & examens : coefficients, crédits, types d'examen, feuille de notes générée en un clic
+- Notes : statuts (à noter, noté, absent, dispensé), analyse pivot / graphique
+- Rapports : bulletin scolaire et relevé des résultats de la classe
     """,
-
     'category': 'Education',
-
-    'author': 'E-ACTA',
-
+    'author': 'NR School',
     'website': 'https://www.e-acta.com',
-
-    'depends': ['base','mail'],
-
-'data': [
-        'data/school_data_classes.xml',
-        'data/school_data_courses_students.xml',
+    'license': 'LGPL-3',
+    'icon': '/eacta_school/static/src/img/nr_school_icon.png',
+    'depends': ['base', 'mail', 'web'],
+    'data': [
         'security/eacta_school_security.xml',
-        'security/eacta_school_rules.xml',
         'security/ir.model.access.csv',
-	    'views/eacta_menu.xml',
-        'views/eacta_student_views.xml',
-        'views/eacta_course_views.xml',
-        'views/eacta_class_views.xml',
-        'data/eacta_school_data.xml',
-        'views/eacta_course_category_views.xml',
-        'views/eacta_school_level_views.xml',
-        'views/res_partner_views.xml',
-        'views/res_users_views.xml',
+        'security/eacta_school_rules.xml',
         'data/eacta_school_config_data.xml',
         'reports/report_assets.xml',
         'reports/student_report.xml',
-        'views/eacta_course_grade_views.xml',
+        'views/eacta_student_views.xml',
+        'views/eacta_class_views.xml',
+        'views/eacta_course_views.xml',
         'views/eacta_exam_views.xml',
-     ],
-
-'assets': {
-   'web.report_assets_common': [
-           'eacta_school/static/src/css/eacta_school_report_assets.css',
-            'eacta_school/static/src/css/class_kanban.css',
-
-   ],
-   },
-
-    'demo': [],
-
+        'views/eacta_course_grade_views.xml',
+        'views/eacta_school_level_views.xml',
+        'views/eacta_course_category_views.xml',
+        'views/res_partner_views.xml',
+        'views/res_users_views.xml',
+        'views/eacta_menu.xml',
+    ],
+    'demo': [
+        'demo/school_demo_classes.xml',
+        'demo/school_demo_courses_students.xml',
+        'demo/school_demo_results.xml',
+    ],
+    'assets': {
+        'web.assets_backend': [
+            'eacta_school/static/src/scss/school.scss',
+            'eacta_school/static/src/dashboard/school_dashboard.js',
+            'eacta_school/static/src/dashboard/school_dashboard.xml',
+        ],
+    },
     'installable': True,
-
     'application': True,
-
     'auto_install': False,
-
     'sequence': 1,
 }

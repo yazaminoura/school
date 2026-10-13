@@ -1,8 +1,9 @@
 {
-    'name': 'Eacta Bibliothèque',
-    'icon': 'eacta_bibliothèque/static/description/icon.png',
+    'name': 'NR School - Bibliothèque',
+    'license': 'LGPL-3',
+    'icon': '/eacta_bibliothèque/static/description/icon.png',
     'version': '1.0',
-    'summary': 'Manage library books, borrowers, and loans for E-ACTA School',
+    'summary': 'Manage library books, borrowers, and loans for NR School',
     'depends': ['base', 'eacta_school', 'mail', 'web'],
     'data': [
         'data/library_demo.xml',
@@ -10,6 +11,7 @@
         'security/ir.model.access.csv',
         'views/library_views.xml',
         'views/library_category_views.xml',
+        'views/eacta_student_library_views.xml',
         'security/library_rules.xml',
     ],
     'installable': True,

@@ -3,7 +3,7 @@ from odoo import models, fields, api
 class EactaSchoolEvent(models.Model):
     _name = 'eacta.school.event'
     _inherit = ['mail.thread', 'mail.activity.mixin']
-    _description = 'Événement scolaire E-ACTA'
+    _description = 'Événement scolaire'
 
     name = fields.Char(string="Nom de l'événement", required=True)
     date = fields.Date(string="Date de l'événement")

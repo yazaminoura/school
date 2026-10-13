@@ -1,212 +1,44 @@
 <?xml version="1.0" encoding="UTF-8"?>
 <odoo>
-
-  <!-- Template: Bulletin Scolaire -->
-  <template id="report_student_card">
-    <t t-call="web.html_container">
-      <t t-foreach="docs" t-as="o">
-        <t t-set="company" t-value="o.company_id or env.user.company_id"/>
-        <t t-call="web.external_layout_standard">
-          <t t-call="eacta_school.eacta_school_report_assets"/>
-
-          <div class="page">
-            <div class="eacta_school_header">
-              <h2>Bulletin Scolaire</h2>
-            </div>
-
-            <div class="row mt32 mb32">
-              <div class="col-6">
-                <strong>Nom de l'élève:</strong> <span t-field="o.name"/>
-                <br/>
-                <strong>Classe:</strong> <span t-field="o.class_id.name"/>
-              </div>
-              <div class="col-6">
-                <strong>Date de naissance:</strong> <span t-field="o.date_of_birth"/>
-              </div>
-            </div>
-
-            <table class="table table-sm">
-              <thead>
-                <tr>
-                  <th>Cours</th>
-                  <th>Note</th>
-                  <th>Commentaire</th>
-                </tr>
-              </thead>
-              <tbody>
-                <t t-foreach="o.course_ids" t-as="course">
-                  <tr>
-                    <td><span t-field="course.name"/></td>
-                    <td>
-                      <span t-field="course.grade" t-if="course.grade"/>
-                      <span t-if="not course.grade">N/A</span>
-                    </td>
-                    <td><span t-field="course.comment"/></td>
-                  </tr>
-                </t>
-              </tbody>
-            </table>
-
-            <div class="eacta_school_footer">
-              <p>© 2024 E-ACTA School. Tous droits réservés.</p>
-            </div>
-          </div>
-
-        </t>
-      </t>
-    </t>
-  </template>
-
-  <record id="action_report_student_card" model="ir.actions.report">
-    <field name="name">Bulletin Scolaire</field>
-    <field name="model">eacta.student</field>
-    <field name="report_type">qweb-pdf</field>
-    <field name="report_name">eacta_school.report_student_card</field>
-    <field name="report_file">eacta_school.report_student_card</field>
-    <field name="binding_model_id" ref="model_eacta_student"/>
-    <field name="binding_type">report</field>
-  </record>
-
-  <!-- Template: Analyse des résultats -->
-  <template id="report_student_results">
-    <t t-call="web.html_container">
-      <t t-foreach="docs" t-as="student">
-        <t t-set="company" t-value="student.company_id or env.user.company_id"/>
-        <t t-call="web.external_layout">
-          <t t-call="eacta_school.eacta_school_report_assets"/>
-
-          <div class="page">
-            <div class="eacta_school_header">
-              <h2>Analyse des résultats de l'élève</h2>
-            </div>
-
-            <div class="row mt32 mb32">
-              <div class="col-6">
-                <strong>Nom:</strong> <span t-field="student.name"/>
-                <br/>
-                <strong>Classe:</strong> <span t-field="student.class_id.name"/>
-              </div>
-              <div class="col-6">
-                <strong>Moyenne générale:</strong> <span t-esc="get_average_grade(student)"/>
-              </div>
-            </div>
-
-            <table class="table table-sm" style="width: 100%; border-collapse: collapse;">
-              <thead>
-                <tr style="background-color: #f5f5f5;">
-                  <th style="padding: 8px; border: 1px solid #ddd;">Cours</th>
-                  <th style="padding: 8px; border: 1px solid #ddd;">Note</th>
-                </tr>
-              </thead>
-              <tbody>
-                <t t-foreach="student.course_ids" t-as="course">
-                  <tr>
-                    <td style="padding: 8px; border: 1px solid #ddd;"><span t-field="course.name"/></td>
-                    <td style="padding: 8px; border: 1px solid #ddd;">
-                      <span t-field="course.grade" t-if="course.grade"/>
-                      <span t-if="not course.grade">N/A</span>
-                    </td>
-                  </tr>
-                </t>
-              </tbody>
-            </table>
-
-            <div class="eacta_school_footer">
-              <p>© 2024 E-ACTA School. Tous droits réservés.</p>
-            </div>
-          </div>
-
-        </t>
-      </t>
-    </t>
-  </template>
-
-  <record id="action_report_student_results" model="ir.actions.report">
-    <field name="name">Analyse des résultats</field>
-    <field name="model">eacta.student</field>
-    <field name="report_type">qweb-pdf</field>
-    <field name="report_name">eacta_school.report_student_results</field>
-    <field name="report_file">eacta_school.report_student_results</field>
-    <field name="binding_model_id" ref="model_eacta_student"/>
-    <field name="binding_type">report</field>
-  </record>
-
-  <!-- Assets CSS -->
-  <template id="eacta_school_report_assets" name="EACTA School Report Assets">
-    <link rel="stylesheet" type="text/css" href="/eacta_school/static/src/css/report_style.css"/>
-    <style>
-      .eacta_school_header {
-          background-color: #f2f2f2;
-          padding: 15px;
-          margin-top: 20px;
-          margin-bottom: 20px;
-          display: flex;
-          align-items: center;
-          justify-content: flex-start;
-          border-bottom: 2px solid #ddd;
-      }
-
-      .eacta_school_header h2 {
-          font-size: 24px;
-          margin: 0;
-          font-weight: 600;
-          color: #333;
-          flex-grow: 1;
-          text-align: center;
-      }
-
-
-
-      .eacta_school_footer {
-          background-color: #f2f2f2;
-          padding: 10px;
-          text-align: center;
-          font-size: 12px;
-          border-top: 2px solid #ddd;
-          margin-top: 20px;
-          color: #555;
-      }
-
-      .row {
-          display: flex;
-          flex-wrap: wrap;
-          margin-left: -15px;
-          margin-right: -15px;
-      }
-
-      .col-6 {
-          width: 50%;
-          padding: 0 15px;
-          box-sizing: border-box;
-      }
-
-      .table {
-          width: 100%;
-          border-collapse: collapse;
-          margin-top: 15px;
-      }
-
-      .table th, .table td {
-          padding: 8px 12px;
-          text-align: left;
-          border: 1px solid #ddd;
-          word-wrap: break-word;
-      }
-
-      .table th {
-          background-color: #f2f2f2;
-          font-weight: bold;
-      }
-
-      @media print {
-          .page {
-              page-break-after: always;
-          }
-          .eacta_school_header, .eacta_school_footer {
-              page-break-inside: avoid;
-          }
-      }
-    </style>
-  </template>
-
+    <!-- Styles communs aux rapports NR School (limités au conteneur .eacta_report) -->
+    <template id="eacta_school_report_assets" name="NR School Report Styles">
+        <style>
+            .eacta_report { font-size: 12px; color: #1e293b; }
+            .eacta_report .eacta_report_title {
+                display: flex; justify-content: space-between; align-items: flex-end;
+                border-bottom: 3px solid #0b6e4f; padding-bottom: 8px; margin-bottom: 16px;
+            }
+            .eacta_report .eacta_report_title h2 { margin: 0; font-weight: 700; color: #06392a; }
+            .eacta_report .eacta_report_title .eacta_report_sub { color: #64748b; font-size: 12px; }
+            .eacta_report .eacta_identity {
+                display: table; width: 100%; background: #f8fafc; border: 1px solid #e2e8f0;
+                border-radius: 6px; padding: 10px 14px; margin-bottom: 16px;
+            }
+            .eacta_report .eacta_identity > div { display: table-cell; width: 33%; vertical-align: top; }
+            .eacta_report .eacta_identity .eacta_label {
+                color: #64748b; font-size: 10px; text-transform: uppercase; letter-spacing: .05em;
+            }
+            .eacta_report .eacta_identity .eacta_value { font-weight: 600; font-size: 13px; }
+            .eacta_report table.eacta_table { width: 100%; border-collapse: collapse; }
+            .eacta_report table.eacta_table th {
+                background: #06392a; color: #fff; font-weight: 600; padding: 6px 8px;
+                font-size: 11px; text-align: left;
+            }
+            .eacta_report table.eacta_table td { padding: 6px 8px; border-bottom: 1px solid #e2e8f0; }
+            .eacta_report table.eacta_table tr:nth-child(even) td { background: #f8fafc; }
+            .eacta_report table.eacta_table .text-end { text-align: right; }
+            .eacta_report table.eacta_table .text-center { text-align: center; }
+            .eacta_report .eacta_fail { color: #b91c1c; font-weight: 700; }
+            .eacta_report .eacta_pass { color: #047857; font-weight: 700; }
+            .eacta_report .eacta_summary { display: table; width: 100%; margin-top: 18px; }
+            .eacta_report .eacta_summary > div {
+                display: table-cell; text-align: center; padding: 10px; border: 1px solid #e2e8f0;
+            }
+            .eacta_report .eacta_summary .eacta_big { font-size: 20px; font-weight: 800; color: #0b6e4f; }
+            .eacta_report .eacta_signatures { display: table; width: 100%; margin-top: 40px; }
+            .eacta_report .eacta_signatures > div {
+                display: table-cell; width: 50%; text-align: center; color: #64748b; height: 70px;
+            }
+        </style>
+    </template>
 </odoo>

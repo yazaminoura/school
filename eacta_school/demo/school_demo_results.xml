@@ -1,0 +1,33 @@
+<?xml version="1.0" encoding="utf-8"?>
+<odoo>
+    <data noupdate="1">
+
+        <record id="demo_teacher_amina" model="res.users">
+            <field name="name">Amina Benali</field>
+            <field name="login">amina.benali@demo.nrschool.com</field>
+            <field name="email">amina.benali@demo.nrschool.com</field>
+            <field name="is_teacher" eval="True"/>
+            <field name="groups_id" eval="[(4, ref('base.group_user')), (4, ref('eacta_school.group_eacta_school_user'))]"/>
+        </record>
+
+        <record id="demo_teacher_youssef" model="res.users">
+            <field name="name">Youssef El Idrissi</field>
+            <field name="login">youssef.elidrissi@demo.nrschool.com</field>
+            <field name="email">youssef.elidrissi@demo.nrschool.com</field>
+            <field name="is_teacher" eval="True"/>
+            <field name="groups_id" eval="[(4, ref('base.group_user')), (4, ref('eacta_school.group_eacta_school_user'))]"/>
+        </record>
+
+        <record id="demo_teacher_sara" model="res.users">
+            <field name="name">Sara Alaoui</field>
+            <field name="login">sara.alaoui@demo.nrschool.com</field>
+            <field name="email">sara.alaoui@demo.nrschool.com</field>
+            <field name="is_teacher" eval="True"/>
+            <field name="groups_id" eval="[(4, ref('base.group_user')), (4, ref('eacta_school.group_eacta_school_user'))]"/>
+        </record>
+
+        <!-- Affecte cours / enseignants, crée examens et notes de démonstration -->
+        <function model="eacta.exam" name="_eacta_generate_demo_results"/>
+
+    </data>
+</odoo>

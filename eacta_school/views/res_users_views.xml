@@ -1,25 +1,59 @@
 <?xml version="1.0" encoding="utf-8"?>
 <odoo>
-   <record id="view_users_form_eacta_school_inherit" model="ir.ui.view">
-       <field name="name">res.users.form.eacta.school.inherit</field>
-       <field name="model">res.users</field>
-       <field name="inherit_id" ref="base.view_users_form"/>
-       <field name="arch" type="xml">
-           <notebook position="inside">
-               <page string="Enseignement">
-                   <group>
-                       <field name="is_teacher"/>
-                       <field name="subject_ids" widget="many2many_tags" options="{'no_create': True}">
-                           <list>
-                               <field name="name"/>
-                           </list>
-                           <form>
-                               <field name="name"/>
-                           </form>
-                       </field>
-                   </group>
-               </page>
-           </notebook>
-       </field>
-   </record>
+
+    <record id="view_users_form_eacta_school_inherit" model="ir.ui.view">
+        <field name="name">res.users.form.eacta.school.inherit</field>
+        <field name="model">res.users</field>
+        <field name="inherit_id" ref="base.view_users_form"/>
+        <field name="arch" type="xml">
+            <notebook position="inside">
+                <page string="Enseignement" name="eacta_teaching">
+                    <group>
+                        <group>
+                            <field name="is_teacher"/>
+                            <field name="subject_ids" widget="many2many_tags" options="{'no_create': True}"
+                                   invisible="not is_teacher"/>
+                        </group>
+                    </group>
+                    <field name="taught_course_ids" invisible="not is_teacher" readonly="1">
+                        <list>
+                            <field name="code"/>
+                            <field name="name"/>
+                            <field name="student_count"/>
+                            <field name="grade"/>
+                        </list>
+                    </field>
+                </page>
+            </notebook>
+        </field>
+    </record>
+
+    <record id="view_users_list_eacta_teacher" model="ir.ui.view">
+        <field name="name">res.users.list.eacta.teacher</field>
+        <field name="model">res.users</field>
+        <field name="priority">50</field>
+        <field name="arch" type="xml">
+            <list string="Enseignants" create="0">
+                <field name="name"/>
+                <field name="login"/>
+                <field name="subject_ids" widget="many2many_tags"/>
+                <field name="taught_course_count"/>
+            </list>
+        </field>
+    </record>
+
+    <record id="action_eacta_teachers" model="ir.actions.act_window">
+        <field name="name">Enseignants</field>
+        <field name="res_model">res.users</field>
+        <field name="view_mode">list,form</field>
+        <field name="domain">[('is_teacher', '=', True)]</field>
+        <field name="context">{'default_is_teacher': True}</field>
+        <field name="view_ids" eval="[(5, 0, 0),
+            (0, 0, {'view_mode': 'list', 'view_id': ref('view_users_list_eacta_teacher')})]"/>
+        <field name="help" type="html">
+            <p class="o_view_nocontent_smiling_face">Aucun enseignant</p>
+            <p>Cochez « Est un enseignant » dans l'onglet Enseignement de la fiche utilisateur.</p>
+        </field>
+    </record>
+
 </odoo>

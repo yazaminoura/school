@@ -1,100 +1,138 @@
 <?xml version="1.0" encoding="utf-8"?>
 <odoo>
-    <!-- Vue Liste pour la Configuration du Thème -->
+
+    <record id="view_eacta_theme_config_kanban" model="ir.ui.view">
+        <field name="name">eacta.theme.config.kanban</field>
+        <field name="model">eacta.theme.config</field>
+        <field name="arch" type="xml">
+            <kanban class="o_eacta_kanban o_eacta_theme_kanban">
+                <field name="is_current"/>
+                <field name="primary_color"/>
+                <field name="secondary_color"/>
+                <field name="accent_color"/>
+                <field name="ink_color"/>
+                <templates>
+                    <t t-name="card" class="p-0">
+                        <div class="o_eacta_theme_card">
+                            <div class="o_eacta_theme_swatch"
+                                 t-attf-style="background: linear-gradient(120deg, #{record.ink_color.raw_value}, #{record.primary_color.raw_value});">
+                                <span t-attf-style="background: #{record.secondary_color.raw_value}"/>
+                                <span t-attf-style="background: #{record.accent_color.raw_value}"/>
+                            </div>
+                            <div class="d-flex align-items-center justify-content-between gap-2 p-3">
+                                <div class="min-w-0">
+                                    <field name="name" class="fw-bold d-block text-truncate"/>
+                                    <field name="color_scheme" class="small text-muted"/>
+                                </div>
+                                <span t-if="record.is_current.raw_value" class="badge rounded-pill text-bg-success">
+                                    <i class="fa fa-check me-1" title="Appliqué"/>Appliqué
+                                </span>
+                                <button t-else="" name="action_set_current" type="object" class="btn btn-sm btn-primary">
+                                    Appliquer
+                                </button>
+                            </div>
+                        </div>
+                    </t>
+                </templates>
+            </kanban>
+        </field>
+    </record>
+
     <record id="view_eacta_theme_config_list" model="ir.ui.view">
         <field name="name">eacta.theme.config.list</field>
         <field name="model">eacta.theme.config</field>
         <field name="arch" type="xml">
-            <list string="Styles &amp; Thèmes E-ACTA">
+            <list string="Styles visuels" decoration-bf="is_current">
+                <field name="sequence" widget="handle"/>
                 <field name="name"/>
                 <field name="color_scheme"/>
                 <field name="primary_color" widget="color"/>
                 <field name="secondary_color" widget="color"/>
-                <field name="card_style"/>
-                <field name="badge_style"/>
-                <field name="active" widget="boolean_toggle"/>
+                <field name="navbar_style"/>
+                <field name="font_family"/>
+                <field name="is_current" widget="boolean"/>
             </list>
         </field>
     </record>
 
-    <!-- Vue Formulaire pour la Configuration du Thème -->
     <record id="view_eacta_theme_config_form" model="ir.ui.view">
         <field name="name">eacta.theme.config.form</field>
         <field name="model">eacta.theme.config</field>
         <field name="arch" type="xml">
-            <form string="Configuration du Thème E-ACTA">
+            <form string="Style visuel">
                 <header>
-                    <button name="action_set_active"
-                            string="Activer ce style"
-                            type="object"
-                            class="btn-primary"
-                            invisible="active == True"/>
-                    <button name="action_reset_defaults"
-                            string="Réinitialiser par défaut"
-                            type="object"
-                            class="btn-secondary"/>
+                    <button name="action_set_current" string="Appliquer ce style" type="object"
+                            class="btn-primary" invisible="is_current"/>
+                    <button name="action_reset_defaults" string="Réinitialiser (NR School)" type="object"
+                            confirm="Remplacer tous les réglages de ce style par les valeurs par défaut ?"/>
                 </header>
                 <sheet>
+                    <widget name="web_ribbon" title="Appliqué" bg_color="text-bg-success" invisible="not is_current"/>
+                    <field name="active" invisible="1"/>
+                    <field name="is_current" invisible="1"/>
                     <div class="oe_title">
-                        <label for="name" string="Nom du Style"/>
-                        <h1>
-                            <field name="name" placeholder="Ex: E-ACTA Prestige"/>
-                        </h1>
+                        <label for="name"/>
+                        <h1><field name="name" placeholder="ex : Charte de l'établissement"/></h1>
                     </div>
-
+                    <div class="mb-4">
+                        <field name="preview_html" nolabel="1" readonly="1"/>
+                    </div>
                     <group>
-                        <group string="Palette de Couleurs">
-                            <field name="color_scheme" widget="radio"/>
+                        <group string="Couleurs">
+                            <field name="color_scheme"/>
                             <field name="primary_color" widget="color"/>
                             <field name="secondary_color" widget="color"/>
                             <field name="accent_color" widget="color"/>
                             <field name="ink_color" widget="color"/>
                         </group>
-                        <group string="Apparence des Composants">
+                        <group string="Apparence">
+                            <field name="navbar_style" widget="radio"/>
+                            <field name="font_family"/>
                             <field name="card_style"/>
                             <field name="card_radius"/>
                             <field name="badge_style"/>
-                            <field name="active" widget="boolean_toggle"/>
+                            <field name="density" widget="radio" options="{'horizontal': true}"/>
                         </group>
                     </group>
-
-                    <group string="Options d'Affichage Visuel">
+                    <group string="Éléments affichés">
                         <group>
                             <field name="show_gpa_badges"/>
                             <field name="show_capacity_bar"/>
+                            <field name="show_avatar_glow"/>
                         </group>
                         <group>
-                            <field name="show_avatar_glow"/>
                             <field name="school_header_banner"/>
+                            <field name="brand_login"/>
                         </group>
                     </group>
-
                     <notebook>
-                        <page string="CSS Personnalisé" name="custom_css_page">
-                            <field name="custom_css" placeholder="/* Ajoutez des règles CSS ou SCSS personnalisées ici */"/>
+                        <page string="CSS personnalisé" name="custom_css_page">
+                            <field name="custom_css" widget="code" options="{'mode': 'css'}"
+                                   placeholder="/* Règles CSS supplémentaires appliquées à toute l'interface */"/>
                         </page>
                     </notebook>
+                    <div class="text-muted small mt-2">
+                        <i class="fa fa-info-circle me-1" title="Info"/>
+                        Les modifications d'un style appliqué sont visibles après rechargement de la page.
+                    </div>
                 </sheet>
             </form>
         </field>
     </record>
 
-    <!-- Action pour la Configuration du Thème -->
     <record id="action_eacta_theme_config" model="ir.actions.act_window">
-        <field name="name">Thème &amp; Styles E-ACTA</field>
+        <field name="name">Thème &amp; style visuel</field>
         <field name="res_model">eacta.theme.config</field>
-        <field name="view_mode">list,form</field>
+        <field name="view_mode">kanban,list,form</field>
         <field name="help" type="html">
-            <p class="o_view_nocontent_smiling_face">
-                Personnalisez le design et l'apparence de vos modules scolaires !
-            </p>
+            <p class="o_view_nocontent_smiling_face">Créez un style visuel</p>
+            <p>Couleurs, police, barre de navigation, cartes et page de connexion aux couleurs de votre école.</p>
         </field>
     </record>
 
-    <!-- Menu Item sous Configuration -->
     <menuitem id="menu_eacta_theme_config"
-              name="Thème &amp; Style Visuel"
+              name="Thème &amp; style visuel"
               parent="eacta_school.menu_eacta_school_config"
               action="action_eacta_theme_config"
-              sequence="5"/>
+              sequence="50"/>
 </odoo>

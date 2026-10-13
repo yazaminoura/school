@@ -1,7 +1,7 @@
 <?xml version="1.0" encoding="UTF-8"?>
 <odoo>
     <record id="group_eacta_library" model="ir.module.category">
-        <field name="name">E-ACTA Library</field>
+        <field name="name">NR School - Bibliothèque</field>
         <field name="description">Gestion des utilisateurs pour le module Bibliothèque</field>
         <field name="sequence">30</field>
     </record>

@@ -1,34 +1,28 @@
-from odoo import models, api
+from odoo import api, models
 
 
-class StudentResultsReport(models.AbstractModel):
-   _name = 'report.eacta_school.report_student_results'
-   _description = 'Rapport des résultats des élèves'
+class ClassResultsReport(models.AbstractModel):
+    _name = 'report.eacta_school.report_class_results'
+    _description = 'Relevé des résultats de la classe'
 
-
-   @api.model
-   def _get_report_values(self, docids, data=None):
-       docs = self.env['eacta.student'].browse(docids)
-       return {
-           'doc_ids': docids,
-           'doc_model': 'eacta.student',
-           'docs': docs,
-           'get_average_grade': self._get_average_grade,
-       }
-
-
-   def _get_average_grade(self, student):
-       grades = student.course_ids.mapped('grade')
-       filtered_grades = [grade for grade in grades if isinstance(grade, (int, float))]
-       return round(sum(filtered_grades) / len(filtered_grades), 2) if filtered_grades else 0
-
-
-   @api.model
-   def _get_report_values(self, docids, data=None):
-       docs = self.env['eacta.student'].browse(docids)
-       return {
-           'doc_ids': docids,
-           'doc_model': 'eacta.student',
-           'docs': docs,
-           'get_average_grade': self._get_average_grade,
-       }
+    @api.model
+    def _get_report_values(self, docids, data=None):
+        classes = self.env['eacta.class'].browse(docids)
+        results = {}
+        for klass in classes:
+            rows = []
+            for student in klass.student_ids:
+                card = student._get_report_card(year=klass.year)
+                rows.append({'student': student, 'average': card['average'], 'appreciation': card['appreciation'],
+                             'has_grades': bool(card['lines'])})
+            ranked = sorted([r for r in rows if r['has_grades']], key=lambda r: r['average'], reverse=True)
+            for rank, row in enumerate(ranked, start=1):
+                row['rank'] = rank
+            rows = ranked + [dict(r, rank=False) for r in rows if not r['has_grades']]
+            results[klass.id] = rows
+        return {
+            'doc_ids': docids,
+            'doc_model': 'eacta.class',
+            'docs': classes,
+            'results': results,
+        }

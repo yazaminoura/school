@@ -1,19 +1,20 @@
 # -*- coding: utf-8 -*-
 {
-    'name': 'E-ACTA School Theme & Design Studio',
-    'version': '1.0',
-    'category': 'Theme/Education',
-    'summary': 'Design moderne & styles élégants pour la gestion scolaire E-ACTA',
+    'name': 'NR School - Thème',
+    'version': '18.0.2.2',
+    'category': 'Theme/Backend',
+    'summary': "Charte graphique de l'établissement pour l'interface Odoo",
     'description': """
-        Thème et Design Studio pour E-ACTA School Management (Odoo 18) :
-        ================================================================
-        - Design moderne et raffiné pour les fiches Élèves, Classes et Cours
-        - Cartes Kanban interactives avec jauges de progression, statuts et badges
-        - Modèle de configuration de style (eacta.theme.config) avec palettes de couleurs
-        - Mise en valeur des moyennes, GPA et jauges d'effectif
-        - Styles SCSS responsives et modernes
+Thème NR School
+===============
+- Styles prêts à l'emploi (NR School, Indigo, Émeraude, Océan, Violet, Minimal clair, Terracotta)
+- Couleurs, police (Inter, Poppins, Nunito, Cairo), barre de navigation dégradée / pleine / claire
+- Cartes modernes / encadrées / plates, arrondis, badges, densité confortable ou compacte
+- Aperçu en direct dans la fiche du style, application en un clic
+- Page de connexion aux couleurs de l'établissement
+- CSS personnalisé
     """,
-    'author': 'E-ACTA / Noura',
+    'author': 'NR School',
     'website': 'https://www.e-acta.com',
     'license': 'LGPL-3',
     'depends': ['base', 'web', 'eacta_school'],
@@ -22,20 +23,14 @@
         'data/theme_presets.xml',
         'views/theme_config_views.xml',
         'views/dynamic_styles.xml',
-        'views/eacta_student_theme_views.xml',
-        'views/eacta_class_theme_views.xml',
-        'views/eacta_course_theme_views.xml',
     ],
     'assets': {
         'web.assets_backend': [
             'eacta_theme/static/src/scss/eacta_theme.scss',
         ],
     },
-    'images': [
-        'static/description/icon.png',
-    ],
+    'images': ['static/description/icon.png'],
     'installable': True,
-    'application': True,
+    'application': False,
     'auto_install': False,
-    'sequence': 2,
 }

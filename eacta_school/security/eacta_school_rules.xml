@@ -1,46 +1,44 @@
 <?xml version="1.0" encoding="utf-8"?>
 <odoo>
+    <data noupdate="0">
 
-   <data noupdate="1">
+        <!-- Enseignant : lit tous les élèves, ne modifie que ceux qu'il a créés / modifiés -->
+        <record id="eacta_student_user_rule" model="ir.rule">
+            <field name="name">NR School (enseignant) : modifier ses élèves</field>
+            <field name="model_id" ref="model_eacta_student"/>
+            <field name="domain_force">['|', ('create_uid', '=', user.id), ('write_uid', '=', user.id)]</field>
+            <field name="perm_read" eval="False"/>
+            <field name="perm_write" eval="True"/>
+            <field name="perm_create" eval="True"/>
+            <field name="perm_unlink" eval="False"/>
+            <field name="groups" eval="[(4, ref('eacta_school.group_eacta_school_user'))]"/>
+        </record>
 
-       <!-- Règle pour les utilisateurs : peuvent voir tous les enregistrements, mais ne peuvent modifier que les leurs -->
+        <record id="eacta_student_manager_rule" model="ir.rule">
+            <field name="name">NR School (manager) : accès complet aux élèves</field>
+            <field name="model_id" ref="model_eacta_student"/>
+            <field name="domain_force">[(1, '=', 1)]</field>
+            <field name="groups" eval="[(4, ref('eacta_school.group_eacta_school_manager'))]"/>
+        </record>
 
-       <record id="eacta_student_user_rule" model="ir.rule">
+        <!-- Enseignant : saisit uniquement les notes de ses propres matières -->
+        <record id="eacta_grade_teacher_rule" model="ir.rule">
+            <field name="name">NR School (enseignant) : notes de ses matières</field>
+            <field name="model_id" ref="model_eacta_course_grade"/>
+            <field name="domain_force">['|', ('exam_id.course_id.teacher_id', '=', user.id), ('create_uid', '=', user.id)]</field>
+            <field name="perm_read" eval="False"/>
+            <field name="perm_write" eval="True"/>
+            <field name="perm_create" eval="True"/>
+            <field name="perm_unlink" eval="True"/>
+            <field name="groups" eval="[(4, ref('eacta_school.group_eacta_school_user'))]"/>
+        </record>
 
-           <field name="name">Utilisateur E-ACTA School : voir tous les élèves, modifier les siens</field>
+        <record id="eacta_grade_manager_rule" model="ir.rule">
+            <field name="name">NR School (manager) : toutes les notes</field>
+            <field name="model_id" ref="model_eacta_course_grade"/>
+            <field name="domain_force">[(1, '=', 1)]</field>
+            <field name="groups" eval="[(4, ref('eacta_school.group_eacta_school_manager'))]"/>
+        </record>
 
-           <field name="model_id" ref="model_eacta_student"/>
-
-           <field name="domain_force">['|', ('create_uid', '=', user.id), ('write_uid', '=', user.id)]</field>
-
-           <field name="perm_read" eval="True"/>
-
-           <field name="perm_write" eval="True"/>
-
-           <field name="perm_create" eval="True"/>
-
-           <field name="perm_unlink" eval="False"/>
-
-           <field name="groups" eval="[(4, ref('eacta_school.group_eacta_school_user'))]"/>
-
-       </record>
-
-
-
-       <!-- Règle pour les managers : accès complet à tous les enregistrements -->
-
-       <record id="eacta_student_manager_rule" model="ir.rule">
-
-           <field name="name">Manager E-ACTA School : accès complet aux élèves</field>
-
-           <field name="model_id" ref="model_eacta_student"/>
-
-           <field name="domain_force">[(1, '=', 1)]</field>
-
-           <field name="groups" eval="[(4, ref('eacta_school.group_eacta_school_manager'))]"/>
-
-       </record>
-
-   </data>
-
+    </data>
 </odoo>

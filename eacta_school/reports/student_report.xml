@@ -1,134 +1,204 @@
 <?xml version="1.0" encoding="UTF-8"?>
 <odoo>
 
-  <!-- Rapport Bulletin Scolaire -->
-  <template id="report_student_card">
-    <t t-call="web.html_container">
-      <t t-foreach="docs" t-as="o">
-        <t t-set="company" t-value="o.company_id or env.user.company_id"/>
-        <t t-call="web.external_layout_standard">
-          <t t-call="eacta_school.eacta_school_report_assets"/>
-
-          <div class="page">
-            <div class="eacta_school_header">
-              <h2>Bulletin Scolaire</h2>
-            </div>
-
-            <div class="row mt32 mb32">
-              <div class="col-6">
-                <strong>Nom de l'élève:</strong> <span t-field="o.name"/>
-                <br/>
-                <strong>Classe:</strong> <span t-field="o.class_id.name"/>
-              </div>
-              <div class="col-6">
-                <strong>Date de naissance:</strong> <span t-field="o.date_of_birth"/>
-              </div>
-            </div>
-
-            <table class="table table-sm">
-              <thead>
-                <tr>
-                  <th>Cours</th>
-                  <th>Note</th>
-                  <th>Commentaire</th>
-                </tr>
-              </thead>
-              <tbody>
-                <t t-foreach="o.course_ids" t-as="course">
-                  <tr>
-                    <td><span t-field="course.name"/></td>
-                    <td>
-                      <span t-field="course.grade" t-if="course.grade"/>
-                      <span t-if="not course.grade">N/A</span>
-                    </td>
-                    <td><span t-field="course.comment"/></td>
-                  </tr>
-                </t>
-              </tbody>
-            </table>
-
-            <div class="eacta_school_footer">
-              <p>© 2024 E-ACTA School. Tous droits réservés.</p>
-            </div>
-          </div>
-
-        </t>
-      </t>
-    </t>
-  </template>
-
-  <record id="action_report_student_card" model="ir.actions.report">
-    <field name="name">Bulletin Scolaire</field>
-    <field name="model">eacta.student</field>
-    <field name="report_type">qweb-pdf</field>
-    <field name="report_name">eacta_school.report_student_card</field>
-    <field name="report_file">eacta_school.report_student_card</field>
-    <field name="binding_model_id" ref="model_eacta_student"/>
-    <field name="binding_type">report</field>
-  </record>
-
-  <!-- Rapport Analyse des résultats -->
-  <template id="report_student_results">
-    <t t-call="web.html_container">
-      <t t-foreach="docs" t-as="student">
-        <t t-set="company" t-value="student.company_id or env.user.company_id"/>
+    <!-- ================================================================
+         BULLETIN SCOLAIRE
+         ================================================================ -->
+    <template id="report_student_card_document">
         <t t-call="web.external_layout">
-          <t t-call="eacta_school.eacta_school_report_assets"/>
+            <t t-set="card" t-value="o._get_report_card()"/>
+            <t t-call="eacta_school.eacta_school_report_assets"/>
+            <div class="page eacta_report">
+                <div class="eacta_report_title">
+                    <h2>Bulletin scolaire</h2>
+                    <div class="eacta_report_sub">
+                        Année académique <strong t-out="card['year'] or '-'"/>
+                    </div>
+                </div>
 
-          <div class="page">
-            <div class="eacta_school_header">
-              <h2>Analyse des résultats de l'élève</h2>
+                <div class="eacta_identity">
+                    <div>
+                        <div class="eacta_label">Élève</div>
+                        <div class="eacta_value" t-field="o.name"/>
+                        <div t-if="o.code" class="text-muted">Matricule : <span t-field="o.code"/></div>
+                    </div>
+                    <div>
+                        <div class="eacta_label">Classe</div>
+                        <div class="eacta_value" t-out="card['class'].display_name if card['class'] else '-'"/>
+                        <div t-if="card['class_size']" class="text-muted">
+                            Effectif : <t t-out="card['class_size']"/> élèves
+                        </div>
+                    </div>
+                    <div>
+                        <div class="eacta_label">Date de naissance</div>
+                        <div class="eacta_value"><span t-field="o.date_of_birth"/><t t-if="not o.date_of_birth">-</t></div>
+                    </div>
+                </div>
+
+                <table class="eacta_table">
+                    <thead>
+                        <tr>
+                            <th>Matière</th>
+                            <th class="text-center">Coeff.</th>
+                            <th class="text-center">Notes</th>
+                            <th class="text-end">Moyenne</th>
+                            <th class="text-end">Total</th>
+                            <th class="text-end">Moy. classe</th>
+                            <th class="text-center">Min / Max</th>
+                            <th>Appréciation</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        <tr t-foreach="card['lines']" t-as="line">
+                            <td>
+                                <strong t-out="line['course'].name"/>
+                                <div t-if="line['course'].teacher_id" class="text-muted small"
+                                     t-out="line['course'].teacher_id.name"/>
+                            </td>
+                            <td class="text-center" t-out="'%g' % line['coefficient']"/>
+                            <td class="text-center" t-out="line['count']"/>
+                            <td t-attf-class="text-end #{'eacta_fail' if line['average'] &lt; 10 else 'eacta_pass'}"
+                                t-out="'%.2f' % line['average']"/>
+                            <td class="text-end" t-out="'%.2f' % line['weighted']"/>
+                            <td class="text-end" t-out="'%.2f' % line['class_average'] if line['class_average'] else '-'"/>
+                            <td class="text-center">
+                                <t t-if="line['class_average']">
+                                    <t t-out="'%.2f' % line['min']"/> / <t t-out="'%.2f' % line['max']"/>
+                                </t>
+                                <t t-else="">-</t>
+                            </td>
+                            <td t-out="line['appreciation']"/>
+                        </tr>
+                        <tr t-if="not card['lines']">
+                            <td colspan="8" class="text-center text-muted">Aucune note enregistrée pour cette année.</td>
+                        </tr>
+                    </tbody>
+                </table>
+
+                <div class="eacta_summary" t-if="card['lines']">
+                    <div>
+                        <div class="eacta_label">Moyenne générale</div>
+                        <div t-attf-class="eacta_big #{'eacta_fail' if card['average'] &lt; 10 else ''}"
+                             t-out="'%.2f / 20' % card['average']"/>
+                    </div>
+                    <div>
+                        <div class="eacta_label">Appréciation</div>
+                        <div class="eacta_big" t-out="card['appreciation']"/>
+                    </div>
+                    <div t-if="card['rank']">
+                        <div class="eacta_label">Rang</div>
+                        <div class="eacta_big"><t t-out="card['rank']"/><small> / <t t-out="card['class_size']"/></small></div>
+                    </div>
+                    <div t-if="card['class_average']">
+                        <div class="eacta_label">Moyenne de la classe</div>
+                        <div class="eacta_big" t-out="'%.2f' % card['class_average']"/>
+                    </div>
+                    <div>
+                        <div class="eacta_label">Décision</div>
+                        <div t-attf-class="eacta_big #{'eacta_pass' if card['average'] &gt;= 10 else 'eacta_fail'}"
+                             t-out="'Admis' if card['average'] &gt;= 10 else 'Non admis'"/>
+                    </div>
+                </div>
+
+                <div class="eacta_signatures">
+                    <div>Le professeur principal<br/><t t-out="card['class'].teacher_id.name if card['class'] else ''"/></div>
+                    <div>La direction</div>
+                </div>
             </div>
-
-            <div class="row mt32 mb32">
-              <div class="col-6">
-                <strong>Nom:</strong> <span t-field="student.name"/>
-                <br/>
-                <strong>Classe:</strong> <span t-field="student.class_id.name"/>
-              </div>
-              <div class="col-6">
-                <strong>Moyenne générale:</strong> <span t-esc="get_average_grade(student)"/>
-              </div>
-            </div>
-
-            <table class="table table-sm" style="width: 100%; border-collapse: collapse;">
-              <thead>
-                <tr style="background-color: #f5f5f5;">
-                  <th style="padding: 8px; border: 1px solid #ddd;">Cours</th>
-                  <th style="padding: 8px; border: 1px solid #ddd;">Note</th>
-                </tr>
-              </thead>
-              <tbody>
-                <t t-foreach="student.course_ids" t-as="course">
-                  <tr>
-                    <td style="padding: 8px; border: 1px solid #ddd;"><span t-field="course.name"/></td>
-                    <td style="padding: 8px; border: 1px solid #ddd;">
-                      <span t-field="course.grade" t-if="course.grade"/>
-                      <span t-if="not course.grade">N/A</span>
-                    </td>
-                  </tr>
-                </t>
-              </tbody>
-            </table>
-
-            <div class="eacta_school_footer">
-              <p>© 2024 E-ACTA School. Tous droits réservés.</p>
-            </div>
-          </div>
-
         </t>
-      </t>
-    </t>
-  </template>
+    </template>
 
-  <record id="action_report_student_results" model="ir.actions.report">
-    <field name="name">Analyse des résultats</field>
-    <field name="model">eacta.student</field>
-    <field name="report_type">qweb-pdf</field>
-    <field name="report_name">eacta_school.report_student_results</field>
-    <field name="report_file">eacta_school.report_student_results</field>
-    <field name="binding_model_id" ref="model_eacta_student"/>
-    <field name="binding_type">report</field>
-  </record>
+    <template id="report_student_card">
+        <t t-call="web.html_container">
+            <t t-foreach="docs" t-as="o">
+                <t t-call="eacta_school.report_student_card_document"/>
+            </t>
+        </t>
+    </template>
+
+    <record id="action_report_student_card" model="ir.actions.report">
+        <field name="name">Bulletin scolaire</field>
+        <field name="model">eacta.student</field>
+        <field name="report_type">qweb-pdf</field>
+        <field name="report_name">eacta_school.report_student_card</field>
+        <field name="report_file">eacta_school.report_student_card</field>
+        <field name="print_report_name">'Bulletin - %s' % (object.name)</field>
+        <field name="binding_model_id" ref="model_eacta_student"/>
+        <field name="binding_type">report</field>
+    </record>
+
+    <!-- ================================================================
+         RELEVÉ DES RÉSULTATS DE LA CLASSE
+         ================================================================ -->
+    <template id="report_class_results">
+        <t t-call="web.html_container">
+            <t t-foreach="docs" t-as="klass">
+                <t t-call="web.external_layout">
+                    <t t-set="o" t-value="klass"/>
+                    <t t-call="eacta_school.eacta_school_report_assets"/>
+                    <div class="page eacta_report">
+                        <div class="eacta_report_title">
+                            <h2>Résultats de la classe <t t-out="klass.name"/></h2>
+                            <div class="eacta_report_sub">Année académique <strong t-out="klass.year"/></div>
+                        </div>
+                        <div class="eacta_identity">
+                            <div>
+                                <div class="eacta_label">Professeur principal</div>
+                                <div class="eacta_value" t-out="klass.teacher_id.name or '-'"/>
+                            </div>
+                            <div>
+                                <div class="eacta_label">Effectif</div>
+                                <div class="eacta_value"><t t-out="klass.student_count"/> / <t t-out="klass.capacity"/></div>
+                            </div>
+                            <div>
+                                <div class="eacta_label">Moyenne / Réussite</div>
+                                <div class="eacta_value">
+                                    <t t-out="'%.2f' % klass.average"/> · <t t-out="'%.1f' % klass.success_rate"/> %
+                                </div>
+                            </div>
+                        </div>
+                        <table class="eacta_table">
+                            <thead>
+                                <tr>
+                                    <th class="text-center">Rang</th>
+                                    <th>Matricule</th>
+                                    <th>Élève</th>
+                                    <th class="text-end">Moyenne</th>
+                                    <th>Appréciation</th>
+                                    <th class="text-center">Décision</th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                                <tr t-foreach="results[klass.id]" t-as="row">
+                                    <td class="text-center" t-out="row['rank'] or '-'"/>
+                                    <td t-out="row['student'].code or ''"/>
+                                    <td t-out="row['student'].name"/>
+                                    <td t-attf-class="text-end #{'eacta_fail' if row['has_grades'] and row['average'] &lt; 10 else ''}"
+                                        t-out="'%.2f' % row['average'] if row['has_grades'] else '-'"/>
+                                    <td t-out="row['appreciation'] or '-'"/>
+                                    <td class="text-center">
+                                        <t t-if="not row['has_grades']">-</t>
+                                        <span t-elif="row['average'] &gt;= 10" class="eacta_pass">Admis</span>
+                                        <span t-else="" class="eacta_fail">Non admis</span>
+                                    </td>
+                                </tr>
+                            </tbody>
+                        </table>
+                    </div>
+                </t>
+            </t>
+        </t>
+    </template>
+
+    <record id="action_report_class_results" model="ir.actions.report">
+        <field name="name">Résultats de la classe</field>
+        <field name="model">eacta.class</field>
+        <field name="report_type">qweb-pdf</field>
+        <field name="report_name">eacta_school.report_class_results</field>
+        <field name="report_file">eacta_school.report_class_results</field>
+        <field name="print_report_name">'Résultats - %s' % (object.display_name)</field>
+        <field name="binding_model_id" ref="model_eacta_class"/>
+        <field name="binding_type">report</field>
+    </record>
 
 </odoo>

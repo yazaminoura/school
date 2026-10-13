@@ -1,409 +1,394 @@
-from odoo import models, fields, api
+from dateutil.relativedelta import relativedelta
+
+from odoo import api, fields, models
 from odoo.exceptions import UserError
+
+from .eacta_course_grade import APPRECIATIONS, appreciation_for
 
 
 class EactaStudent(models.Model):
     _name = 'eacta.student'
-    _description = 'Élève E-ACTA'
+    _description = 'Élève'
     _inherit = ['mail.thread', 'mail.activity.mixin']
+    _order = 'name'
 
+    # ------------------------------------------------------------------
+    # Identité
+    # ------------------------------------------------------------------
+    code = fields.Char(string='Matricule', readonly=True, copy=False, index=True, tracking=True)
     name = fields.Char(string='Nom', required=True, tracking=True)
+    image_128 = fields.Image("Photo", max_width=128, max_height=128)
     date_of_birth = fields.Date(string='Date de naissance')
+    age = fields.Integer(string='Âge', compute='_compute_age')
     gender = fields.Selection([
         ('male', 'Masculin'),
         ('female', 'Féminin'),
-        ('other', 'Autre')
+        ('other', 'Autre'),
     ], string='Genre')
-    address = fields.Text(string='Adresse')
-    class_ids = fields.Many2many('eacta.class', string='Classes', tracking=True)
-    image_128 = fields.Image("Photo", max_width=128, max_height=128)
+    email = fields.Char(string='E-mail')
     phone = fields.Char(string="Téléphone")
+    address = fields.Text(string='Adresse')
+    parent_ids = fields.Many2many(
+        'res.partner', relation='eacta_partner_student_rel', column1='student_id', column2='partner_id',
+        string='Parents / Tuteurs')
+    enrollment_date = fields.Date(string="Date d'inscription", default=fields.Date.context_today)
+    student_comment = fields.Text(string='Commentaire')
+    color = fields.Integer(string='Couleur')
+    active = fields.Boolean(default=True)
+    company_id = fields.Many2one('res.company', string='Établissement', default=lambda self: self.env.company,
+                                 readonly=True)
+
+    # ------------------------------------------------------------------
+    # Scolarité
+    # ------------------------------------------------------------------
     state = fields.Selection([
-        ('draft', 'Brouillon'),
+        ('draft', 'Pré-inscription'),
         ('enrolled', 'Inscrit'),
-        ('graduated', 'Diplômer'),
+        ('graduated', 'Diplômé'),
         ('alumni', 'Ancien élève'),
-    ], string='État', default='draft', required=True)
-    student_comment = fields.Text(string='Commentaire', help="Comment for the student")
-    is_graduated = fields.Boolean(string="Graduated", default=False)
+    ], string='État', default='draft', required=True, tracking=True, group_expand='_group_expand_states')
+    is_graduated = fields.Boolean(string="Diplômé", compute='_compute_is_graduated', store=True)
+    class_ids = fields.Many2many('eacta.class', string='Classes', tracking=True)
+    current_class_id = fields.Many2one('eacta.class', string='Classe actuelle',
+                                       compute='_compute_current_class', store=True)
+    current_year = fields.Char(string='Année en cours', compute='_compute_current_class', store=True)
     course_ids = fields.Many2many('eacta.course', string='Cours', tracking=True)
     course_count = fields.Integer(string='Nombre de cours', compute='_compute_course_count')
-    course_grade_ids = fields.One2many('eacta.course.grade', 'student_id', string='Notes des Cours')
-    average = fields.Float(string='Moyenne', compute='_compute_average', store=True, digits=(3, 2))
-    gpa = fields.Float(string='GPA', compute='_compute_gpa', store=True, digits=(3, 2))
-    company_id = fields.Many2one(
-        'res.company',
-        string='Company',
-        default=lambda self: self.env.company,
-        readonly=True
-    )
 
-    selected_class_id = fields.Many2one(
-        'eacta.class',
-        string='Classe sélectionnée',
-        compute='_compute_selected_class',
-        store=False
-    )
+    # ------------------------------------------------------------------
+    # Résultats
+    # ------------------------------------------------------------------
+    course_grade_ids = fields.One2many('eacta.course.grade', 'student_id', string='Notes')
+    average = fields.Float(string='Moyenne générale', compute='_compute_results', store=True, digits=(4, 2),
+                           aggregator='avg', help="Moyenne pondérée par les coefficients des matières")
+    gpa = fields.Float(string='GPA', compute='_compute_results', store=True, digits=(4, 2), aggregator='avg',
+                       help="Moyenne pondérée par les crédits des matières")
+    appreciation = fields.Selection(APPRECIATIONS, string='Appréciation', compute='_compute_results', store=True)
+    grade_count = fields.Integer(string='Nombre de notes', compute='_compute_results', store=True)
+    class_rank = fields.Integer(string='Rang dans la classe', compute='_compute_class_rank')
+    class_size = fields.Integer(string='Effectif de la classe', compute='_compute_class_rank')
 
-    selected_year_courses = fields.Many2many(
-        'eacta.course',
-        string='Cours de l\'année sélectionnée',
-        compute='_compute_selected_year_info'
-    )
+    # Filtre par année dans la fiche
+    selected_year = fields.Selection(selection='_get_selection_year', string='Année affichée',
+                                     help="Sélectionnez l'année académique à afficher")
+    display_year = fields.Char(string='Année', compute='_compute_selected_year_info')
+    selected_year_class = fields.Many2one('eacta.class', string="Classe de l'année",
+                                          compute='_compute_selected_year_info')
+    selected_year_courses = fields.Many2many('eacta.course', string="Cours de l'année",
+                                             compute='_compute_selected_year_info')
+    selected_year_grades = fields.One2many('eacta.course.grade', string="Notes de l'année",
+                                           compute='_compute_selected_year_info')
+    selected_year_average = fields.Float(string="Moyenne de l'année", digits=(4, 2),
+                                         compute='_compute_selected_year_info')
 
+    _sql_constraints = [
+        ('code_unique', 'UNIQUE(code)', "Ce matricule est déjà attribué à un autre élève."),
+    ]
 
-    selected_year_class = fields.Many2one(
-        'eacta.class',
-        string='Classe de l\'année sélectionnée',
-        compute='_compute_selected_year_info'
-    )
+    # ------------------------------------------------------------------
+    # Computes
+    # ------------------------------------------------------------------
+    @api.model
+    def _group_expand_states(self, states, domain):
+        return [key for key, _label in self._fields['state'].selection]
 
-    @api.depends('selected_year', 'class_ids', 'course_ids', 'course_grade_ids')
-    def _compute_selected_year_info(self):
-        for student in self:
-            if student.selected_year:
-                selected_class = student.class_ids.filtered(
-                    lambda c: c.year == student.selected_year
-                )
-                student.selected_year_class = selected_class[0] if selected_class else False
-
-                if selected_class:
-                    student.selected_year_courses = selected_class.course_ids
-                else:
-                    student.selected_year_courses = False
-
-                # Filter grades for the selected year - FIXED FILTER
-                student.selected_year_grades = student.course_grade_ids.filtered(
-                    lambda g: g.class_id and g.class_id.year == student.selected_year
-                )
-            else:
-                student.selected_year_class = False
-                student.selected_year_courses = False
-                student.selected_year_grades = False
-
-    @api.depends('selected_year', 'class_ids')
-    def _compute_selected_class(self):
-        for student in self:
-            if student.selected_year:
-                selected_class = student.class_ids.filtered(
-                    lambda c: c.year == student.selected_year
-                )
-                student.selected_class_id = selected_class[0] if selected_class else False
-            else:
-                student.selected_class_id = False
-
-    # FIXED: Better method to get available years
     @api.model
     def _get_selection_year(self):
-        """Get available years for selection"""
-        # Get all years from all classes in the system
-        all_years = self.env['eacta.class'].search([]).mapped('year')
-        # Remove duplicates and sort
-        unique_years = sorted(set(all_years))
+        years = sorted({y for y in self.env['eacta.class'].sudo().search([]).mapped('year') if y}, reverse=True)
+        if not years:
+            years = [str(fields.Date.today().year)]
+        return [(year, year) for year in years]
 
-        # If no classes exist, provide current and next year as fallback
-        if not unique_years:
-            current_year = str(fields.Date.today().year)
-            next_year = str(int(current_year) + 1)
-            unique_years = [current_year, next_year]
-
-        return [(year, year) for year in unique_years if year]
-
-    # Update the selected_year field definition with dynamic selection
-    selected_year = fields.Selection(
-        selection='_get_selection_year',
-        string='Année sélectionnée',
-        default=lambda self: str(fields.Date.today().year),
-        help="Sélectionnez l'année académique à afficher"
-    )
-
-    # Add available years as computed field for the dropdown
-    available_years = fields.Char(
-        compute='_compute_available_years',
-        store=False
-    )
-
-    @api.depends('class_ids.year')
-    def _compute_available_years(self):
+    @api.depends('date_of_birth')
+    def _compute_age(self):
+        today = fields.Date.context_today(self)
         for student in self:
-            years = student.class_ids.mapped('year')
-            student.available_years = ','.join(sorted(set(years))) if years else ''
+            student.age = relativedelta(today, student.date_of_birth).years if student.date_of_birth else 0
 
-    @api.onchange('class_id')
-    def _onchange_class_id(self):
-        """Synchronise automatiquement les cours quand la classe change"""
-        if self.class_id:
-            class_courses = self.class_id.course_ids
-            self.course_ids = [(6, 0, class_courses.ids)]
-        else:
-            self.course_ids = [(5, 0, 0)]
+    @api.depends('state')
+    def _compute_is_graduated(self):
+        for student in self:
+            student.is_graduated = student.state in ('graduated', 'alumni')
 
-    def write(self, vals):
-        """Override write pour synchroniser les cours lors de la sauvegarde"""
-        result = super(EactaStudent, self).write(vals)
-        if 'class_id' in vals:
-            for student in self:
-                if student.class_id:
-                    student.course_ids = [(6, 0, student.class_id.course_ids.ids)]
-                else:
-                    student.course_ids = [(5, 0, 0)]
-        return result
+    @api.depends('class_ids', 'class_ids.year')
+    def _compute_current_class(self):
+        for student in self:
+            latest = student.class_ids.sorted(lambda c: (c.year or '', c.id), reverse=True)[:1]
+            student.current_class_id = latest
+            student.current_year = latest.year if latest else False
 
     @api.depends('course_ids')
     def _compute_course_count(self):
         for student in self:
             student.course_count = len(student.course_ids)
 
-    @api.depends('course_grade_ids.grade')
-    def _compute_average(self):
+    @api.model
+    def _get_weighted_average(self, grades, weight='coefficient'):
+        """Moyenne pondérée des notes « notées ». Retourne None si aucune note."""
+        total = weights = 0.0
+        for grade in grades.filtered(lambda g: g.status == 'graded'):
+            w = grade.course_id[weight] or 1.0
+            total += grade.grade * w
+            weights += w
+        return round(total / weights, 2) if weights else None
+
+    @api.depends('course_grade_ids.grade', 'course_grade_ids.status', 'course_grade_ids.coefficient',
+                 'course_grade_ids.course_id.credits')
+    def _compute_results(self):
         for student in self:
-            grades = [grade.grade for grade in student.course_grade_ids if grade.grade is not None]
-            student.average = round(sum(grades) / len(grades), 2) if grades else 0.0
+            grades = student.course_grade_ids
+            average = self._get_weighted_average(grades)
+            gpa = self._get_weighted_average(grades, weight='credits')
+            student.average = average or 0.0
+            student.gpa = gpa or 0.0
+            student.appreciation = appreciation_for(average) if average is not None else False
+            student.grade_count = len(grades.filtered(lambda g: g.status == 'graded'))
 
-    def debug_student_grades(self):
+    @api.depends('current_class_id', 'average')
+    def _compute_class_rank(self):
+        cache = {}
         for student in self:
-            print(f"Student: {student.name}")
-            print(f"Grade count: {len(student.course_grade_ids)}")
-            for grade in student.course_grade_ids:
-                print(f"  Course: {grade.course_id.name if grade.course_id else 'None'}")
-                print(f"  Grade: {grade.grade}")
-                print(f"  Class: {grade.class_id.name if grade.class_id else 'None'}")
-                print(f"  Exam: {grade.exam_id.name if grade.exam_id else 'None'}")
-            print(f"Average: {student.average}")
-            print(f"GPA: {student.gpa}")
-            print("---")
+            klass = student.current_class_id
+            if not klass:
+                student.class_rank = student.class_size = 0
+                continue
+            if klass.id not in cache:
+                ranking = []
+                for mate in klass.student_ids:
+                    avg = self._get_weighted_average(mate.course_grade_ids.filtered(lambda g: g.class_id == klass))
+                    if avg is not None:
+                        ranking.append((avg, mate.id))
+                ranking.sort(reverse=True)
+                cache[klass.id] = ([sid for _avg, sid in ranking], len(klass.student_ids))
+            ordered, size = cache[klass.id]
+            student.class_rank = ordered.index(student.id) + 1 if student.id in ordered else 0
+            student.class_size = size
 
-    # In eacta_student.py - add these methods
-
-    selected_year_grades = fields.One2many(
-        'eacta.course.grade',
-        string='Notes de l\'année sélectionnée',
-        compute='_compute_selected_year_info',
-        inverse='_inverse_selected_year_grades'  # Add this line
-    )
-
-
-    def _inverse_selected_year_grades(self):
-        """Allow writing to the computed field"""
-        for student in self:
-            # This method allows the field to be written to
-            pass
-
-    @api.depends('selected_year', 'class_ids', 'course_ids', 'course_grade_ids')
+    @api.depends('selected_year', 'current_year', 'class_ids', 'course_ids', 'course_grade_ids')
     def _compute_selected_year_info(self):
         for student in self:
-            if student.selected_year:
-                selected_class = student.class_ids.filtered(
-                    lambda c: c.year == student.selected_year
-                )
-                student.selected_year_class = selected_class[0] if selected_class else False
+            year = student.selected_year or student.current_year
+            klass = student.class_ids.filtered(lambda c: c.year == year)[:1] if year else self.env['eacta.class']
+            grades = student.course_grade_ids.filtered(lambda g: g.year == year) if year else student.course_grade_ids
+            student.display_year = year or False
+            student.selected_year_class = klass
+            student.selected_year_courses = klass.course_ids if klass else student.course_ids
+            student.selected_year_grades = grades
+            student.selected_year_average = self._get_weighted_average(grades) or 0.0
 
-                if selected_class:
-                    student.selected_year_courses = selected_class.course_ids
-                else:
-                    student.selected_year_courses = False
-
-                # Filter grades for the selected year
-                student.selected_year_grades = student.course_grade_ids.filtered(
-                    lambda g: g.class_id and g.class_id.year == student.selected_year
-                )
-            else:
-                student.selected_year_class = False
-                student.selected_year_courses = False
-                student.selected_year_grades = False
-
-
-    @api.depends('course_grade_ids.grade', 'course_grade_ids.course_id.credits')
-    def _compute_gpa(self):
-        for student in self:
-            total_weighted = 0.0
-            total_credits = 0.0
-
-            for grade in student.course_grade_ids:
-                if grade.course_id and grade.course_id.credits and grade.grade:
-                    total_weighted += grade.grade * grade.course_id.credits
-                    total_credits += grade.course_id.credits
-
-            student.gpa = round(total_weighted / total_credits, 2) if total_credits > 0 else 0.0
-    current_year_class_id = fields.Many2one(
-        'eacta.class',
-        string='Classe actuelle',
-        compute='_compute_current_year_info',
-        store=True
-    )
-
-    current_year = fields.Char(
-        string='Année actuelle',
-        compute='_compute_current_year_info',
-        store=True
-    )
-
-    @api.depends('class_ids', 'class_ids.year')
-    def _compute_current_year_info(self):
-        current_year = str(fields.Date.today().year)
-        for student in self:
-            current_class = student.class_ids.filtered(lambda c: c.year == current_year)
-            student.current_year_class_id = current_class[0] if current_class else False
-            student.current_year = current_year if current_class else False
-
-    @api.depends('name', 'class_ids')
+    @api.depends('name', 'code', 'current_class_id')
     def _compute_display_name(self):
-        current_year = str(fields.Date.today().year)
         for student in self:
-            current_class = student.class_ids.filtered(lambda c: c.year == current_year)
-            if current_class:
-                student.display_name = f"{student.name} - {current_class[0].name} ({current_year})"
-            else:
-                student.display_name = student.name
+            label = student.name or ''
+            if student.code:
+                label = f"[{student.code}] {label}"
+            student.display_name = label
 
-    def name_get(self):
-        return [(s.id, s.display_name) for s in self]
+    @api.model
+    def _name_search(self, name, domain=None, operator='ilike', limit=None, order=None):
+        domain = domain or []
+        if name:
+            domain = ['|', ('code', operator, name), ('name', operator, name)] + list(domain)
+        return self._search(domain, limit=limit, order=order)
 
-    def action_validate_enrollment(self):
+    # ------------------------------------------------------------------
+    # CRUD
+    # ------------------------------------------------------------------
+    @api.model_create_multi
+    def create(self, vals_list):
+        sequence = self.env['ir.sequence']
+        for vals in vals_list:
+            if not vals.get('code'):
+                vals['code'] = sequence.next_by_code('eacta.student.code') or False
+        students = super().create(vals_list)
+        students._sync_class_courses()
+        return students
+
+    def write(self, vals):
+        res = super().write(vals)
+        if 'class_ids' in vals:
+            self._sync_class_courses()
+        return res
+
+    def _sync_class_courses(self):
+        """Inscrit automatiquement l'élève aux cours de sa classe actuelle."""
+        for student in self:
+            missing = student.current_class_id.course_ids - student.course_ids
+            if missing:
+                super(EactaStudent, student).write({'course_ids': [(4, c.id) for c in missing]})
+
+    # ------------------------------------------------------------------
+    # Workflow
+    # ------------------------------------------------------------------
+    def action_enroll(self):
         for student in self:
             if student.state != 'draft':
-                raise UserError("L'inscription ne peut être validée que pour les étudiants en état de brouillon.")
-            student.state = 'enrolled'
+                raise UserError(f"Seule une pré-inscription peut être validée ({student.name}).")
+            if not student.class_ids:
+                raise UserError(f"Affectez une classe à {student.name} avant de valider son inscription.")
+        self.write({'state': 'enrolled'})
+
+    # Compatibilité avec l'ancien bouton
+    action_validate_enrollment = action_enroll
 
     def action_graduate(self):
-        """Mark the student as graduated based on GPA or just change state."""
         for student in self:
-            if student.state == 'graduated':
-                raise UserError(f"{student.name} est déjà diplômé.")
-            student.state = 'graduated'
-            if student.gpa <= 10:
+            if student.state != 'enrolled':
+                raise UserError(f"{student.name} doit être inscrit pour être diplômé.")
+            if student.average < 10:
                 raise UserError(
-                    f"{student.name} a été diplômé, mais sa note est {student.gpa}. "
-                    "Il faut une note supérieure à 10 pour un diplôme valide."
-                )
+                    f"{student.name} ne peut pas être diplômé : sa moyenne générale est de "
+                    f"{student.average:.2f}/20 (10/20 minimum requis).")
+        self.write({'state': 'graduated'})
+
+    def action_set_alumni(self):
+        self.write({'state': 'alumni'})
 
     def action_draft(self):
-        return self.write({'state': 'draft'})
+        self.write({'state': 'draft'})
 
-    def action_enroll(self):
-        return self.write({'state': 'enrolled'})
-
-    def action_confirm_edit(self):
-        """Confirme avant d'éditer l'élève."""
-        return {
-            'name': 'Confirm Edit',
-            'type': 'ir.actions.act_window',
-            'res_model': 'eacta.student',
-            'view_mode': 'form',
-            'res_id': self.id,
-            'target': 'new',
-            'context': {
-                'default_title': 'Confirmer la modification',
-                'default_message': 'Êtes-vous sûr de vouloir modifier cet enregistrement ?',
-                'confirm_callback': 'action_edit'
-            }
-        }
-
-    def action_save(self):
-        """Action de sauvegarde personnalisée avec logique additionnelle."""
-        self.ensure_one()
-        if not self.name:
-            raise UserError("Le nom est requis pour enregistrer l'élève.")
-        self.write({})
-        return {
-            'type': 'ir.actions.client',
-            'tag': 'reload',
-        }
-
+    # ------------------------------------------------------------------
+    # Navigation
+    # ------------------------------------------------------------------
     def action_view_courses(self):
         self.ensure_one()
         return {
-            'name': "Cours de l'étudiant",
-            'view_mode': 'list,form',
+            'name': f"Cours de {self.name}",
+            'type': 'ir.actions.act_window',
             'res_model': 'eacta.course',
+            'view_mode': 'kanban,list,form',
             'domain': [('id', 'in', self.course_ids.ids)],
-            'type': 'ir.actions.act_window',
-            'context': {'create': False}
+            'context': {'create': False},
         }
 
-    def get_average_grade(self, student):
-        grades = student.course_ids.mapped('grade')
-        filtered_grades = [float(grade) for grade in grades]
-        return filtered_grades and round(sum(filtered_grades) / len(filtered_grades), 2) or 0.0
+    def action_view_grades(self):
+        self.ensure_one()
+        return {
+            'name': f"Notes de {self.name}",
+            'type': 'ir.actions.act_window',
+            'res_model': 'eacta.course.grade',
+            'view_mode': 'list,pivot,graph,form',
+            'domain': [('student_id', '=', self.id)],
+            'context': {'default_student_id': self.id, 'search_default_group_by_year': 1},
+        }
 
+    def action_print_report_card(self):
+        return self.env.ref('eacta_school.action_report_student_card').report_action(self)
+
+    # ------------------------------------------------------------------
+    # Bulletin
+    # ------------------------------------------------------------------
+    def _get_report_card(self, year=None):
+        """Données du bulletin scolaire pour une année (par défaut l'année affichée)."""
+        self.ensure_one()
+        year = year or self.selected_year or self.current_year
+        klass = self.class_ids.filtered(lambda c: c.year == year)[:1]
+        grades = self.course_grade_ids.filtered(lambda g: g.year == year and g.status == 'graded')
+        appreciation_labels = dict(APPRECIATIONS)
+        lines = []
+        for course in grades.mapped('course_id').sorted('name'):
+            course_grades = grades.filtered(lambda g: g.course_id == course)
+            values = course_grades.mapped('grade')
+            avg = round(sum(values) / len(values), 2)
+            class_values = klass.grade_ids.filtered(
+                lambda g: g.course_id == course and g.status == 'graded').mapped('grade') if klass else []
+            lines.append({
+                'course': course,
+                'coefficient': course.coefficient,
+                'count': len(values),
+                'average': avg,
+                'weighted': round(avg * course.coefficient, 2),
+                'class_average': round(sum(class_values) / len(class_values), 2) if class_values else False,
+                'min': min(class_values) if class_values else False,
+                'max': max(class_values) if class_values else False,
+                'appreciation': appreciation_labels.get(appreciation_for(avg)),
+            })
+        total_coef = sum(line['coefficient'] for line in lines)
+        average = round(sum(line['weighted'] for line in lines) / total_coef, 2) if total_coef else 0.0
+        return {
+            'year': year,
+            'class': klass,
+            'lines': lines,
+            'total_coefficient': total_coef,
+            'average': average,
+            'appreciation': appreciation_labels.get(appreciation_for(average)) if lines else False,
+            'rank': self.class_rank if klass == self.current_class_id else False,
+            'class_size': len(klass.student_ids) if klass else 0,
+            'class_average': klass.average if klass else False,
+        }
+
+    # ------------------------------------------------------------------
+    # Tableau de bord
+    # ------------------------------------------------------------------
     @api.model
-    def _get_class_average(self, class_id):
-        students = self.env['eacta.student'].search([('class_id', '=', class_id)])
-        total_grades = 0
-        total_students = 0
-        for student in students:
-            student_avg = self._get_average_grade(student)
-            if student_avg:
-                total_grades += student_avg
-                total_students += 1
-        return round(total_grades / total_students, 2) if total_students else 0.0
+    def get_school_dashboard_data(self):
+        Student = self.env['eacta.student']
+        Class = self.env['eacta.class']
+        Exam = self.env['eacta.exam']
+        Grade = self.env['eacta.course.grade']
+        today = fields.Date.context_today(self)
 
-    borrowed_book_ids = fields.One2many(
-        'library.loan',
-        compute='_compute_borrowed_book_ids',
-        string="Livres empruntés"
-    )
+        state_labels = dict(self._fields['state'].selection)
+        by_state = {state: count for state, count in Student._read_group([], ['state'], ['__count'])}
+        by_gender = {gender: count for gender, count in Student._read_group([], ['gender'], ['__count'])}
 
-    @api.depends()
-    def _compute_borrowed_book_ids(self):
-        for student in self:
-            emprunt_ids = self.env['library.loan'].search([('borrower_id', '=', student.id)])
-            student.borrowed_book_ids = [(6, 0, emprunt_ids.ids)]
+        graded = Grade.search([('status', '=', 'graded')])
+        values = graded.mapped('grade')
+        buckets = [
+            ('0 - 5', 0, 5), ('5 - 8', 5, 8), ('8 - 10', 8, 10), ('10 - 12', 10, 12),
+            ('12 - 14', 12, 14), ('14 - 16', 14, 16), ('16 - 20', 16, 20.01),
+        ]
+        distribution = [
+            {'label': label, 'count': len([v for v in values if low <= v < high]), 'passed': low >= 10}
+            for label, low, high in buckets
+        ]
 
-    def action_view_borrowed_books(self):
-        self.ensure_one()
+        classes = Class.search([], order='year desc, fill_rate desc', limit=8)
+        upcoming = Exam.search([('date', '>=', today), ('state', '!=', 'cancel')], order='date asc', limit=6)
+        to_grade = Exam.search_count([('state', '=', 'grading')])
+        top = Student.search([('grade_count', '>', 0)], order='average desc', limit=6)
+        courses = self.env['eacta.course'].search([('grade', '>', 0)], order='grade desc')
+
         return {
-            'name': "Livres empruntés",
-            'view_mode': 'list,form',
-            'res_model': 'library.loan',
-            'domain': [('borrower_ref', '=', self.id)],
-            'type': 'ir.actions.act_window',
-            'context': {'create': False}
-        }
-
-    borrowed_book_count = fields.Integer(
-        string="Nombre de livres empruntés",
-        compute='_compute_borrowed_book_count'
-    )
-
-    @api.depends('borrowed_book_ids')
-    def _compute_borrowed_book_count(self):
-        for student in self:
-            student.borrowed_book_count = len(student.borrowed_book_ids)
-
-    event_ids = fields.Many2many(
-        'eacta.school.event',
-        relation='eacta_event_student_rel',
-        column1='student_id',
-        column2='event_id',
-        string="Événements participés",
-        compute='_compute_event_ids',
-        store=False
-    )
-
-    event_count = fields.Integer(
-        string="Nombre d'événements",
-        compute='_compute_event_count'
-    )
-
-    @api.depends()
-    def _compute_event_ids(self):
-        for student in self:
-            event_ids = self.env['eacta.school.event'].search([('participant_ids', 'in', student.id)])
-            student.event_ids = [(6, 0, event_ids.ids)]
-
-    @api.depends('event_ids')
-    def _compute_event_count(self):
-        for student in self:
-            student.event_count = len(student.event_ids)
-
-    def action_view_events(self):
-        self.ensure_one()
-        return {
-            'name': "Événements participés",
-            'view_mode': 'list,form',
-            'res_model': 'eacta.school.event',
-            'domain': [('participant_ids', 'in', self.id)],
-            'type': 'ir.actions.act_window',
-            'context': {'create': False}
+            'kpis': {
+                'students': sum(by_state.values()),
+                'enrolled': by_state.get('enrolled', 0),
+                'drafts': by_state.get('draft', 0),
+                'classes': Class.search_count([]),
+                'courses': self.env['eacta.course'].search_count([]),
+                'teachers': self.env['res.users'].search_count([('is_teacher', '=', True)]),
+                'exams_upcoming': Exam.search_count([('date', '>=', today), ('state', '!=', 'cancel')]),
+                'exams_to_grade': to_grade,
+                'average': round(sum(values) / len(values), 2) if values else 0.0,
+                'success_rate': round(100.0 * len([v for v in values if v >= 10]) / len(values), 1) if values else 0.0,
+                'grades': len(values),
+            },
+            'states': [
+                {'key': key, 'label': state_labels[key], 'count': by_state.get(key, 0)}
+                for key in state_labels
+            ],
+            'gender': {
+                'male': by_gender.get('male', 0),
+                'female': by_gender.get('female', 0),
+                'other': by_gender.get('other', 0) + by_gender.get(False, 0),
+            },
+            'distribution': distribution,
+            'classes': [{
+                'id': c.id, 'name': c.display_name, 'count': c.student_count, 'capacity': c.capacity,
+                'fill': min(c.fill_rate, 100), 'average': c.average,
+            } for c in classes],
+            'upcoming_exams': [{
+                'id': e.id, 'name': e.name, 'course': e.course_id.name,
+                'date': fields.Date.to_string(e.date), 'days': (e.date - today).days,
+                'type': dict(e._fields['exam_type'].selection).get(e.exam_type),
+                'classes': ', '.join(e.class_ids.mapped('name')),
+            } for e in upcoming],
+            'top_students': [{
+                'id': s.id, 'name': s.name, 'code': s.code or '', 'class': s.current_class_id.display_name or '',
+                'average': s.average, 'has_image': bool(s.image_128),
+            } for s in top],
+            'best_courses': [{'id': c.id, 'name': c.name, 'average': c.grade, 'success': c.success_rate}
+                             for c in courses[:5]],
+            'worst_courses': [{'id': c.id, 'name': c.name, 'average': c.grade, 'success': c.success_rate}
+                              for c in courses.sorted('grade')[:5]],
         }

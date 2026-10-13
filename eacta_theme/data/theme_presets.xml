@@ -1,79 +1,107 @@
 <?xml version="1.0" encoding="utf-8"?>
 <odoo>
     <data noupdate="1">
-        <!-- Configuration initiale dans ir.config_parameter (palette Indigo par défaut) -->
-        <function model="ir.config_parameter" name="set_param" eval="['eacta_theme.primary_color', '#4F46E5']"/>
-        <function model="ir.config_parameter" name="set_param" eval="['eacta_theme.secondary_color', '#06B6D4']"/>
-        <function model="ir.config_parameter" name="set_param" eval="['eacta_theme.accent_color', '#F59E0B']"/>
-        <function model="ir.config_parameter" name="set_param" eval="['eacta_theme.ink_color', '#1E1B4B']"/>
-        <function model="ir.config_parameter" name="set_param" eval="['eacta_theme.active_theme_name', 'E-ACTA Indigo Élégance']"/>
+
+        <record id="theme_preset_nr_school" model="eacta.theme.config">
+            <field name="name">NR School</field>
+            <field name="sequence">1</field>
+            <field name="color_scheme">nr_school</field>
+            <field name="primary_color">#0B6E4F</field>
+            <field name="secondary_color">#E9A23B</field>
+            <field name="accent_color">#E76F51</field>
+            <field name="ink_color">#06392A</field>
+            <field name="navbar_style">gradient</field>
+            <field name="card_style">modern</field>
+            <field name="card_radius">medium</field>
+            <field name="badge_style">soft</field>
+            <field name="font_family">inter</field>
+        </record>
+
+        <record id="theme_preset_nr_marine" model="eacta.theme.config">
+            <field name="name">NR School Marine</field>
+            <field name="sequence">2</field>
+            <field name="color_scheme">nr_marine</field>
+            <field name="primary_color">#00285C</field>
+            <field name="secondary_color">#00B8C8</field>
+            <field name="accent_color">#F5A524</field>
+            <field name="ink_color">#001A3D</field>
+            <field name="font_family">inter</field>
+        </record>
 
         <record id="theme_preset_indigo" model="eacta.theme.config">
-            <field name="name">E-ACTA Indigo Élégance</field>
-            <field name="active">1</field>
+            <field name="name">NR School Indigo Élégance</field>
+            <field name="sequence">2</field>
             <field name="color_scheme">indigo</field>
             <field name="primary_color">#4F46E5</field>
             <field name="secondary_color">#06B6D4</field>
             <field name="accent_color">#F59E0B</field>
             <field name="ink_color">#1E1B4B</field>
-            <field name="card_style">modern</field>
-            <field name="card_radius">medium</field>
-            <field name="badge_style">soft</field>
-            <field name="show_gpa_badges">1</field>
-            <field name="show_capacity_bar">1</field>
-            <field name="show_avatar_glow">1</field>
-            <field name="school_header_banner">1</field>
         </record>
 
         <record id="theme_preset_emerald" model="eacta.theme.config">
-            <field name="name">E-ACTA Vert Académie</field>
-            <field name="active">0</field>
+            <field name="name">NR School Vert Académie</field>
+            <field name="sequence">3</field>
             <field name="color_scheme">emerald</field>
             <field name="primary_color">#059669</field>
             <field name="secondary_color">#10B981</field>
             <field name="accent_color">#F59E0B</field>
             <field name="ink_color">#064E3B</field>
-            <field name="card_style">modern</field>
-            <field name="card_radius">medium</field>
-            <field name="badge_style">soft</field>
-            <field name="show_gpa_badges">1</field>
-            <field name="show_capacity_bar">1</field>
-            <field name="show_avatar_glow">1</field>
-            <field name="school_header_banner">1</field>
+            <field name="font_family">nunito</field>
         </record>
 
         <record id="theme_preset_sky" model="eacta.theme.config">
-            <field name="name">E-ACTA Bleu Océan</field>
-            <field name="active">0</field>
+            <field name="name">NR School Bleu Océan</field>
+            <field name="sequence">4</field>
             <field name="color_scheme">sky</field>
             <field name="primary_color">#0284C7</field>
             <field name="secondary_color">#38BDF8</field>
             <field name="accent_color">#F97316</field>
             <field name="ink_color">#0C4A6E</field>
+            <field name="navbar_style">solid</field>
             <field name="card_style">bordered</field>
             <field name="card_radius">large</field>
             <field name="badge_style">pill</field>
-            <field name="show_gpa_badges">1</field>
-            <field name="show_capacity_bar">1</field>
-            <field name="show_avatar_glow">1</field>
-            <field name="school_header_banner">1</field>
         </record>
 
         <record id="theme_preset_violet" model="eacta.theme.config">
-            <field name="name">E-ACTA Prestige Violet</field>
-            <field name="active">0</field>
+            <field name="name">NR School Prestige Violet</field>
+            <field name="sequence">5</field>
             <field name="color_scheme">violet</field>
             <field name="primary_color">#7C3AED</field>
             <field name="secondary_color">#A855F7</field>
             <field name="accent_color">#EC4899</field>
             <field name="ink_color">#3B0764</field>
-            <field name="card_style">modern</field>
-            <field name="card_radius">medium</field>
-            <field name="badge_style">soft</field>
-            <field name="show_gpa_badges">1</field>
-            <field name="show_capacity_bar">1</field>
-            <field name="show_avatar_glow">1</field>
-            <field name="school_header_banner">1</field>
+            <field name="font_family">poppins</field>
         </record>
+
+        <record id="theme_preset_slate_light" model="eacta.theme.config">
+            <field name="name">NR School Minimal Clair</field>
+            <field name="sequence">6</field>
+            <field name="color_scheme">slate</field>
+            <field name="primary_color">#334155</field>
+            <field name="secondary_color">#64748B</field>
+            <field name="accent_color">#0284C7</field>
+            <field name="ink_color">#0F172A</field>
+            <field name="navbar_style">light</field>
+            <field name="card_style">flat</field>
+            <field name="card_radius">small</field>
+            <field name="badge_style">outline</field>
+            <field name="density">compact</field>
+        </record>
+
+        <record id="theme_preset_terracotta" model="eacta.theme.config">
+            <field name="name">NR School Terracotta</field>
+            <field name="sequence">7</field>
+            <field name="color_scheme">terracotta</field>
+            <field name="primary_color">#C2410C</field>
+            <field name="secondary_color">#0D9488</field>
+            <field name="accent_color">#EAB308</field>
+            <field name="ink_color">#431407</field>
+            <field name="font_family">cairo</field>
+        </record>
+
+        <!-- Applique « NR School » si aucun style n'est encore appliqué -->
+        <function model="eacta.theme.config" name="_ensure_current_theme"/>
+
     </data>
 </odoo>

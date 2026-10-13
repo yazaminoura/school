@@ -1,80 +1,185 @@
 <?xml version="1.0" encoding="utf-8"?>
 <odoo>
-    <!-- Form examen -->
+
     <record id="view_exam_form" model="ir.ui.view">
         <field name="name">eacta.exam.form</field>
         <field name="model">eacta.exam</field>
         <field name="arch" type="xml">
             <form string="Examen">
+                <header>
+                    <button name="action_generate_grade_sheet" string="Générer la feuille de notes" type="object"
+                            class="btn-primary" invisible="state in ('done', 'cancel') or grade_count"/>
+                    <button name="action_open_grade_sheet" string="Saisir les notes" type="object"
+                            class="btn-primary" icon="fa-pencil" invisible="state in ('done', 'cancel') or not grade_count"/>
+                    <button name="action_generate_grade_sheet" string="Ajouter les élèves manquants" type="object"
+                            invisible="state in ('done', 'cancel') or not grade_count"/>
+                    <button name="action_done" string="Clôturer" type="object" invisible="state != 'grading'"/>
+                    <button name="action_cancel" string="Annuler" type="object" invisible="state in ('done', 'cancel')"/>
+                    <button name="action_reset_draft" string="Remettre en planifié" type="object"
+                            invisible="state not in ('done', 'cancel')"/>
+                    <field name="state" widget="statusbar" statusbar_visible="draft,grading,done"/>
+                </header>
                 <sheet>
-                    <div class="oe_title">
-                        <label for="name" string="Nom de l'Examen" class="oe_edit_only"/>
-                        <h1 class="d-flex align-items-center gap-2">
-                            <i class="fa fa-pencil-square-o text-primary"/>
-                            <field name="name" placeholder="ex: Contrôle Continu 1 - Algèbre"/>
-                        </h1>
+                    <div class="oe_button_box" name="button_box">
+                        <button name="action_open_grade_sheet" type="object" class="oe_stat_button" icon="fa-pencil-square-o">
+                            <field name="graded_count" widget="statinfo" string="Copies notées"/>
+                        </button>
                     </div>
+                    <div class="oe_title">
+                        <field name="exam_type" class="o_eacta_chip"/>
+                        <h1><field name="name" placeholder="ex : Contrôle continu n°1 - Algèbre"/></h1>
+                    </div>
+
+                    <div class="o_eacta_kpis" invisible="not graded_count">
+                        <div class="o_eacta_kpi">
+                            <span class="o_eacta_kpi_label">Moyenne</span>
+                            <span class="o_eacta_kpi_value"><field name="average" class="oe_inline"/><small>/20</small></span>
+                        </div>
+                        <div class="o_eacta_kpi">
+                            <span class="o_eacta_kpi_label">Min · Max</span>
+                            <span class="o_eacta_kpi_value"><field name="min_grade" class="oe_inline"/><small> · </small><field name="max_grade" class="oe_inline"/></span>
+                        </div>
+                        <div class="o_eacta_kpi">
+                            <span class="o_eacta_kpi_label">Réussite</span>
+                            <span class="o_eacta_kpi_value"><field name="success_rate" class="oe_inline"/><small> %</small></span>
+                        </div>
+                        <div class="o_eacta_kpi">
+                            <span class="o_eacta_kpi_label">Correction</span>
+                            <field name="progress" widget="progressbar" class="o_eacta_kpi_bar"/>
+                        </div>
+                    </div>
+
                     <group>
-                        <group string="Matière &amp; Calendrier">
-                            <field name="course_id" string="Matière" required="True" options="{'no_create': True}"/>
-                            <field name="date" string="Date de l'Examen" required="True"/>
+                        <group string="Matière">
+                            <field name="course_id" options="{'no_create': True}"/>
+                            <field name="teacher_id"/>
+                            <field name="class_ids" widget="many2many_tags" options="{'no_create': True}"/>
                         </group>
-                        <group string="Classes Concernées">
-                            <field name="class_ids" string="Classes" widget="many2many_tags" required="True"/>
+                        <group string="Organisation">
+                            <field name="date"/>
+                            <field name="duration" widget="float_time"/>
+                            <field name="room"/>
                         </group>
                     </group>
+                    <notebook>
+                        <page string="Notes" name="grades" icon="fa-pencil-square-o">
+                            <field name="grade_ids" context="{'default_exam_id': id}">
+                                <list editable="bottom"
+                                      decoration-danger="status == 'graded' and grade &lt; 10"
+                                      decoration-success="status == 'graded' and grade &gt;= 14"
+                                      decoration-muted="status in ('absent', 'exempt')">
+                                    <field name="student_id" options="{'no_create': True}"/>
+                                    <field name="class_id" options="{'no_create': True}" optional="show"/>
+                                    <field name="status" widget="badge" decoration-warning="status == 'pending'"
+                                           decoration-danger="status == 'absent'"/>
+                                    <field name="grade" invisible="status in ('absent', 'exempt')"/>
+                                    <field name="appreciation"/>
+                                    <field name="comment" optional="show"/>
+                                </list>
+                            </field>
+                        </page>
+                        <page string="Consignes" name="description" icon="fa-info-circle">
+                            <field name="description" placeholder="Documents autorisés, barème, programme…"/>
+                        </page>
+                    </notebook>
                 </sheet>
+                <chatter/>
             </form>
         </field>
     </record>
 
-    <!-- Vue liste des examens -->
     <record id="view_eacta_exam_tree" model="ir.ui.view">
         <field name="name">eacta.exam.list</field>
         <field name="model">eacta.exam</field>
         <field name="arch" type="xml">
-            <list string="Liste des Examens" decoration-info="date and date &gt;= current_date">
-                <field name="name" string="Nom de l'Examen" class="fw-bold"/>
-                <field name="course_id" string="Matière"/>
-                <field name="date" string="Date" widget="date"/>
-                <field name="class_ids" string="Classes" widget="many2many_tags"/>
+            <list string="Examens" sample="1" decoration-info="state == 'draft'" decoration-muted="state == 'cancel'">
+                <field name="date"/>
+                <field name="name"/>
+                <field name="course_id"/>
+                <field name="exam_type"/>
+                <field name="class_ids" widget="many2many_tags" optional="show"/>
+                <field name="teacher_id" optional="hide"/>
+                <field name="graded_count" string="Copies" optional="show"/>
+                <field name="progress" widget="progressbar" optional="show"/>
+                <field name="average" optional="show"/>
+                <field name="success_rate" optional="hide"/>
+                <field name="state" widget="badge" decoration-info="state == 'draft'"
+                       decoration-warning="state == 'grading'" decoration-success="state == 'done'"/>
             </list>
         </field>
     </record>
 
-    <!-- Vue Kanban des examens -->
+    <record id="view_eacta_exam_search" model="ir.ui.view">
+        <field name="name">eacta.exam.search</field>
+        <field name="model">eacta.exam</field>
+        <field name="arch" type="xml">
+            <search string="Rechercher des examens">
+                <field name="name"/>
+                <field name="course_id"/>
+                <field name="class_ids"/>
+                <field name="teacher_id"/>
+                <filter string="Mes examens" name="my_exams" domain="[('teacher_id', '=', uid)]"/>
+                <separator/>
+                <filter string="À venir" name="upcoming" domain="[('date', '>=', context_today().strftime('%Y-%m-%d'))]"/>
+                <filter string="En correction" name="grading" domain="[('state', '=', 'grading')]"/>
+                <filter string="Clôturés" name="done" domain="[('state', '=', 'done')]"/>
+                <separator/>
+                <filter string="Date" name="filter_date" date="date"/>
+                <group expand="0" string="Regrouper par">
+                    <filter string="Matière" name="group_by_course" context="{'group_by': 'course_id'}"/>
+                    <filter string="Type" name="group_by_type" context="{'group_by': 'exam_type'}"/>
+                    <filter string="État" name="group_by_state" context="{'group_by': 'state'}"/>
+                    <filter string="Mois" name="group_by_month" context="{'group_by': 'date:month'}"/>
+                </group>
+            </search>
+        </field>
+    </record>
+
     <record id="view_eacta_exam_kanban" model="ir.ui.view">
         <field name="name">eacta.exam.kanban</field>
         <field name="model">eacta.exam</field>
         <field name="arch" type="xml">
-            <kanban>
-                <field name="id"/>
-                <field name="name"/>
-                <field name="course_id"/>
-                <field name="date"/>
-                <field name="class_ids"/>
+            <kanban class="o_eacta_kanban" default_group_by="state" sample="1" quick_create="false">
+                <field name="state"/>
+                <field name="progress"/>
+                <field name="average"/>
+                <field name="graded_count"/>
                 <templates>
-                    <t t-name="card">
-                        <div class="oe_kanban_global_click eacta_card_custom eacta_exam_card p-3">
-                            <div class="d-flex justify-content-between align-items-center mb-2">
-                                <span class="badge bg-light text-primary border rounded-pill px-2 py-1 small">
-                                    <i class="fa fa-book me-1"/>
-                                    <field name="course_id"/>
-                                </span>
-                                <span class="badge bg-primary-subtle text-primary border border-primary-subtle rounded-pill px-2 py-1 small">
-                                    <i class="fa fa-calendar me-1"/>
-                                    <field name="date"/>
-                                </span>
+                    <t t-name="card" class="p-0">
+                        <div class="o_eacta_card o_eacta_exam_card">
+                            <div class="o_eacta_card_head">
+                                <div class="o_eacta_date_tile" t-if="record.date.raw_value">
+                                    <t t-out="record.date.raw_value.toFormat('dd')"/>
+                                    <small t-out="record.date.raw_value.toFormat('LLL')"/>
+                                </div>
+                                <div class="flex-grow-1 min-w-0">
+                                    <field name="name" class="o_eacta_card_title d-block text-truncate"/>
+                                    <div class="o_eacta_card_meta text-truncate"><field name="course_id"/></div>
+                                </div>
                             </div>
-                            <h5 class="fw-bold text-dark mb-2 text-truncate">
-                                <field name="name"/>
-                            </h5>
-                            <div class="d-flex align-items-center justify-content-between mt-auto pt-2 border-top">
-                                <small class="text-muted">
-                                    <i class="fa fa-users me-1"/>
-                                    Classes:
-                                </small>
-                                <field name="class_ids" widget="many2many_tags"/>
+                            <div class="o_eacta_card_body">
+                                <div class="d-flex gap-2 flex-wrap align-items-center">
+                                    <span class="o_eacta_tag"><field name="exam_type"/></span>
+                                    <field name="class_ids" widget="many2many_tags"/>
+                                </div>
+                                <div class="o_eacta_meter" t-if="record.state.raw_value == 'grading'">
+                                    <div class="d-flex justify-content-between small">
+                                        <span class="text-muted">Correction</span>
+                                        <strong><t t-out="Math.round(record.progress.raw_value)"/> %</strong>
+                                    </div>
+                                    <div class="o_eacta_meter_track">
+                                        <div class="o_eacta_meter_fill" t-attf-style="width: #{record.progress.raw_value}%"/>
+                                    </div>
+                                </div>
+                            </div>
+                            <div class="o_eacta_card_foot">
+                                <span class="text-muted small">
+                                    <i class="fa fa-pencil-square-o me-1" title="Copies"/><t t-out="record.graded_count.raw_value"/> copies
+                                </span>
+                                <span t-if="record.graded_count.raw_value"
+                                      t-attf-class="o_eacta_score #{record.average.raw_value &gt;= 14 ? 'o_eacta_score_high' : (record.average.raw_value &lt; 10 ? 'o_eacta_score_low' : '')}">
+                                    <field name="average"/> / 20
+                                </span>
                             </div>
                         </div>
                     </t>
@@ -83,25 +188,29 @@
         </field>
     </record>
 
-    <!-- Actions examen-->
-    <record id="action_eacta_exam" model="ir.actions.act_window">
-        <field name="name">Examens</field>
-        <field name="res_model">eacta.exam</field>
-        <field name="view_mode">kanban,list,form</field>
-        <field name="help" type="html">
-            <p class="o_view_nocontent_smiling_face">
-                Planifiez votre premier examen !
-            </p>
-            <p>
-                Définissez les devoirs, contrôles continus et examens finaux pour chaque matière et classe.
-            </p>
+    <record id="view_eacta_exam_calendar" model="ir.ui.view">
+        <field name="name">eacta.exam.calendar</field>
+        <field name="model">eacta.exam</field>
+        <field name="arch" type="xml">
+            <calendar string="Calendrier des examens" date_start="date" color="course_id" mode="month" event_open_popup="1">
+                <field name="name"/>
+                <field name="course_id" filters="1"/>
+                <field name="exam_type"/>
+                <field name="class_ids" widget="many2many_tags"/>
+                <field name="room"/>
+            </calendar>
         </field>
     </record>
 
-    <!-- Menu -->
-    <menuitem id="menu_eacta_exam"
-              name="Examens"
-              parent="menu_eacta_school_root"
-              action="action_eacta_exam"
-              sequence="20"/>
-</odoo>
+    <record id="action_eacta_exam" model="ir.actions.act_window">
+        <field name="name">Examens</field>
+        <field name="res_model">eacta.exam</field>
+        <field name="view_mode">kanban,list,calendar,form</field>
+        <field name="search_view_id" ref="view_eacta_exam_search"/>
+        <field name="help" type="html">
+            <p class="o_view_nocontent_smiling_face">Planifiez votre premier examen</p>
+            <p>Générez la feuille de notes en un clic, saisissez les notes et suivez la correction.</p>
+        </field>
+    </record>
+
+</odoo>

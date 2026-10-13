@@ -5,9 +5,9 @@
 
        <record id="module_category_eacta_school" model="ir.module.category">
 
-           <field name="name">E-ACTA School</field>
+           <field name="name">NR School</field>
 
-           <field name="description">Gestion des utilisateurs pour le module E-ACTA School</field>
+           <field name="description">Gestion des utilisateurs pour le module NR School</field>
 
            <field name="sequence">20</field>
 

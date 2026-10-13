@@ -1,312 +1,55 @@
 <?xml version="1.0" encoding="utf-8"?>
 <odoo>
-    <!-- ====================================================================
-         STYLES DYNAMIQUES DU SYSTÈME E-ACTA
-         Injectés dans <head> au runtime via web.webclient_bootstrap.
-         Surcharge les couleurs globales Bootstrap et Odoo 18 et personnalise
-         l'affichage de la navbar et de tous les menuitems.
-         ==================================================================== -->
-    <template id="eacta_theme_dynamic_styles" name="E-ACTA Theme Dynamic System Styles" inherit_id="web.webclient_bootstrap">
+    <!-- Variables CSS du style appliqué, injectées dans le client web -->
+    <template id="eacta_theme_dynamic_styles" name="NR School Theme Dynamic Styles" inherit_id="web.webclient_bootstrap">
         <xpath expr="//t[@t-set='head_web']" position="inside">
-            <style type="text/css">
-                <t t-set="ICP" t-value="env['ir.config_parameter'].sudo()"/>
-                <t t-set="c1" t-value="ICP.get_param('eacta_theme.primary_color', '#4F46E5')"/>
-                <t t-set="c2" t-value="ICP.get_param('eacta_theme.secondary_color', '#06B6D4')"/>
-                <t t-set="c3" t-value="ICP.get_param('eacta_theme.accent_color', '#F59E0B')"/>
-                <t t-set="ink" t-value="ICP.get_param('eacta_theme.ink_color', '#1E1B4B')"/>
-                <t t-set="custom_css" t-value="ICP.get_param('eacta_theme.custom_css', '')"/>
+            <t t-set="eacta_theme" t-value="request.env['eacta.theme.config'].sudo()"/>
+            <t t-set="eacta_font_url" t-value="eacta_theme._get_font_url()"/>
+            <link t-if="eacta_font_url" rel="preconnect" href="https://fonts.gstatic.com" crossorigin=""/>
+            <link t-if="eacta_font_url" rel="stylesheet" t-att-href="eacta_font_url"/>
+            <style id="eacta_theme_vars" t-out="eacta_theme._get_theme_css()"/>
+        </xpath>
+    </template>
 
-                /* ══ 1. VARIABLES GLOBALES DU SYSTÈME ══════════════════════════ */
-                :root {
-                    --eacta-primary: <t t-esc="c1"/> !important;
-                    --eacta-secondary: <t t-esc="c2"/> !important;
-                    --eacta-accent: <t t-esc="c3"/> !important;
-                    --eacta-primary-ink: <t t-esc="ink"/> !important;
-
-                    /* Variantes dérivées */
-                    --eacta-primary-hover: color-mix(in srgb, <t t-esc="c1"/> 80%, black) !important;
-                    --eacta-primary-dark: color-mix(in srgb, <t t-esc="c1"/> 75%, black) !important;
-                    --eacta-primary-light: color-mix(in srgb, <t t-esc="c1"/> 45%, white) !important;
-                    --eacta-primary-subtle: color-mix(in srgb, <t t-esc="c1"/> 12%, transparent) !important;
-
-                    /* Navbar fond dégradé encre */
-                    --eacta-navbar-bg: linear-gradient(135deg,
-                        color-mix(in srgb, <t t-esc="ink"/> 82%, <t t-esc="c1"/> 18%) 0%,
-                        <t t-esc="ink"/> 100%) !important;
-
-                    /* ══ Surcharge Bootstrap 5 et Odoo 18 ══════════════════════ */
-                    --bs-primary: <t t-esc="c1"/> !important;
-                    --bs-secondary: <t t-esc="c2"/> !important;
-                    --bs-link-color: <t t-esc="c1"/> !important;
-                    --bs-link-hover-color: color-mix(in srgb, <t t-esc="c1"/> 75%, black) !important;
-                    --bs-primary-bg-subtle: color-mix(in srgb, <t t-esc="c1"/> 12%, transparent) !important;
-                    --bs-primary-border-subtle: color-mix(in srgb, <t t-esc="c1"/> 30%, transparent) !important;
-                    --bs-primary-text-emphasis: color-mix(in srgb, <t t-esc="c1"/> 70%, black) !important;
-
-                    --o-color-primary: <t t-esc="c1"/> !important;
-                    --o-color-primary-hover: color-mix(in srgb, <t t-esc="c1"/> 80%, black) !important;
-                    --o-color-primary-dark: color-mix(in srgb, <t t-esc="c1"/> 75%, black) !important;
-                    --o-brand-primary: <t t-esc="c1"/> !important;
-                    --o-brand-odoo: <t t-esc="c1"/> !important;
-                    --o-color-1: <t t-esc="c1"/> !important;
-                    --o-color-2: <t t-esc="c2"/> !important;
-                    --o-color-3: <t t-esc="c3"/> !important;
-
-                    --focus-ring-color: color-mix(in srgb, <t t-esc="c1"/> 25%, transparent) !important;
-                }
-
-                /* ══ 2. NAVBAR ET MENUITEMS DISPLAY ══════════════════════════════ */
-                .o_main_navbar,
-                nav.o_main_navbar,
-                .o_web_client .o_main_navbar {
-                    background: var(--eacta-navbar-bg) !important;
-                    border-bottom: 3px solid <t t-esc="c2"/> !important;
-                    box-shadow: 0 4px 18px rgba(0, 0, 0, 0.12) !important;
-                    display: flex !important;
-                    align-items: center !important;
-                    height: 48px !important;
-                    padding: 0 0.5rem !important;
-                }
-
-                /* Nom de l'application / Brand */
-                .o_main_navbar .o_menu_brand {
-                    color: #FFFFFF !important;
-                    font-weight: 700 !important;
-                    font-size: 1.05rem !important;
-                    letter-spacing: 0.02em !important;
-                    padding: 6px 14px !important;
-                    border-radius: 8px !important;
-                    background: transparent !important;
-                    transition: all 0.2s ease !important;
-                    cursor: pointer !important;
-                }
-                .o_main_navbar .o_menu_brand:hover {
-                    background: rgba(255, 255, 255, 0.15) !important;
-                    transform: translateY(-1px);
-                }
-
-                /* Sections de menus et boutons du menu principal */
-                .o_main_navbar .o_menu_sections {
-                    display: flex !important;
-                    align-items: center !important;
-                    gap: 3px !important;
-                }
-
-                .o_main_navbar .o_menu_sections > button,
-                .o_main_navbar .o_menu_sections > a,
-                .o_main_navbar .o_menu_sections .dropdown > button,
-                .o_main_navbar .o_menu_sections .dropdown > a {
-                    color: rgba(255, 255, 255, 0.92) !important;
-                    font-weight: 500 !important;
-                    font-size: 0.88rem !important;
-                    padding: 7px 13px !important;
-                    border-radius: 6px !important;
-                    border: none !important;
-                    background: transparent !important;
-                    transition: all 0.2s ease !important;
-                    display: inline-flex !important;
-                    align-items: center !important;
-                    gap: 5px !important;
-                }
-
-                /* Indicateur flèche vers le bas sur les menus déroulants */
-                .o_main_navbar .o_menu_sections .dropdown > button::after,
-                .o_main_navbar .o_menu_sections .dropdown > a::after {
-                    content: '▾' !important;
-                    font-size: 11px !important;
-                    margin-left: 4px !important;
-                    opacity: 0.8 !important;
-                    transition: transform 0.2s ease !important;
-                }
-                .o_main_navbar .o_menu_sections .dropdown > button[aria-expanded="true"]::after,
-                .o_main_navbar .o_menu_sections .dropdown > a[aria-expanded="true"]::after {
-                    transform: rotate(180deg) !important;
-                }
-
-                /* Effet au survol des menuitems */
-                .o_main_navbar .o_menu_sections > button:hover,
-                .o_main_navbar .o_menu_sections > a:hover,
-                .o_main_navbar .o_menu_sections .dropdown > button:hover,
-                .o_main_navbar .o_menu_sections .dropdown > a:hover {
-                    color: #FFFFFF !important;
-                    background: rgba(255, 255, 255, 0.18) !important;
-                    transform: translateY(-1px) !important;
-                    box-shadow: 0 2px 8px rgba(0, 0, 0, 0.12) !important;
-                }
-
-                /* Bouton Plus (More) */
-                .o_main_navbar .o_menu_sections_more > button,
-                .o_main_navbar .o_navbar_more > button {
-                    background: rgba(255, 255, 255, 0.15) !important;
-                    border: 1px solid rgba(255, 255, 255, 0.25) !important;
-                    border-radius: 6px !important;
-                    color: #FFFFFF !important;
-                    padding: 6px 12px !important;
-                }
-                .o_main_navbar .o_menu_sections_more > button:hover,
-                .o_main_navbar .o_navbar_more > button:hover {
-                    background: rgba(255, 255, 255, 0.25) !important;
-                }
-
-                /* ══ 3. SOUS-MENUS DÉROULANTS (DROPDOWNS) ═══════════════════════ */
-                .o_main_navbar .dropdown-menu {
-                    background: #FFFFFF !important;
-                    border: 1px solid #E2E8F0 !important;
-                    border-radius: 12px !important;
-                    box-shadow: 0 12px 28px rgba(15, 23, 42, 0.12), 0 4px 10px rgba(15, 23, 42, 0.06) !important;
-                    padding: 6px !important;
-                    margin-top: 6px !important;
-                    min-width: 200px !important;
-                }
-
-                .o_main_navbar .dropdown-menu .dropdown-item {
-                    color: #1E293B !important;
-                    font-size: 0.875rem !important;
-                    font-weight: 500 !important;
-                    padding: 8px 14px !important;
-                    border-radius: 8px !important;
-                    transition: all 0.18s ease !important;
-                    display: flex !important;
-                    align-items: center !important;
-                    justify-content: space-between !important;
-                }
-
-                /* Effet au survol des sous-menus */
-                .o_main_navbar .dropdown-menu .dropdown-item:hover,
-                .o_main_navbar .dropdown-menu .dropdown-item:focus {
-                    background-color: color-mix(in srgb, <t t-esc="c1"/> 12%, transparent) !important;
-                    color: <t t-esc="c1"/> !important;
-                    font-weight: 600 !important;
-                    padding-left: 20px !important;
-                    transform: translateX(2px) !important;
-                }
-
-                /* ══ 4. BOUTON TOGGLE HAMBURGER ET SYSTRAY ═══════════════════════ */
-                .o_main_navbar .o_menu_toggle {
-                    background: rgba(255, 255, 255, 0.15) !important;
-                    border: 1px solid rgba(255, 255, 255, 0.28) !important;
-                    border-radius: 8px !important;
-                    color: #FFFFFF !important;
-                    padding: 6px 10px !important;
-                    margin-right: 6px !important;
-                    cursor: pointer !important;
-                    transition: all 0.2s ease !important;
-                }
-                .o_main_navbar .o_menu_toggle:hover {
-                    background: rgba(255, 255, 255, 0.25) !important;
-                    transform: scale(1.05);
-                }
-
-                .o_main_navbar .o_menu_systray,
-                .o_main_navbar .o_navbar_systray {
-                    display: flex !important;
-                    align-items: center !important;
-                    margin-left: auto !important;
-                    gap: 4px !important;
-                }
-                .o_main_navbar .o_menu_systray > *,
-                .o_main_navbar .o_navbar_systray > * {
-                    color: #FFFFFF !important;
-                }
-                .o_main_navbar .o_menu_systray button,
-                .o_main_navbar .o_navbar_systray button,
-                .o_main_navbar .o_menu_systray a,
-                .o_main_navbar .o_navbar_systray a {
-                    color: #FFFFFF !important;
-                    border-radius: 6px !important;
-                    padding: 6px 10px !important;
-                    transition: all 0.2s ease !important;
-                }
-                .o_main_navbar .o_menu_systray button:hover,
-                .o_main_navbar .o_navbar_systray button:hover {
-                    background: rgba(255, 255, 255, 0.15) !important;
-                }
-
-                /* ══ 5. COULEURS DU SYSTÈME (COMPOSANTS GLOBAUX) ═════════════════ */
-                /* Boutons primaires */
-                .btn-primary {
-                    background: linear-gradient(135deg, <t t-esc="c1"/> 0%, color-mix(in srgb, <t t-esc="c1"/> 75%, black) 100%) !important;
-                    border-color: color-mix(in srgb, <t t-esc="c1"/> 75%, black) !important;
-                    color: #FFFFFF !important;
-                    font-weight: 600 !important;
-                    box-shadow: 0 2px 6px color-mix(in srgb, <t t-esc="c1"/> 30%, transparent) !important;
-                    transition: all 0.2s ease !important;
-                }
-                .btn-primary:hover, .btn-primary:focus {
-                    background: linear-gradient(135deg, color-mix(in srgb, <t t-esc="c1"/> 85%, black) 0%, color-mix(in srgb, <t t-esc="c1"/> 65%, black) 100%) !important;
-                    border-color: color-mix(in srgb, <t t-esc="c1"/> 65%, black) !important;
-                    color: #FFFFFF !important;
-                    transform: translateY(-1px) !important;
-                    box-shadow: 0 4px 12px color-mix(in srgb, <t t-esc="c1"/> 40%, transparent) !important;
-                }
-
-                /* Boutons secondaires */
-                .btn-secondary {
-                    background: <t t-esc="c2"/> !important;
-                    border-color: color-mix(in srgb, <t t-esc="c2"/> 80%, black) !important;
-                    color: #FFFFFF !important;
-                    font-weight: 600 !important;
-                    transition: all 0.2s ease !important;
-                }
-                .btn-secondary:hover, .btn-secondary:focus {
-                    background: color-mix(in srgb, <t t-esc="c2"/> 80%, black) !important;
-                    color: #FFFFFF !important;
-                    transform: translateY(-1px) !important;
-                }
-
-                /* Liens généraux */
-                a:not(.btn):not(.nav-link):not(.dropdown-item):not(.badge) {
-                    color: <t t-esc="c1"/>;
-                }
-                a:not(.btn):not(.nav-link):not(.dropdown-item):not(.badge):hover {
-                    color: color-mix(in srgb, <t t-esc="c1"/> 75%, black);
-                }
-
-                /* Focus rings sur formulaires */
-                input:focus, textarea:focus, select:focus,
-                .o_field_widget:focus-within input {
-                    border-color: <t t-esc="c1"/> !important;
-                    box-shadow: 0 0 0 3px color-mix(in srgb, <t t-esc="c1"/> 22%, transparent) !important;
-                    outline: none !important;
-                }
-
-                /* Checkboxes et Switches */
-                .form-check-input:checked {
-                    background-color: <t t-esc="c1"/> !important;
-                    border-color: <t t-esc="c1"/> !important;
-                }
-
-                /* Onglets actifs */
-                .nav-tabs .nav-link.active {
-                    color: <t t-esc="c1"/> !important;
-                    border-bottom: 3px solid <t t-esc="c1"/> !important;
-                }
-
-                /* Pagination */
-                .page-item.active .page-link {
-                    background-color: <t t-esc="c1"/> !important;
-                    border-color: <t t-esc="c1"/> !important;
-                }
-
-                /* Barres de progression */
-                .progress-bar {
-                    background-color: <t t-esc="c1"/> !important;
-                }
-
-                /* Facettes de filtres dans le searchview */
-                .o_searchview .o_facet {
-                    border-color: color-mix(in srgb, <t t-esc="c1"/> 35%, transparent) !important;
-                    background-color: color-mix(in srgb, <t t-esc="c1"/> 8%, white) !important;
-                }
-                .o_searchview .o_facet .o_facet_values {
-                    color: <t t-esc="c1"/> !important;
-                }
-
-                /* CSS Personnalisé injection */
-                <t t-if="custom_css">
-                    <t t-out="custom_css"/>
-                </t>
-            </style>
+    <!-- Page de connexion aux couleurs de l'établissement -->
+    <template id="eacta_theme_login_styles" name="NR School Theme Login" inherit_id="web.login_layout">
+        <xpath expr="//div[hasclass('container')]" position="before">
+            <t t-set="eacta_theme" t-value="request.env['eacta.theme.config'].sudo()"/>
+            <t t-set="eacta_current" t-value="eacta_theme._get_current()"/>
+            <t t-if="not eacta_current or eacta_current.brand_login">
+                <t t-set="eacta_font_url" t-value="eacta_theme._get_font_url()"/>
+                <link t-if="eacta_font_url" rel="stylesheet" t-att-href="eacta_font_url"/>
+                <style t-out="eacta_theme._get_theme_css()"/>
+                <style>
+                    body.bg-100, html { min-height: 100%; }
+                    body.bg-100 {
+                        background:
+                            radial-gradient(circle at 15% 15%, color-mix(in srgb, var(--eacta-secondary) 35%, transparent) 0, transparent 40%),
+                            linear-gradient(135deg, var(--eacta-primary-ink) 0%, var(--eacta-primary) 100%) fixed !important;
+                        font-family: var(--eacta-font);
+                    }
+                    .o_database_list {
+                        max-width: 380px !important;
+                        background: #fff !important;
+                        border-radius: 18px !important;
+                        box-shadow: 0 24px 60px rgba(0, 0, 0, .28) !important;
+                        padding: .75rem .5rem;
+                        margin-top: 6vh;
+                    }
+                    .o_database_list .btn-primary {
+                        background: var(--eacta-primary) !important;
+                        border-color: var(--eacta-primary) !important;
+                        border-radius: 10px; font-weight: 600; padding: .6rem 1rem;
+                    }
+                    .o_database_list .btn-primary:hover { background: var(--eacta-primary-hover) !important; }
+                    .o_database_list .form-control { border-radius: 10px; padding: .6rem .8rem; }
+                    .o_database_list .form-control:focus {
+                        border-color: var(--eacta-primary);
+                        box-shadow: 0 0 0 3px color-mix(in srgb, var(--eacta-primary) 20%, transparent);
+                    }
+                    .o_database_list a { color: var(--eacta-primary); }
+                </style>
+            </t>
         </xpath>
     </template>
 </odoo>

@@ -1,48 +1,79 @@
 <?xml version="1.0" encoding="utf-8"?>
 <odoo>
-    <!-- List view des notes -->
+
     <record id="view_course_grade_tree" model="ir.ui.view">
         <field name="name">eacta.course.grade.list</field>
         <field name="model">eacta.course.grade</field>
         <field name="arch" type="xml">
-            <list string="Notes des élèves"
-                  decoration-success="grade &gt;= 14"
-                  decoration-warning="grade &gt;= 10 and grade &lt; 14"
-                  decoration-danger="grade &lt; 10">
-                <field name="student_id" string="Élève" class="fw-bold"/>
-                <field name="class_id" string="Classe"/>
-                <field name="course_id" string="Matière"/>
-                <field name="exam_id" string="Examen"/>
-                <field name="grade" string="Note (/20)" class="fw-bold"/>
+            <list string="Notes" sample="1"
+                  decoration-danger="status == 'graded' and grade &lt; 10"
+                  decoration-success="status == 'graded' and grade &gt;= 14"
+                  decoration-muted="status in ('absent', 'exempt')">
+                <field name="date"/>
+                <field name="student_id"/>
+                <field name="class_id" optional="show"/>
+                <field name="course_id"/>
+                <field name="exam_id"/>
+                <field name="exam_type" optional="hide"/>
+                <field name="coefficient" optional="hide"/>
+                <field name="status" widget="badge" decoration-warning="status == 'pending'"
+                       decoration-danger="status == 'absent'"/>
+                <field name="grade"/>
+                <field name="appreciation" optional="show"/>
+                <field name="comment" optional="hide"/>
             </list>
         </field>
     </record>
 
-    <!-- Form view des notes -->
+    <!-- Grille de saisie rapide (ouverte depuis l'examen) -->
+    <record id="view_course_grade_entry_list" model="ir.ui.view">
+        <field name="name">eacta.course.grade.entry.list</field>
+        <field name="model">eacta.course.grade</field>
+        <field name="priority">30</field>
+        <field name="arch" type="xml">
+            <list string="Saisie des notes" editable="top" create="1"
+                  default_order="class_id, student_id"
+                  decoration-danger="status == 'graded' and grade &lt; 10"
+                  decoration-success="status == 'graded' and grade &gt;= 14"
+                  decoration-muted="status in ('absent', 'exempt')">
+                <field name="exam_id" column_invisible="1"/>
+                <field name="student_id" options="{'no_create': True}"/>
+                <field name="class_id" options="{'no_create': True}"/>
+                <field name="status" widget="badge" decoration-warning="status == 'pending'"
+                       decoration-danger="status == 'absent'"/>
+                <field name="grade" invisible="status in ('absent', 'exempt')" class="fw-bold"/>
+                <field name="appreciation"/>
+                <field name="comment"/>
+            </list>
+        </field>
+    </record>
+
     <record id="view_course_grade_form" model="ir.ui.view">
         <field name="name">eacta.course.grade.form</field>
         <field name="model">eacta.course.grade</field>
         <field name="arch" type="xml">
-            <form string="Note de l'élève">
+            <form string="Note">
                 <sheet>
                     <div class="oe_title">
-                        <label for="student_id" string="Élève concerné" class="oe_edit_only"/>
-                        <h1 class="d-flex align-items-center gap-2">
-                            <field name="student_id" options="{'no_create': True}" placeholder="Sélectionner l'élève..."/>
-                        </h1>
+                        <label for="student_id"/>
+                        <h1><field name="student_id" options="{'no_create': True}" placeholder="Élève…"/></h1>
                     </div>
                     <group>
-                        <group string="Contexte de l'évaluation">
+                        <group string="Évaluation">
                             <field name="exam_id" options="{'no_create': True}"/>
-                            <field name="course_id" options="{'no_create': True}"/>
+                            <field name="course_id"/>
                             <field name="class_id" options="{'no_create': True}"/>
+                            <field name="date"/>
                         </group>
                         <group string="Résultat">
-                            <label for="grade" string="Note obtenue"/>
-                            <div class="d-flex align-items-center gap-2">
+                            <field name="status"/>
+                            <label for="grade" invisible="status in ('absent', 'exempt')"/>
+                            <div class="d-flex align-items-baseline gap-2" invisible="status in ('absent', 'exempt')">
                                 <field name="grade" class="oe_inline fw-bold fs-4"/>
                                 <span class="fs-5 text-muted">/ 20</span>
                             </div>
+                            <field name="appreciation"/>
+                            <field name="comment"/>
                         </group>
                     </group>
                 </sheet>
@@ -50,26 +81,76 @@
         </field>
     </record>
 
-    <!-- Action pour les notes -->
-    <record id="action_eacta_course_grade" model="ir.actions.act_window">
-        <field name="name">Notes &amp; Évaluations</field>
-        <field name="res_model">eacta.course.grade</field>
-        <field name="view_mode">list,form</field>
-        <field name="help" type="html">
-            <p class="o_view_nocontent_smiling_face">
-                Enregistrez les notes des élèves !
-            </p>
-            <p>
-                Saisissez les notes obtenues par les élèves aux différents examens et contrôles.
-            </p>
+    <record id="view_course_grade_search" model="ir.ui.view">
+        <field name="name">eacta.course.grade.search</field>
+        <field name="model">eacta.course.grade</field>
+        <field name="arch" type="xml">
+            <search string="Rechercher des notes">
+                <field name="student_id"/>
+                <field name="course_id"/>
+                <field name="exam_id"/>
+                <field name="class_id"/>
+                <field name="year"/>
+                <filter string="Mes matières" name="my_courses" domain="[('teacher_id', '=', uid)]"/>
+                <separator/>
+                <filter string="À noter" name="pending" domain="[('status', '=', 'pending')]"/>
+                <filter string="Notées" name="graded" domain="[('status', '=', 'graded')]"/>
+                <filter string="Absents" name="absent" domain="[('status', '=', 'absent')]"/>
+                <separator/>
+                <filter string="Sous la moyenne" name="failed" domain="[('status', '=', 'graded'), ('grade', '&lt;', 10)]"/>
+                <filter string="Date" name="filter_date" date="date"/>
+                <group expand="0" string="Regrouper par">
+                    <filter string="Élève" name="group_by_student" context="{'group_by': 'student_id'}"/>
+                    <filter string="Classe" name="group_by_class" context="{'group_by': 'class_id'}"/>
+                    <filter string="Matière" name="group_by_course" context="{'group_by': 'course_id'}"/>
+                    <filter string="Examen" name="group_by_exam" context="{'group_by': 'exam_id'}"/>
+                    <filter string="Année" name="group_by_year" context="{'group_by': 'year'}"/>
+                    <filter string="Appréciation" name="group_by_appreciation" context="{'group_by': 'appreciation'}"/>
+                </group>
+            </search>
         </field>
     </record>
 
-    <!-- Menu item pour les notes -->
-    <menuitem id="menu_eacta_course_grade"
-              name="Notes"
-              parent="menu_eacta_school_root"
-              action="action_eacta_course_grade"
-              sequence="25"/>
-</odoo>
+    <record id="view_course_grade_pivot" model="ir.ui.view">
+        <field name="name">eacta.course.grade.pivot</field>
+        <field name="model">eacta.course.grade</field>
+        <field name="arch" type="xml">
+            <pivot string="Analyse des notes" sample="1">
+                <field name="class_id" type="row"/>
+                <field name="course_id" type="col"/>
+                <field name="grade" type="measure"/>
+            </pivot>
+        </field>
+    </record>
 
+    <record id="view_course_grade_graph" model="ir.ui.view">
+        <field name="name">eacta.course.grade.graph</field>
+        <field name="model">eacta.course.grade</field>
+        <field name="arch" type="xml">
+            <graph string="Moyennes par matière" type="bar" sample="1">
+                <field name="course_id"/>
+                <field name="grade" type="measure"/>
+            </graph>
+        </field>
+    </record>
+
+    <record id="action_eacta_course_grade" model="ir.actions.act_window">
+        <field name="name">Notes</field>
+        <field name="res_model">eacta.course.grade</field>
+        <field name="view_mode">list,pivot,graph,form</field>
+        <field name="search_view_id" ref="view_course_grade_search"/>
+        <field name="help" type="html">
+            <p class="o_view_nocontent_smiling_face">Aucune note pour le moment</p>
+            <p>Ouvrez un examen et cliquez sur « Générer la feuille de notes » pour saisir les notes de toute une classe.</p>
+        </field>
+    </record>
+
+    <record id="action_eacta_grade_analysis" model="ir.actions.act_window">
+        <field name="name">Analyse des notes</field>
+        <field name="res_model">eacta.course.grade</field>
+        <field name="view_mode">pivot,graph,list</field>
+        <field name="search_view_id" ref="view_course_grade_search"/>
+        <field name="context">{'search_default_graded': 1}</field>
+    </record>
+
+</odoo>

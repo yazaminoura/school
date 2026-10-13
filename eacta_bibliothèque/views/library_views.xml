@@ -463,7 +463,7 @@
     </record>
 
     <!-- Menu Items -->
-    <menuitem id="menu_library_root" name="E-ACTA Bibliothèque" sequence="10"/>
+    <menuitem id="menu_library_root" name="Bibliothèque" sequence="10"/>
     <menuitem id="menu_library_book" name="Livres" parent="menu_library_root" action="action_library_book" sequence="10"/>
     <menuitem id="menu_library_loan" name="Emprunts" parent="menu_library_root" action="action_library_loan" sequence="20"/>
 </odoo>

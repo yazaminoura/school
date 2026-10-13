@@ -1,0 +1,584 @@
+// ==========================================================================
+// NR School — composants visuels (cartes, badges, KPI, tableau de bord)
+// Les couleurs proviennent des variables CSS du module eacta_theme lorsqu'il
+// est installé ; sinon les valeurs de repli ci-dessous s'appliquent.
+// ==========================================================================
+
+.o_web_client {
+    --eacta-c-primary: var(--eacta-primary, #0b6e4f);
+    --eacta-c-secondary: var(--eacta-secondary, #e9a23b);
+    --eacta-c-accent: var(--eacta-accent, #e76f51);
+    --eacta-c-ink: var(--eacta-primary-ink, #06392a);
+    --eacta-c-success: #059669;
+    --eacta-c-warning: #d97706;
+    --eacta-c-danger: #dc2626;
+    --eacta-c-text: #0f172a;
+    --eacta-c-muted: #64748b;
+    --eacta-c-line: #e2e8f0;
+    --eacta-c-soft: #f8fafc;
+    --eacta-c-radius: var(--eacta-card-radius, 14px);
+    --eacta-c-shadow: var(--eacta-card-shadow, 0 1px 2px rgba(15, 23, 42, .04), 0 4px 14px rgba(15, 23, 42, .05));
+    --eacta-c-shadow-hover: var(--eacta-card-shadow-hover, 0 10px 28px rgba(15, 23, 42, .10));
+    --eacta-c-border: var(--eacta-card-border, 1px solid #e2e8f0);
+}
+
+@mixin eacta-badge-tone($c) {
+    color: color-mix(in srgb, #{$c} 85%, black);
+    background: color-mix(in srgb, #{$c} 13%, white);
+    border-color: color-mix(in srgb, #{$c} 28%, white);
+}
+
+// --------------------------------------------------------------------------
+// Kanban cards
+// --------------------------------------------------------------------------
+.o_eacta_kanban {
+    .o_kanban_record {
+        border: var(--eacta-c-border);
+        border-radius: var(--eacta-c-radius);
+        box-shadow: var(--eacta-c-shadow);
+        overflow: hidden;
+        transition: box-shadow .2s ease, transform .2s ease, border-color .2s ease;
+
+        &:hover {
+            box-shadow: var(--eacta-c-shadow-hover);
+            transform: translateY(-2px);
+            border-color: color-mix(in srgb, var(--eacta-c-primary) 35%, var(--eacta-c-line));
+        }
+    }
+}
+
+.o_eacta_card {
+    display: flex;
+    flex-direction: column;
+    gap: .65rem;
+    width: 100%;
+    padding: .9rem 1rem;
+    border-top: 3px solid transparent;
+
+    &.o_eacta_state_draft { border-top-color: var(--eacta-c-warning); }
+    &.o_eacta_state_enrolled { border-top-color: var(--eacta-c-success); }
+    &.o_eacta_state_graduated { border-top-color: var(--eacta-c-primary); }
+    &.o_eacta_state_alumni { border-top-color: #94a3b8; }
+    &.o_eacta_level_primary { border-top-color: var(--eacta-c-success); }
+    &.o_eacta_level_secondary { border-top-color: var(--eacta-c-secondary); }
+    &.o_eacta_level_higher { border-top-color: var(--eacta-c-primary); }
+}
+
+.o_eacta_card_head {
+    display: flex;
+    align-items: center;
+    gap: .75rem;
+}
+
+.o_eacta_card_title {
+    font-size: 1rem;
+    font-weight: 700;
+    color: var(--eacta-c-text);
+    line-height: 1.25;
+}
+
+.o_eacta_card_meta {
+    font-size: .78rem;
+    color: var(--eacta-c-muted);
+}
+
+.o_eacta_card_body {
+    display: flex;
+    flex-direction: column;
+    gap: .35rem;
+    font-size: .85rem;
+    color: #334155;
+}
+
+.o_eacta_card_line {
+    display: flex;
+    align-items: center;
+    gap: .4rem;
+    min-width: 0;
+
+    > i { color: var(--eacta-c-primary); opacity: .8; }
+}
+
+.o_eacta_card_foot {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: .5rem;
+    margin-top: auto;
+    padding-top: .6rem;
+    border-top: 1px dashed var(--eacta-c-line);
+}
+
+// --------------------------------------------------------------------------
+// Avatars & tiles
+// --------------------------------------------------------------------------
+.o_eacta_avatar {
+    flex: 0 0 auto;
+    width: 52px;
+    height: 52px;
+    border-radius: 50%;
+    overflow: hidden;
+    box-shadow: var(--eacta-avatar-ring, 0 0 0 3px color-mix(in srgb, var(--eacta-c-primary) 14%, white));
+
+    &.o_eacta_avatar_square { border-radius: 12px; }
+
+    .o_eacta_avatar_img, img {
+        width: 52px !important;
+        height: 52px !important;
+        object-fit: cover;
+    }
+}
+
+.o_eacta_avatar_initials {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    font-weight: 700;
+    font-size: 1.2rem;
+    color: var(--eacta-c-primary);
+    background: color-mix(in srgb, var(--eacta-c-primary) 12%, white);
+}
+
+.o_eacta_icon_tile, .o_eacta_date_tile {
+    flex: 0 0 auto;
+    width: 46px;
+    height: 46px;
+    border-radius: 12px;
+    display: inline-flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    color: var(--eacta-c-primary);
+    background: color-mix(in srgb, var(--eacta-c-primary) 11%, white);
+    font-size: 1.15rem;
+}
+
+.o_eacta_date_tile {
+    font-weight: 800;
+    font-size: 1.1rem;
+    line-height: 1;
+
+    small {
+        font-size: .62rem;
+        font-weight: 700;
+        text-transform: uppercase;
+        letter-spacing: .05em;
+        margin-top: 2px;
+    }
+}
+
+// --------------------------------------------------------------------------
+// Badges, tags & scores
+// --------------------------------------------------------------------------
+.o_eacta_badge {
+    display: inline-flex;
+    align-items: center;
+    gap: .3rem;
+    padding: .2rem .6rem;
+    border-radius: var(--eacta-badge-radius, 999px);
+    font-size: .72rem;
+    font-weight: 600;
+    white-space: nowrap;
+    border: 1px solid transparent;
+
+    &.o_eacta_badge_draft { @include eacta-badge-tone(var(--eacta-c-warning)); }
+    &.o_eacta_badge_enrolled { @include eacta-badge-tone(var(--eacta-c-success)); }
+    &.o_eacta_badge_graduated, &.o_eacta_badge_primary { @include eacta-badge-tone(var(--eacta-c-primary)); }
+    &.o_eacta_badge_alumni { @include eacta-badge-tone(#64748b); }
+}
+
+.o_eacta_tag {
+    display: inline-flex;
+    align-items: center;
+    padding: .12rem .5rem;
+    border-radius: 6px;
+    font-size: .72rem;
+    font-weight: 600;
+    color: #475569;
+    background: #f1f5f9;
+}
+
+.o_eacta_score {
+    display: inline-flex;
+    align-items: center;
+    padding: .18rem .55rem;
+    border-radius: 8px;
+    font-weight: 700;
+    font-size: .8rem;
+    color: color-mix(in srgb, var(--eacta-c-primary) 85%, black);
+    background: color-mix(in srgb, var(--eacta-c-primary) 12%, white);
+
+    &.o_eacta_score_high {
+        color: #047857;
+        background: #d1fae5;
+    }
+
+    &.o_eacta_score_low {
+        color: #b91c1c;
+        background: #fee2e2;
+    }
+}
+
+// --------------------------------------------------------------------------
+// Meter (capacité, correction)
+// --------------------------------------------------------------------------
+.o_eacta_meter {
+    display: flex;
+    flex-direction: column;
+    gap: .3rem;
+}
+
+.o_eacta_meter_track {
+    height: 7px;
+    border-radius: 999px;
+    background: #eef2f7;
+    overflow: hidden;
+}
+
+.o_eacta_meter_fill {
+    height: 100%;
+    border-radius: 999px;
+    background: linear-gradient(90deg, var(--eacta-c-primary), var(--eacta-c-secondary));
+    transition: width .5s ease;
+
+    &.o_eacta_meter_warn { background: linear-gradient(90deg, #f59e0b, #f97316); }
+    &.o_eacta_meter_full { background: linear-gradient(90deg, #ef4444, #dc2626); }
+}
+
+// --------------------------------------------------------------------------
+// Form helpers
+// --------------------------------------------------------------------------
+.o_form_view {
+    .o_eacta_code {
+        font-size: .8rem;
+        font-weight: 600;
+        letter-spacing: .04em;
+        color: var(--eacta-c-muted);
+    }
+
+    .o_eacta_chip {
+        display: inline-flex;
+        width: auto !important;
+        padding: .15rem .6rem;
+        border-radius: 999px;
+        font-size: .8rem;
+        font-weight: 600;
+        color: color-mix(in srgb, var(--eacta-c-primary) 85%, black);
+        background: color-mix(in srgb, var(--eacta-c-primary) 10%, white);
+
+        input, select { font-weight: 600; }
+    }
+}
+
+.o_eacta_kpis {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(170px, 1fr));
+    gap: .75rem;
+    margin: .5rem 0 1.25rem;
+}
+
+.o_eacta_kpi {
+    display: flex;
+    flex-direction: column;
+    gap: .2rem;
+    padding: .8rem 1rem;
+    border-radius: 12px;
+    border: 1px solid var(--eacta-c-line);
+    background: linear-gradient(180deg, white, var(--eacta-c-soft));
+
+    .o_eacta_kpi_label {
+        font-size: .7rem;
+        font-weight: 700;
+        text-transform: uppercase;
+        letter-spacing: .06em;
+        color: var(--eacta-c-muted);
+    }
+
+    .o_eacta_kpi_value {
+        font-size: 1.45rem;
+        font-weight: 800;
+        color: var(--eacta-c-text);
+        line-height: 1.15;
+
+        small { font-size: .8rem; font-weight: 600; color: var(--eacta-c-muted); }
+        .o_field_widget { display: inline; }
+    }
+
+    .o_eacta_kpi_bar { margin-top: .25rem; }
+}
+
+// --------------------------------------------------------------------------
+// Dashboard
+// --------------------------------------------------------------------------
+.o_eacta_dashboard {
+    background: #f4f6fb;
+
+    .o_eacta_dash_loading {
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        height: 60vh;
+        color: var(--eacta-c-primary);
+    }
+
+    .o_eacta_dash_inner {
+        max-width: 1440px;
+        margin: 0 auto;
+        padding: 1.5rem 1.5rem 3rem;
+    }
+
+    .o_eacta_dash_hero {
+        display: flex;
+        flex-wrap: wrap;
+        align-items: center;
+        justify-content: space-between;
+        gap: 1rem;
+        padding: 1.6rem 1.8rem;
+        margin-bottom: 1.25rem;
+        border-radius: calc(var(--eacta-c-radius) + 4px);
+        color: white;
+        background:
+            radial-gradient(circle at 85% -20%, color-mix(in srgb, var(--eacta-c-secondary) 55%, transparent) 0, transparent 45%),
+            linear-gradient(120deg, var(--eacta-c-ink), var(--eacta-c-primary));
+        box-shadow: 0 12px 30px color-mix(in srgb, var(--eacta-c-primary) 25%, transparent);
+
+        h1 { color: white; font-weight: 800; font-size: 1.6rem; margin: 0 0 .25rem; }
+        p { margin: 0; opacity: .85; }
+
+        .btn-light {
+            background: rgba(255, 255, 255, .15) !important;
+            border-color: rgba(255, 255, 255, .25) !important;
+            color: white !important;
+        }
+
+        .btn-primary {
+            background: white !important;
+            border-color: white !important;
+            color: var(--eacta-c-primary) !important;
+            box-shadow: none !important;
+        }
+    }
+
+    .o_eacta_dash_actions { display: flex; gap: .5rem; flex-wrap: wrap; }
+
+    .o_eacta_dash_kpis {
+        display: grid;
+        grid-template-columns: repeat(auto-fit, minmax(210px, 1fr));
+        gap: 1rem;
+        margin-bottom: 1.25rem;
+    }
+
+    .o_eacta_dash_kpi {
+        display: flex;
+        align-items: center;
+        gap: .9rem;
+        padding: 1rem 1.1rem;
+        background: white;
+        border: var(--eacta-c-border);
+        border-radius: var(--eacta-c-radius);
+        box-shadow: var(--eacta-c-shadow);
+        cursor: pointer;
+        transition: transform .2s ease, box-shadow .2s ease;
+
+        &:hover { transform: translateY(-2px); box-shadow: var(--eacta-c-shadow-hover); }
+    }
+
+    .o_eacta_dash_kpi_icon {
+        flex: 0 0 auto;
+        width: 48px;
+        height: 48px;
+        border-radius: 14px;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        font-size: 1.3rem;
+    }
+
+    .o_eacta_tone_primary { color: var(--eacta-c-primary); background: color-mix(in srgb, var(--eacta-c-primary) 12%, white); }
+    .o_eacta_tone_info { color: var(--eacta-c-secondary); background: color-mix(in srgb, var(--eacta-c-secondary) 14%, white); }
+    .o_eacta_tone_success { color: var(--eacta-c-success); background: #d1fae5; }
+    .o_eacta_tone_accent { color: var(--eacta-c-accent); background: color-mix(in srgb, var(--eacta-c-accent) 16%, white); }
+    .o_eacta_tone_warning { color: #ea580c; background: #ffedd5; }
+
+    .o_eacta_dash_kpi_value {
+        font-size: 1.6rem;
+        font-weight: 800;
+        line-height: 1.1;
+        color: var(--eacta-c-text);
+
+        small { font-size: .85rem; color: var(--eacta-c-muted); font-weight: 600; }
+    }
+
+    .o_eacta_dash_kpi_label { font-weight: 600; color: #334155; font-size: .85rem; }
+    .o_eacta_dash_kpi_hint { font-size: .74rem; color: var(--eacta-c-muted); }
+
+    .o_eacta_dash_grid {
+        display: grid;
+        grid-template-columns: repeat(3, minmax(0, 1fr));
+        gap: 1rem;
+
+        @media (max-width: 1199px) { grid-template-columns: repeat(2, minmax(0, 1fr)); }
+        @media (max-width: 767px) { grid-template-columns: minmax(0, 1fr); }
+    }
+
+    .o_eacta_span_2 {
+        grid-column: span 2;
+        @media (max-width: 767px) { grid-column: span 1; }
+    }
+
+    .o_eacta_panel {
+        background: white;
+        border: var(--eacta-c-border);
+        border-radius: var(--eacta-c-radius);
+        box-shadow: var(--eacta-c-shadow);
+        padding: 1.1rem 1.2rem;
+        min-width: 0;
+
+        > header {
+            display: flex;
+            align-items: baseline;
+            justify-content: space-between;
+            margin-bottom: .9rem;
+
+            h3 { font-size: 1rem; font-weight: 700; margin: 0; color: var(--eacta-c-text); }
+            a { font-size: .8rem; font-weight: 600; }
+        }
+    }
+
+    .o_eacta_empty {
+        padding: 1.5rem 0;
+        text-align: center;
+        color: var(--eacta-c-muted);
+        font-size: .85rem;
+    }
+
+    .o_eacta_histogram {
+        display: flex;
+        align-items: stretch;
+        gap: .6rem;
+        height: 210px;
+    }
+
+    .o_eacta_histogram_col {
+        flex: 1 1 0;
+        display: flex;
+        flex-direction: column;
+        align-items: center;
+        gap: .3rem;
+        min-width: 0;
+    }
+
+    .o_eacta_histogram_track {
+        flex: 1 1 auto;
+        width: 100%;
+        display: flex;
+        align-items: flex-end;
+        background: var(--eacta-c-soft);
+        border-radius: 8px;
+    }
+
+    .o_eacta_histogram_bar {
+        width: 100%;
+        border-radius: 8px;
+        transition: height .6s ease;
+
+        &.o_eacta_pass { background: linear-gradient(180deg, var(--eacta-c-secondary), var(--eacta-c-primary)); }
+        &.o_eacta_fail { background: linear-gradient(180deg, #fca5a5, #ef4444); }
+    }
+
+    .o_eacta_histogram_count { font-size: .78rem; font-weight: 700; color: #334155; }
+    .o_eacta_histogram_label { font-size: .7rem; color: var(--eacta-c-muted); white-space: nowrap; }
+
+    .o_eacta_status_list { display: flex; flex-direction: column; gap: .15rem; }
+
+    .o_eacta_status_row {
+        display: flex;
+        align-items: center;
+        gap: .6rem;
+        padding: .5rem .55rem;
+        border-radius: 8px;
+        cursor: pointer;
+
+        &:hover { background: var(--eacta-c-soft); }
+    }
+
+    .o_eacta_dot {
+        width: 10px;
+        height: 10px;
+        border-radius: 50%;
+        background: #94a3b8;
+
+        &.o_eacta_dot_draft { background: var(--eacta-c-warning); }
+        &.o_eacta_dot_enrolled { background: var(--eacta-c-success); }
+        &.o_eacta_dot_graduated { background: var(--eacta-c-primary); }
+    }
+
+    .o_eacta_split {
+        display: flex;
+        height: 8px;
+        border-radius: 999px;
+        overflow: hidden;
+        background: #eef2f7;
+
+        .o_eacta_split_a { background: var(--eacta-c-secondary); }
+        .o_eacta_split_b { background: #ec4899; }
+    }
+
+    .o_eacta_rows { display: flex; flex-direction: column; gap: .55rem; }
+    .o_eacta_row { display: flex; flex-direction: column; gap: .3rem; padding: .25rem .3rem; border-radius: 8px; }
+
+    .o_eacta_clickable {
+        cursor: pointer;
+        &:hover { background: var(--eacta-c-soft); }
+    }
+
+    .o_eacta_exam_row, .o_eacta_person_row, .o_eacta_course_row {
+        display: flex;
+        align-items: center;
+        gap: .7rem;
+        padding: .4rem .45rem;
+        border-radius: 10px;
+        min-width: 0;
+    }
+
+    .o_eacta_exam_when {
+        flex: 0 0 82px;
+        text-align: center;
+        font-size: .72rem;
+        font-weight: 700;
+        padding: .35rem .2rem;
+        border-radius: 8px;
+        color: var(--eacta-c-primary);
+        background: color-mix(in srgb, var(--eacta-c-primary) 10%, white);
+    }
+
+    .o_eacta_rank {
+        flex: 0 0 24px;
+        height: 24px;
+        border-radius: 50%;
+        display: inline-flex;
+        align-items: center;
+        justify-content: center;
+        font-size: .75rem;
+        font-weight: 800;
+        color: white;
+        background: var(--eacta-c-accent);
+    }
+
+    .o_eacta_mini_avatar {
+        flex: 0 0 34px;
+        width: 34px;
+        height: 34px;
+        border-radius: 50%;
+        object-fit: cover;
+        font-size: .9rem;
+    }
+
+    .o_eacta_subtitle {
+        font-size: .7rem;
+        font-weight: 700;
+        text-transform: uppercase;
+        letter-spacing: .06em;
+        color: var(--eacta-c-muted);
+    }
+}

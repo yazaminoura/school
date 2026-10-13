@@ -1,10 +1,52 @@
 <?xml version="1.0" encoding="utf-8"?>
 <odoo>
-    <data>
-        <menuitem id="menu_eacta_school_root"
-                  name="E-ACTA School"
-                  sequence="50"
-                  web_icon="eacta_school,static/src/img/logoE.png"/>
-        <!-- Sous-menus seront ajoutés ici plus tard -->
-    </data>
+
+    <record id="action_eacta_school_dashboard" model="ir.actions.client">
+        <field name="name">Tableau de bord</field>
+        <field name="tag">eacta_school.dashboard</field>
+    </record>
+
+    <menuitem id="menu_eacta_school_root"
+              name="NR School"
+              sequence="50"
+              action="action_eacta_school_dashboard"
+              web_icon="eacta_school,static/src/img/nr_school_icon.png"
+              groups="eacta_school.group_eacta_school_user"/>
+
+    <menuitem id="menu_eacta_school_dashboard" name="Tableau de bord" parent="menu_eacta_school_root"
+              action="action_eacta_school_dashboard" sequence="1"/>
+
+    <!-- Scolarité -->
+    <menuitem id="menu_eacta_school_scolarite" name="Scolarité" parent="menu_eacta_school_root" sequence="10"/>
+    <menuitem id="menu_eacta_student" name="Élèves" parent="menu_eacta_school_scolarite"
+              action="action_eacta_student" sequence="10"/>
+    <menuitem id="menu_eacta_class" name="Classes" parent="menu_eacta_school_scolarite"
+              action="action_eacta_class" sequence="20"/>
+    <menuitem id="menu_partner_category_form" name="Parents" parent="menu_eacta_school_scolarite"
+              action="action_eacta_school_parents" sequence="30"/>
+
+    <!-- Pédagogie -->
+    <menuitem id="menu_eacta_school_pedagogie" name="Pédagogie" parent="menu_eacta_school_root" sequence="20"/>
+    <menuitem id="menu_eacta_course" name="Cours" parent="menu_eacta_school_pedagogie"
+              action="action_eacta_course" sequence="10"/>
+    <menuitem id="menu_eacta_exam" name="Examens" parent="menu_eacta_school_pedagogie"
+              action="action_eacta_exam" sequence="20"/>
+    <menuitem id="menu_eacta_course_grade" name="Notes" parent="menu_eacta_school_pedagogie"
+              action="action_eacta_course_grade" sequence="30"/>
+
+    <!-- Analyse -->
+    <menuitem id="menu_eacta_school_reporting" name="Analyse" parent="menu_eacta_school_root" sequence="80"/>
+    <menuitem id="menu_eacta_grade_analysis" name="Analyse des notes" parent="menu_eacta_school_reporting"
+              action="action_eacta_grade_analysis" sequence="10"/>
+
+    <!-- Configuration -->
+    <menuitem id="menu_eacta_school_config" name="Configuration" parent="menu_eacta_school_root" sequence="100"
+              groups="eacta_school.group_eacta_school_manager"/>
+    <menuitem id="menu_eacta_school_level" name="Niveaux scolaires" parent="menu_eacta_school_config"
+              action="action_eacta_school_level" sequence="10"/>
+    <menuitem id="menu_eacta_course_category" name="Catégories de cours" parent="menu_eacta_school_config"
+              action="action_eacta_course_category" sequence="20"/>
+    <menuitem id="menu_eacta_teachers" name="Enseignants" parent="menu_eacta_school_config"
+              action="action_eacta_teachers" sequence="30"/>
+
 </odoo>

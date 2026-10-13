@@ -1,51 +1,86 @@
 <?xml version="1.0" encoding="utf-8"?>
 <odoo>
-    <!-- Define the Kanban view for the res.partner model -->
+
     <record id="view_partner_kanban_eacta_school" model="ir.ui.view">
         <field name="name">res.partner.kanban.eacta.school</field>
         <field name="model">res.partner</field>
+        <field name="priority">50</field>
         <field name="arch" type="xml">
-            <kanban>
+            <kanban class="o_eacta_kanban" sample="1">
                 <field name="id"/>
-                <field name="name"/>
-                <field name="is_school_parent"/>
-                <field name="student_ids"/>
                 <field name="avatar_128"/>
+                <field name="school_student_count"/>
                 <templates>
-                    <t t-name="card">
-                        <div class="oe_kanban_global_click eacta_card_custom p-3">
-                            <div class="d-flex gap-3 align-items-center">
-                                <img t-att-src="kanban_image('res.partner', 'avatar_128', record.id.raw_value)"
-                                     class="rounded-circle border shadow-sm flex-shrink-0"
-                                     style="width: 50px; height: 50px; object-fit: cover;"
-                                     alt="Parent Avatar"/>
+                    <t t-name="card" class="p-0">
+                        <div class="o_eacta_card">
+                            <div class="o_eacta_card_head">
+                                <field name="avatar_128" widget="image" class="o_eacta_avatar"
+                                       options="{'img_class': 'o_eacta_avatar_img'}"/>
                                 <div class="flex-grow-1 min-w-0">
-                                    <h6 class="fw-bold text-dark mb-1 text-truncate">
-                                        <field name="name"/>
-                                    </h6>
-                                    <span t-if="record.is_school_parent.raw_value" class="badge bg-primary-subtle text-primary border border-primary-subtle rounded-pill px-2 py-0 small">
-                                        <i class="fa fa-heart me-1"/> Parent d'élève
-                                    </span>
+                                    <field name="name" class="o_eacta_card_title d-block text-truncate"/>
+                                    <div class="o_eacta_card_meta text-truncate"><field name="email"/></div>
                                 </div>
                             </div>
-                            <div t-if="record.student_ids.raw_value" class="mt-2 pt-2 border-top">
-                                <small class="text-muted d-block mb-1">Élève(s) rattaché(s):</small>
+                            <div class="o_eacta_card_body">
+                                <div class="o_eacta_card_line" t-if="record.phone.raw_value">
+                                    <i class="fa fa-fw fa-phone" title="Téléphone"/><field name="phone"/>
+                                </div>
                                 <field name="student_ids" widget="many2many_tags"/>
+                            </div>
+                            <div class="o_eacta_card_foot">
+                                <span class="text-muted small">
+                                    <i class="fa fa-child me-1" title="Enfants"/><t t-out="record.school_student_count.raw_value"/> enfant(s)
+                                </span>
                             </div>
                         </div>
                     </t>
                 </templates>
             </kanban>
-       </field>
+        </field>
     </record>
 
+    <record id="view_partner_form_eacta_school" model="ir.ui.view">
+        <field name="name">res.partner.form.eacta.school</field>
+        <field name="model">res.partner</field>
+        <field name="inherit_id" ref="base.view_partner_form"/>
+        <field name="arch" type="xml">
+            <div name="button_box" position="inside">
+                <button name="action_view_school_students" type="object" class="oe_stat_button" icon="fa-child"
+                        invisible="not school_student_count">
+                    <field name="school_student_count" widget="statinfo" string="Enfants"/>
+                </button>
+            </div>
+            <notebook position="inside">
+                <page string="Scolarité" name="eacta_school">
+                    <group>
+                        <field name="is_school_parent"/>
+                    </group>
+                    <field name="student_ids" invisible="not is_school_parent">
+                        <list>
+                            <field name="code"/>
+                            <field name="name"/>
+                            <field name="current_class_id"/>
+                            <field name="average"/>
+                            <field name="state" widget="badge"/>
+                        </list>
+                    </field>
+                </page>
+            </notebook>
+        </field>
+    </record>
 
+    <record id="action_eacta_school_parents" model="ir.actions.act_window">
+        <field name="name">Parents</field>
+        <field name="res_model">res.partner</field>
+        <field name="view_mode">kanban,list,form</field>
+        <field name="domain">[('is_school_parent', '=', True)]</field>
+        <field name="context">{'default_is_school_parent': True, 'default_company_type': 'person'}</field>
+        <field name="view_ids" eval="[(5, 0, 0),
+            (0, 0, {'view_mode': 'kanban', 'view_id': ref('view_partner_kanban_eacta_school')})]"/>
+        <field name="help" type="html">
+            <p class="o_view_nocontent_smiling_face">Ajoutez le premier parent d'élève</p>
+            <p>Associez les parents et tuteurs à leurs enfants pour faciliter la communication.</p>
+        </field>
+    </record>
 
-
-   <!-- Add a menu item to access this Kanban view -->
-   <menuitem id="menu_partner_category_form"
-             name="Parents"
-             parent="menu_eacta_school_root"
-             action="base.action_partner_category_form"
-             sequence="90"/>
 </odoo>

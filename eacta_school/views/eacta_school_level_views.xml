@@ -1,89 +1,65 @@
 <?xml version="1.0" encoding="utf-8"?>
 <odoo>
-    <!-- Form view definition for school levels -->
+
     <record id="view_eacta_school_level_form" model="ir.ui.view">
         <field name="name">eacta.school.level.form</field>
         <field name="model">eacta.school.level</field>
         <field name="arch" type="xml">
-            <form string="Niveau Scolaire">
+            <form string="Niveau scolaire">
                 <sheet>
+                    <widget name="web_ribbon" title="Archivé" bg_color="text-bg-danger" invisible="active"/>
+                    <field name="active" invisible="1"/>
                     <div class="oe_title">
-                        <label for="name" string="Nom du Niveau" class="oe_edit_only"/>
-                        <h1 class="d-flex align-items-center gap-2">
-                            <i class="fa fa-graduation-cap text-primary"/>
-                            <field name="name" placeholder="ex: Collège - 1ère Année"/>
-                        </h1>
+                        <label for="name"/>
+                        <h1><field name="name" placeholder="ex : Collège - 1ère année"/></h1>
                     </div>
                     <group>
-                        <group string="Identifiants">
-                            <field name="code" placeholder="ex: COL-1" required="True"/>
+                        <group>
+                            <field name="code" placeholder="ex : COL1"/>
                             <field name="sequence"/>
                         </group>
+                        <group>
+                            <field name="class_count"/>
+                        </group>
                     </group>
+                    <notebook>
+                        <page string="Classes" name="classes">
+                            <field name="class_ids" readonly="1">
+                                <list>
+                                    <field name="year"/>
+                                    <field name="name"/>
+                                    <field name="student_count"/>
+                                    <field name="fill_rate" widget="progressbar"/>
+                                </list>
+                            </field>
+                        </page>
+                    </notebook>
                 </sheet>
             </form>
         </field>
     </record>
 
-    <!-- List view definition for school levels -->
     <record id="view_eacta_school_level_tree" model="ir.ui.view">
         <field name="name">eacta.school.level.list</field>
         <field name="model">eacta.school.level</field>
         <field name="arch" type="xml">
-            <list string="Niveaux Scolaires">
+            <list string="Niveaux scolaires" editable="bottom">
                 <field name="sequence" widget="handle"/>
-                <field name="name" string="Nom du Niveau" class="fw-bold"/>
-                <field name="code" string="Code" widget="badge"/>
+                <field name="name"/>
+                <field name="code"/>
+                <field name="class_count"/>
             </list>
         </field>
     </record>
 
-    <!-- Kanban view definition for school levels -->
-    <record id="view_eacta_school_level_kanban" model="ir.ui.view">
-        <field name="name">eacta.school.level.kanban</field>
-        <field name="model">eacta.school.level</field>
-        <field name="arch" type="xml">
-            <kanban>
-                <field name="name"/>
-                <field name="code"/>
-                <templates>
-                    <t t-name="card">
-                        <div class="oe_kanban_global_click eacta_card_custom p-3">
-                            <div class="d-flex justify-content-between align-items-center mb-2">
-                                <span class="badge bg-primary-subtle text-primary border border-primary-subtle rounded-pill px-2 py-1 small fw-bold">
-                                    <field name="code"/>
-                                </span>
-                                <i class="fa fa-graduation-cap fa-lg text-primary opacity-50"/>
-                            </div>
-                            <h5 class="fw-bold text-dark mb-1 text-truncate">
-                                <field name="name"/>
-                            </h5>
-                        </div>
-                    </t>
-                </templates>
-            </kanban>
-        </field>
-    </record>
-
-    <!-- Action definition for school levels -->
     <record id="action_eacta_school_level" model="ir.actions.act_window">
         <field name="name">Niveaux scolaires</field>
         <field name="res_model">eacta.school.level</field>
-        <field name="view_mode">kanban,list,form</field>
+        <field name="view_mode">list,form</field>
         <field name="help" type="html">
-            <p class="o_view_nocontent_smiling_face">
-                Définissez les niveaux scolaires !
-            </p>
-            <p>
-                Configurez les cycles d'enseignement : Primaire, Collège, Lycée, etc.
-            </p>
+            <p class="o_view_nocontent_smiling_face">Définissez vos niveaux scolaires</p>
+            <p>Primaire, Collège, Lycée… Ils servent à organiser les classes.</p>
         </field>
     </record>
 
-    <!-- Menu item definition for school levels -->
-    <menuitem id="menu_eacta_school_level"
-              name="Niveaux scolaires"
-              parent="menu_eacta_school_config"
-              action="action_eacta_school_level"
-              sequence="10"/>
-</odoo>
+</odoo>

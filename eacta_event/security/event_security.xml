@@ -3,7 +3,7 @@
     <data>
         <!-- Events Module Category -->
         <record id="module_category_eacta_event" model="ir.module.category">
-            <field name="name">E-ACTA Events</field>
+            <field name="name">NR School - Événements</field>
             <field name="description">Gestion des utilisateurs pour le module Événements</field>
             <field name="sequence">40</field>
         </record>

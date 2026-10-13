@@ -157,7 +157,7 @@
                             <div class="card border-0 shadow-sm h-100">
                                 <div class="card-body text-center p-4">
                                     <div class="text-primary mb-2">
-                                        <i class="fa fa-book fa-2x"></i>
+                                        <i class="fa fa-book fa-2x" title="Livres" aria-label="Livres" role="img"></i>
                                     </div>
                                     <h3 class="fw-bold text-dark mb-1">
                                         <field name="book_count"/>
@@ -170,7 +170,7 @@
                             <div class="card border-0 shadow-sm h-100">
                                 <div class="card-body text-center p-4">
                                     <div class="text-success mb-2">
-                                        <i class="fa fa-check-circle fa-2x"></i>
+                                        <i class="fa fa-check-circle fa-2x" title="Disponible" aria-label="Disponible" role="img"></i>
                                     </div>
                                     <h3 class="fw-bold text-dark mb-1">
                                         <field name="available_book_count"/>
@@ -183,7 +183,7 @@
                             <div class="card border-0 shadow-sm h-100">
                                 <div class="card-body text-center p-4">
                                     <div class="text-warning mb-2">
-                                        <i class="fa fa-users fa-2x"></i>
+                                        <i class="fa fa-users fa-2x" title="Empruntés" aria-label="Empruntés" role="img"></i>
                                     </div>
                                     <h3 class="fw-bold text-dark mb-1">
                                         <field name="book_count"/> - <field name="available_book_count"/>
@@ -197,9 +197,9 @@
                     <!-- Books in this category -->
                     <notebook>
                         <page string="Books" name="books_tab">
-                            <div class="alert alert-light border mb-4">
+                            <div class="alert alert-light border mb-4" role="status">
                                 <div class="d-flex align-items-center">
-                                    <i class="fa fa-info-circle text-primary me-2"></i>
+                                    <i class="fa fa-info-circle text-primary me-2" title="Info" aria-label="Info" role="img"></i>
                                      <div>
                                         <strong class="d-block">Category Contents</strong>
                                         <small class="text-muted">
@@ -317,7 +317,7 @@
                         <!-- Email -->
                         <div class="borrower-email mb-3" t-if="record.email.raw_value">
                             <div class="d-flex align-items-center">
-                                <i class="fa fa-envelope text-muted me-2" style="font-size: 12px;"></i>
+                                <i class="fa fa-envelope text-muted me-2" style="font-size: 12px;" title="Email" aria-label="Email" role="img"></i>
                                 <small class="text-truncate" style="max-width: 200px;">
                                     <field name="email"/>
                                 </small>
@@ -385,8 +385,8 @@
                                 <button class="btn btn-sm btn-outline-primary flex-fill" name="open_loans" type="object">
                                     <i class="fa fa-eye me-1"></i> Voir
                                 </button>
-                                <button class="btn btn-sm btn-outline-secondary" name="action_view_loans" type="object">
-                                    <i class="fa fa-book me-1"></i>
+                                <button class="btn btn-sm btn-outline-secondary" name="action_view_loans" type="object" title="Emprunts" aria-label="Emprunts">
+                                    <i class="fa fa-book me-1" title="Emprunts" aria-label="Emprunts" role="img"></i>
                                 </button>
                             </div>
                         </div>

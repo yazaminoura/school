@@ -1,20 +1,218 @@
-from odoo import models,fields
+import random
+from datetime import timedelta
+
+from odoo import api, fields, models
+from odoo.exceptions import UserError
+
+EXAM_TYPES = [
+    ('quiz', 'Contrôle continu'),
+    ('homework', 'Devoir'),
+    ('oral', 'Oral'),
+    ('practical', 'Travaux pratiques'),
+    ('midterm', 'Examen partiel'),
+    ('final', 'Examen final'),
+]
+
 
 class EactaExam(models.Model):
-   _name = 'eacta.exam'
-   _description = 'Exam'
+    _name = 'eacta.exam'
+    _description = 'Examen'
+    _inherit = ['mail.thread', 'mail.activity.mixin']
+    _order = 'date desc, id desc'
 
+    name = fields.Char(string="Nom de l'examen", required=True, tracking=True)
+    course_id = fields.Many2one('eacta.course', string="Matière", required=True, tracking=True)
+    teacher_id = fields.Many2one(related='course_id.teacher_id', store=True, string='Enseignant')
+    date = fields.Date(string="Date de l'examen", required=True, tracking=True,
+                       default=fields.Date.context_today)
+    exam_type = fields.Selection(EXAM_TYPES, string="Type", default='quiz', required=True, tracking=True)
+    state = fields.Selection([
+        ('draft', 'Planifié'),
+        ('grading', 'Correction'),
+        ('done', 'Clôturé'),
+        ('cancel', 'Annulé'),
+    ], string='État', default='draft', required=True, tracking=True)
+    duration = fields.Float(string='Durée (h)', default=1.0)
+    room = fields.Char(string='Salle')
+    description = fields.Text(string='Consignes')
+    class_ids = fields.Many2many(
+        'eacta.class', 'eacta_exam_class_rel', 'exam_id', 'class_ids', string="Classes",
+        compute='_compute_class_ids', store=True, readonly=False)
+    color = fields.Integer(string='Couleur')
 
-   course_id = fields.Many2one('eacta.course', string="Matière", required=True)
-   name = fields.Char(string="Nom de l'examen", required=True)
-   date = fields.Date(string="Date de l'examen", required=True)
-   # Exemple de champ lié pour récupérer le classe du cours
-   class_ids = fields.Many2many(
-       'eacta.class',
-       'eacta_exam_class_rel',  # Nom de la table intermédiaire
-       'exam_id',  # Champ local
-       'class_ids',  # Champ distant
-       string="Classes",
-       related='course_id.class_ids',  # Liaison au champ `class_ids` du cours
-       store=True
-   )
+    grade_ids = fields.One2many('eacta.course.grade', 'exam_id', string='Notes')
+    grade_count = fields.Integer(string='Copies', compute='_compute_stats', store=True)
+    graded_count = fields.Integer(string='Copies notées', compute='_compute_stats', store=True)
+    average = fields.Float(string='Moyenne', compute='_compute_stats', store=True, digits=(4, 2), aggregator='avg')
+    max_grade = fields.Float(string='Meilleure note', compute='_compute_stats', store=True, digits=(4, 2),
+                             aggregator='max')
+    min_grade = fields.Float(string='Note la plus basse', compute='_compute_stats', store=True, digits=(4, 2),
+                             aggregator='min')
+    success_rate = fields.Float(string='Taux de réussite (%)', compute='_compute_stats', store=True,
+                                digits=(5, 1), aggregator='avg')
+    progress = fields.Float(string='Avancement correction (%)', compute='_compute_stats', store=True)
+
+    @api.depends('course_id')
+    def _compute_class_ids(self):
+        for exam in self:
+            if exam.course_id and not exam.class_ids:
+                exam.class_ids = exam.course_id.class_ids
+
+    @api.depends('grade_ids.grade', 'grade_ids.status')
+    def _compute_stats(self):
+        for exam in self:
+            graded = exam.grade_ids.filtered(lambda g: g.status == 'graded')
+            values = graded.mapped('grade')
+            relevant = exam.grade_ids.filtered(lambda g: g.status != 'exempt')
+            exam.grade_count = len(exam.grade_ids)
+            exam.graded_count = len(graded)
+            exam.average = round(sum(values) / len(values), 2) if values else 0.0
+            exam.max_grade = max(values) if values else 0.0
+            exam.min_grade = min(values) if values else 0.0
+            exam.success_rate = round(100.0 * len([v for v in values if v >= 10]) / len(values), 1) if values else 0.0
+            done = relevant.filtered(lambda g: g.status in ('graded', 'absent'))
+            exam.progress = round(100.0 * len(done) / len(relevant), 1) if relevant else 0.0
+
+    def _get_expected_students(self):
+        self.ensure_one()
+        students = self.class_ids.student_ids
+        if self.course_id.student_ids:
+            # Restreindre aux élèves inscrits au cours lorsque des inscriptions existent
+            enrolled = students & self.course_id.student_ids
+            students = enrolled or students
+        return students.filtered(lambda s: s.state in ('draft', 'enrolled'))
+
+    def action_generate_grade_sheet(self):
+        """Crée une ligne de note « À noter » pour chaque élève attendu."""
+        Grade = self.env['eacta.course.grade']
+        for exam in self:
+            if not exam.class_ids:
+                raise UserError(f"Veuillez sélectionner au moins une classe pour l'examen « {exam.name} ».")
+            existing = exam.grade_ids.mapped('student_id')
+            vals_list = []
+            for student in exam._get_expected_students() - existing:
+                student_class = (student.class_ids & exam.class_ids)[:1]
+                vals_list.append({
+                    'exam_id': exam.id,
+                    'student_id': student.id,
+                    'class_id': student_class.id,
+                    'status': 'pending',
+                    'grade': 0.0,
+                })
+            Grade.create(vals_list)
+            if exam.state == 'draft':
+                exam.state = 'grading'
+        return self.action_open_grade_sheet() if len(self) == 1 else True
+
+    def action_open_grade_sheet(self):
+        self.ensure_one()
+        return {
+            'name': f"Saisie des notes - {self.name}",
+            'type': 'ir.actions.act_window',
+            'res_model': 'eacta.course.grade',
+            'view_mode': 'list,form',
+            'views': [(self.env.ref('eacta_school.view_course_grade_entry_list').id, 'list'), (False, 'form')],
+            'domain': [('exam_id', '=', self.id)],
+            'context': {'default_exam_id': self.id, 'create': True},
+        }
+
+    def action_start_grading(self):
+        self.write({'state': 'grading'})
+
+    def action_done(self):
+        for exam in self:
+            pending = exam.grade_ids.filtered(lambda g: g.status == 'pending')
+            if pending:
+                raise UserError(
+                    f"Impossible de clôturer « {exam.name} » : {len(pending)} copie(s) restent à noter.")
+        self.write({'state': 'done'})
+
+    def action_cancel(self):
+        self.write({'state': 'cancel'})
+
+    def action_reset_draft(self):
+        self.write({'state': 'draft'})
+
+    # ------------------------------------------------------------------
+    # Données de démonstration
+    # ------------------------------------------------------------------
+    @api.model
+    def _eacta_generate_demo_results(self):
+        """Lie cours et classes de démo, puis génère examens et notes (déterministe)."""
+        self = self.with_context(tracking_disable=True, mail_create_nolog=True, mail_notrack=True)
+        rng = random.Random(2026)
+        ref = lambda xmlid: self.env.ref(f'eacta_school.{xmlid}', raise_if_not_found=False)
+        teachers = [t for t in (ref('demo_teacher_amina'), ref('demo_teacher_youssef'), ref('demo_teacher_sara')) if t]
+        courses = {code: ref(f'course_{code}') for code in
+                   ('math', 'french', 'science', 'history', 'english', 'geography', 'art')}
+        courses = {code: course for code, course in courses.items() if course}
+        if not courses:
+            return
+        for i, course in enumerate(courses.values()):
+            if teachers and not course.teacher_id:
+                course.teacher_id = teachers[i % len(teachers)]
+        coefficients = {'math': 4, 'french': 3, 'science': 3, 'english': 2, 'history': 2, 'geography': 2, 'art': 1}
+        for code, course in courses.items():
+            course.coefficient = coefficients.get(code, 1)
+
+        program = {
+            'primary': ['math', 'french', 'science', 'english', 'art'],
+            'secondary': ['math', 'french', 'science', 'english', 'history', 'geography'],
+        }
+        classes = self.env['eacta.class'].search([('id', 'in', [
+            c.id for c in (ref(x) for x in ('class_1a_2023', 'class_1b_2023', 'class_2a_2023', 'class_2b_2023',
+                                            'class_3a_2024', 'class_3b_2024', 'class_4a_2024', 'class_4b_2024')) if c
+        ])])
+        today = fields.Date.context_today(self)
+        for n, klass in enumerate(classes):
+            year = int(klass.year)
+            klass.write({
+                'course_ids': [(6, 0, [courses[c].id for c in program.get(klass.level, []) if c in courses])],
+                'teacher_id': teachers[n % len(teachers)].id if teachers else False,
+                'start_date': fields.Date.to_date(f'{year}-09-01'),
+                'end_date': fields.Date.to_date(f'{year + 1}-06-30'),
+            })
+            klass.action_sync_courses_to_students()
+            klass.student_ids.write({'state': 'enrolled'})
+            # Niveau de chaque élève : stable d'un examen à l'autre
+            skill = {s.id: rng.gauss(12, 2.6) for s in klass.student_ids}
+            sessions = [('Contrôle continu 1', 'quiz', f'{year}-10-20'),
+                        ('Devoir surveillé', 'homework', f'{year}-12-12'),
+                        ('Examen final', 'final', f'{year + 1}-05-28')]
+            for course in klass.course_ids:
+                difficulty = rng.uniform(-1.5, 1.2)
+                for label, exam_type, date in sessions:
+                    exam = self.create({
+                        'name': f'{label} - {course.name}',
+                        'course_id': course.id,
+                        'class_ids': [(6, 0, klass.ids)],
+                        'exam_type': exam_type,
+                        'date': fields.Date.to_date(date),
+                        'state': 'done',
+                    })
+                    vals_list = []
+                    for student in klass.student_ids:
+                        if rng.random() < 0.03:
+                            vals_list.append({'exam_id': exam.id, 'student_id': student.id,
+                                              'class_id': klass.id, 'status': 'absent', 'grade': 0.0})
+                            continue
+                        grade = skill[student.id] + difficulty + rng.gauss(0, 1.8)
+                        vals_list.append({'exam_id': exam.id, 'student_id': student.id, 'class_id': klass.id,
+                                          'status': 'graded', 'grade': round(min(20.0, max(0.0, grade)) * 4) / 4})
+                    self.env['eacta.course.grade'].create(vals_list)
+
+        # Quelques examens à venir pour le tableau de bord
+        latest = classes.sorted('year', reverse=True)[:2]
+        for offset, klass in enumerate(latest, start=1):
+            for course in klass.course_ids[:3]:
+                self.create({
+                    'name': f'Contrôle continu 2 - {course.name}',
+                    'course_id': course.id,
+                    'class_ids': [(6, 0, klass.ids)],
+                    'exam_type': 'quiz',
+                    'date': today + timedelta(days=offset * 3 + len(course.name) % 9),
+                    'room': f'Salle {100 + offset}',
+                })
+        # Quelques pré-inscriptions
+        for student in classes[:1].student_ids[:4]:
+            student.state = 'draft'

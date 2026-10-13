@@ -1,0 +1,205 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<templates xml:space="preserve">
+
+    <t t-name="eacta_school.SchoolDashboard">
+        <div class="o_action o_eacta_dashboard h-100 overflow-auto">
+            <div t-if="state.loading" class="o_eacta_dash_loading">
+                <i class="fa fa-circle-o-notch fa-spin fa-2x" title="Chargement"/>
+            </div>
+            <div t-else="" class="o_eacta_dash_inner">
+                <t t-set="d" t-value="state.data"/>
+
+                <!-- En-tête -->
+                <div class="o_eacta_dash_hero">
+                    <div>
+                        <h1>Tableau de bord scolaire</h1>
+                        <p>Vue d'ensemble des effectifs, des examens et des résultats.</p>
+                    </div>
+                    <div class="o_eacta_dash_actions">
+                        <button class="btn btn-light" t-on-click="() => this.load()">
+                            <i class="fa fa-refresh me-1"/>Actualiser
+                        </button>
+                        <button class="btn btn-primary"
+                                t-on-click="() => this.openAction('eacta_school.action_eacta_student')">
+                            <i class="fa fa-user-plus me-1"/>Élèves
+                        </button>
+                        <button class="btn btn-primary"
+                                t-on-click="() => this.openAction('eacta_school.action_eacta_exam')">
+                            <i class="fa fa-calendar-check-o me-1"/>Examens
+                        </button>
+                    </div>
+                </div>
+
+                <!-- KPIs -->
+                <div class="o_eacta_dash_kpis">
+                    <div class="o_eacta_dash_kpi" t-on-click="() => this.openStudents()">
+                        <div class="o_eacta_dash_kpi_icon o_eacta_tone_primary"><i class="fa fa-graduation-cap"/></div>
+                        <div>
+                            <div class="o_eacta_dash_kpi_value" t-out="kpis.students"/>
+                            <div class="o_eacta_dash_kpi_label">Élèves</div>
+                            <div class="o_eacta_dash_kpi_hint"><t t-out="kpis.enrolled"/> inscrits · <t t-out="kpis.drafts"/> en attente</div>
+                        </div>
+                    </div>
+                    <div class="o_eacta_dash_kpi" t-on-click="() => this.openAction('eacta_school.action_eacta_class')">
+                        <div class="o_eacta_dash_kpi_icon o_eacta_tone_info"><i class="fa fa-users"/></div>
+                        <div>
+                            <div class="o_eacta_dash_kpi_value" t-out="kpis.classes"/>
+                            <div class="o_eacta_dash_kpi_label">Classes</div>
+                            <div class="o_eacta_dash_kpi_hint"><t t-out="kpis.courses"/> cours · <t t-out="kpis.teachers"/> enseignants</div>
+                        </div>
+                    </div>
+                    <div class="o_eacta_dash_kpi" t-on-click="() => this.openAction('eacta_school.action_eacta_grade_analysis')">
+                        <div class="o_eacta_dash_kpi_icon o_eacta_tone_success"><i class="fa fa-line-chart"/></div>
+                        <div>
+                            <div class="o_eacta_dash_kpi_value"><t t-out="kpis.average.toFixed(2)"/><small>/20</small></div>
+                            <div class="o_eacta_dash_kpi_label">Moyenne générale</div>
+                            <div class="o_eacta_dash_kpi_hint"><t t-out="kpis.grades"/> notes enregistrées</div>
+                        </div>
+                    </div>
+                    <div class="o_eacta_dash_kpi" t-on-click="() => this.openAction('eacta_school.action_eacta_grade_analysis')">
+                        <div class="o_eacta_dash_kpi_icon o_eacta_tone_accent"><i class="fa fa-trophy"/></div>
+                        <div>
+                            <div class="o_eacta_dash_kpi_value"><t t-out="kpis.success_rate"/><small>%</small></div>
+                            <div class="o_eacta_dash_kpi_label">Taux de réussite</div>
+                            <div class="o_eacta_dash_kpi_hint">notes ≥ 10/20</div>
+                        </div>
+                    </div>
+                    <div class="o_eacta_dash_kpi"
+                         t-on-click="() => this.openList('eacta.exam', 'Examens à corriger', [['state', '=', 'grading']], {}, ['list', 'form'])">
+                        <div class="o_eacta_dash_kpi_icon o_eacta_tone_warning"><i class="fa fa-pencil"/></div>
+                        <div>
+                            <div class="o_eacta_dash_kpi_value" t-out="kpis.exams_to_grade"/>
+                            <div class="o_eacta_dash_kpi_label">En correction</div>
+                            <div class="o_eacta_dash_kpi_hint"><t t-out="kpis.exams_upcoming"/> examen(s) à venir</div>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="o_eacta_dash_grid">
+                    <!-- Distribution des notes -->
+                    <section class="o_eacta_panel o_eacta_span_2">
+                        <header><h3>Répartition des notes</h3><span class="text-muted small">sur 20</span></header>
+                        <div t-if="kpis.grades" class="o_eacta_histogram">
+                            <div t-foreach="d.distribution" t-as="bucket" t-key="bucket.label" class="o_eacta_histogram_col">
+                                <span class="o_eacta_histogram_count" t-out="bucket.count"/>
+                                <div class="o_eacta_histogram_track">
+                                    <div t-attf-class="o_eacta_histogram_bar #{bucket.passed ? 'o_eacta_pass' : 'o_eacta_fail'}"
+                                         t-attf-style="height: #{Math.max(2, 100 * bucket.count / maxBucket)}%"/>
+                                </div>
+                                <span class="o_eacta_histogram_label" t-out="bucket.label"/>
+                            </div>
+                        </div>
+                        <div t-else="" class="o_eacta_empty">Aucune note enregistrée pour le moment.</div>
+                    </section>
+
+                    <!-- Statuts + genre -->
+                    <section class="o_eacta_panel">
+                        <header><h3>Statut des élèves</h3></header>
+                        <div class="o_eacta_status_list">
+                            <div t-foreach="d.states" t-as="st" t-key="st.key" class="o_eacta_status_row"
+                                 t-on-click="() => this.openStudents(st.key)">
+                                <span t-attf-class="o_eacta_dot o_eacta_dot_#{st.key}"/>
+                                <span class="flex-grow-1" t-out="st.label"/>
+                                <strong t-out="st.count"/>
+                            </div>
+                        </div>
+                        <div t-if="genderTotal" class="mt-3">
+                            <div class="d-flex justify-content-between small text-muted mb-1">
+                                <span><i class="fa fa-male me-1"/>Garçons <t t-out="pct(d.gender.male, genderTotal)"/>%</span>
+                                <span>Filles <t t-out="pct(d.gender.female, genderTotal)"/>%<i class="fa fa-female ms-1"/></span>
+                            </div>
+                            <div class="o_eacta_split">
+                                <div class="o_eacta_split_a" t-attf-style="width: #{pct(d.gender.male, genderTotal)}%"/>
+                                <div class="o_eacta_split_b" t-attf-style="width: #{pct(d.gender.female, genderTotal)}%"/>
+                            </div>
+                        </div>
+                    </section>
+
+                    <!-- Classes -->
+                    <section class="o_eacta_panel">
+                        <header>
+                            <h3>Remplissage des classes</h3>
+                            <a href="#" t-on-click.prevent="() => this.openAction('eacta_school.action_eacta_class')">Tout voir</a>
+                        </header>
+                        <div t-if="d.classes.length" class="o_eacta_rows">
+                            <div t-foreach="d.classes" t-as="c" t-key="c.id" class="o_eacta_row o_eacta_clickable"
+                                 t-on-click="() => this.openRecord('eacta.class', c.id)">
+                                <div class="d-flex justify-content-between small">
+                                    <strong class="text-truncate" t-out="c.name"/>
+                                    <span class="text-muted"><t t-out="c.count"/> / <t t-out="c.capacity"/></span>
+                                </div>
+                                <div class="o_eacta_meter_track">
+                                    <div t-attf-class="o_eacta_meter_fill #{c.fill &gt;= 100 ? 'o_eacta_meter_full' : (c.fill &gt;= 85 ? 'o_eacta_meter_warn' : '')}"
+                                         t-attf-style="width: #{c.fill}%"/>
+                                </div>
+                            </div>
+                        </div>
+                        <div t-else="" class="o_eacta_empty">Aucune classe.</div>
+                    </section>
+
+                    <!-- Examens à venir -->
+                    <section class="o_eacta_panel">
+                        <header>
+                            <h3>Examens à venir</h3>
+                            <a href="#" t-on-click.prevent="() => this.openAction('eacta_school.action_eacta_exam')">Calendrier</a>
+                        </header>
+                        <div t-if="d.upcoming_exams.length" class="o_eacta_rows">
+                            <div t-foreach="d.upcoming_exams" t-as="e" t-key="e.id" class="o_eacta_exam_row o_eacta_clickable"
+                                 t-on-click="() => this.openRecord('eacta.exam', e.id)">
+                                <div class="o_eacta_exam_when" t-out="daysLabel(e.days)"/>
+                                <div class="min-w-0 flex-grow-1">
+                                    <div class="fw-semibold text-truncate" t-out="e.name"/>
+                                    <div class="small text-muted text-truncate"><t t-out="e.course"/> · <t t-out="e.type"/><t t-if="e.classes"> · <t t-out="e.classes"/></t></div>
+                                </div>
+                            </div>
+                        </div>
+                        <div t-else="" class="o_eacta_empty">Aucun examen planifié.</div>
+                    </section>
+
+                    <!-- Meilleurs élèves -->
+                    <section class="o_eacta_panel">
+                        <header><h3>Tableau d'honneur</h3></header>
+                        <div t-if="d.top_students.length" class="o_eacta_rows">
+                            <div t-foreach="d.top_students" t-as="s" t-key="s.id" class="o_eacta_person_row o_eacta_clickable"
+                                 t-on-click="() => this.openRecord('eacta.student', s.id)">
+                                <span class="o_eacta_rank" t-out="s_index + 1"/>
+                                <img t-if="s.has_image" class="o_eacta_mini_avatar"
+                                     t-attf-src="/web/image/eacta.student/#{s.id}/image_128" alt=""/>
+                                <span t-else="" class="o_eacta_mini_avatar o_eacta_avatar_initials" t-out="s.name.charAt(0)"/>
+                                <div class="min-w-0 flex-grow-1">
+                                    <div class="fw-semibold text-truncate" t-out="s.name"/>
+                                    <div class="small text-muted text-truncate" t-out="s.class"/>
+                                </div>
+                                <span t-att-class="scoreClass(s.average)" t-out="s.average.toFixed(2)"/>
+                            </div>
+                        </div>
+                        <div t-else="" class="o_eacta_empty">Pas encore de résultats.</div>
+                    </section>
+
+                    <!-- Matières -->
+                    <section class="o_eacta_panel">
+                        <header><h3>Matières</h3><span class="text-muted small">moyenne · réussite</span></header>
+                        <div t-if="d.best_courses.length" class="o_eacta_rows">
+                            <div class="o_eacta_subtitle">Les plus réussies</div>
+                            <div t-foreach="d.best_courses" t-as="c" t-key="'b' + c.id" class="o_eacta_course_row o_eacta_clickable"
+                                 t-on-click="() => this.openRecord('eacta.course', c.id)">
+                                <span class="flex-grow-1 text-truncate" t-out="c.name"/>
+                                <span class="text-muted small"><t t-out="c.success"/>%</span>
+                                <span t-att-class="scoreClass(c.average)" t-out="c.average.toFixed(2)"/>
+                            </div>
+                            <div class="o_eacta_subtitle mt-2">À surveiller</div>
+                            <div t-foreach="d.worst_courses" t-as="c" t-key="'w' + c.id" class="o_eacta_course_row o_eacta_clickable"
+                                 t-on-click="() => this.openRecord('eacta.course', c.id)">
+                                <span class="flex-grow-1 text-truncate" t-out="c.name"/>
+                                <span class="text-muted small"><t t-out="c.success"/>%</span>
+                                <span t-att-class="scoreClass(c.average)" t-out="c.average.toFixed(2)"/>
+                            </div>
+                        </div>
+                        <div t-else="" class="o_eacta_empty">Pas encore de résultats.</div>
+                    </section>
+                </div>
+            </div>
+        </div>
+    </t>
+
+</templates>

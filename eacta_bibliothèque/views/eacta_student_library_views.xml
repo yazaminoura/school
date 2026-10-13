@@ -1,0 +1,15 @@
+<?xml version="1.0" encoding="utf-8"?>
+<odoo>
+    <record id="view_eacta_student_form_library" model="ir.ui.view">
+        <field name="name">eacta.student.form.library</field>
+        <field name="model">eacta.student</field>
+        <field name="inherit_id" ref="eacta_school.view_eacta_student_form"/>
+        <field name="arch" type="xml">
+            <div name="button_box" position="inside">
+                <button name="action_view_borrowed_books" type="object" class="oe_stat_button" icon="fa-book">
+                    <field name="borrowed_book_count" widget="statinfo" string="Livres"/>
+                </button>
+            </div>
+        </field>
+    </record>
+</odoo>
