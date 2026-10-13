@@ -1,33 +1,75 @@
 <?xml version="1.0" encoding="utf-8"?>
 <odoo>
-<record id="view_course_grade_tree" model="ir.ui.view">
-   <field name="name">eacta.course.grade.tree</field>
-   <field name="model">eacta.course.grade</field>
-   <field name="arch" type="xml">
-       <list string="Notes des étudiants">
-           <field name="student_id"/>
-           <field name="grade"/>
-       </list>
-   </field>
-</record>
+    <!-- List view des notes -->
+    <record id="view_course_grade_tree" model="ir.ui.view">
+        <field name="name">eacta.course.grade.list</field>
+        <field name="model">eacta.course.grade</field>
+        <field name="arch" type="xml">
+            <list string="Notes des élèves"
+                  decoration-success="grade &gt;= 14"
+                  decoration-warning="grade &gt;= 10 and grade &lt; 14"
+                  decoration-danger="grade &lt; 10">
+                <field name="student_id" string="Élève" class="fw-bold"/>
+                <field name="class_id" string="Classe"/>
+                <field name="course_id" string="Matière"/>
+                <field name="exam_id" string="Examen"/>
+                <field name="grade" string="Note (/20)" class="fw-bold"/>
+            </list>
+        </field>
+    </record>
 
+    <!-- Form view des notes -->
+    <record id="view_course_grade_form" model="ir.ui.view">
+        <field name="name">eacta.course.grade.form</field>
+        <field name="model">eacta.course.grade</field>
+        <field name="arch" type="xml">
+            <form string="Note de l'élève">
+                <sheet>
+                    <div class="oe_title">
+                        <label for="student_id" string="Élève concerné" class="oe_edit_only"/>
+                        <h1 class="d-flex align-items-center gap-2">
+                            <field name="student_id" options="{'no_create': True}" placeholder="Sélectionner l'élève..."/>
+                        </h1>
+                    </div>
+                    <group>
+                        <group string="Contexte de l'évaluation">
+                            <field name="exam_id" options="{'no_create': True}"/>
+                            <field name="course_id" options="{'no_create': True}"/>
+                            <field name="class_id" options="{'no_create': True}"/>
+                        </group>
+                        <group string="Résultat">
+                            <label for="grade" string="Note obtenue"/>
+                            <div class="d-flex align-items-center gap-2">
+                                <field name="grade" class="oe_inline fw-bold fs-4"/>
+                                <span class="fs-5 text-muted">/ 20</span>
+                            </div>
+                        </group>
+                    </group>
+                </sheet>
+            </form>
+        </field>
+    </record>
 
-<record id="view_course_grade_form" model="ir.ui.view">
-   <field name="name">eacta.course.grade.form</field>
-   <field name="model">eacta.course.grade</field>
-   <field name="arch" type="xml">
-       <form string="Note">
-           <sheet>
-               <group>
-                   <field name="course_id"/>
-                   <field name="student_id"/>
-                   <field name="exam_id"/>
-                   <field name="grade"/>
-               </group>
-           </sheet>
-       </form>
-   </field>
-</record>
+    <!-- Action pour les notes -->
+    <record id="action_eacta_course_grade" model="ir.actions.act_window">
+        <field name="name">Notes &amp; Évaluations</field>
+        <field name="res_model">eacta.course.grade</field>
+        <field name="view_mode">list,form</field>
+        <field name="help" type="html">
+            <p class="o_view_nocontent_smiling_face">
+                Enregistrez les notes des élèves !
+            </p>
+            <p>
+                Saisissez les notes obtenues par les élèves aux différents examens et contrôles.
+            </p>
+        </field>
+    </record>
 
-
+    <!-- Menu item pour les notes -->
+    <menuitem id="menu_eacta_course_grade"
+              name="Notes"
+              parent="menu_eacta_school_root"
+              action="action_eacta_course_grade"
+              sequence="25"/>
 </odoo>
+

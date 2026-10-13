@@ -62,7 +62,7 @@
                 <field name="date_of_birth"/>
                 <field name="image_128"/>
                 <templates>
-                    <t t-name="kanban-box">
+                    <t t-name="card">
                         <div class="oe_kanban_global_click o_kanban_record_has_image_fill">
                             <div class="o_kanban_image_fill_left d-none d-md-block" t-attf-style="background-image:url('#{kanban_image('eacta.student', 'image_128', record.id.raw_value)}')">
                                 <img class="o_kanban_image_inner_pic" t-if="record.image_128.raw_value" t-att-src="kanban_image('eacta.student', 'image_128', record.id.raw_value)" alt="Photo de l'élève"/>

@@ -346,3 +346,109 @@
         }
     }
 }
+
+/* --------------------------------------------------------------------------
+   7. EVENT, EXAM & ACADEMIC CARDS
+   -------------------------------------------------------------------------- */
+.eacta_event_card {
+    border-radius: var(--eacta-card-radius) !important;
+    overflow: hidden !important;
+    background: #FFFFFF !important;
+
+    .eacta_event_banner {
+        transition: transform 0.3s ease;
+        overflow: hidden;
+
+        img {
+            transition: transform 0.3s ease;
+        }
+
+        &:hover img {
+            transform: scale(1.05);
+        }
+    }
+}
+
+.eacta_exam_card {
+    border-left: 4px solid var(--eacta-primary) !important;
+}
+
+/* --------------------------------------------------------------------------
+   8. LIBRARY & BOOK CARDS (EACTA BIBLIOTHÈQUE)
+   -------------------------------------------------------------------------- */
+.eacta_book_card {
+    border-radius: var(--eacta-card-radius) !important;
+    background: #FFFFFF !important;
+
+    .eacta_book_cover {
+        box-shadow: 0 4px 12px rgba(15, 23, 42, 0.15) !important;
+        transition: transform 0.25s ease, box-shadow 0.25s ease;
+
+        &:hover {
+            transform: translateY(-2px) scale(1.03);
+            box-shadow: 0 8px 18px rgba(15, 23, 42, 0.22) !important;
+        }
+    }
+}
+
+.loan-card {
+    border-radius: var(--eacta-card-radius) !important;
+    background: #FFFFFF !important;
+    border: 1px solid #E2E8F0 !important;
+    transition: all 0.22s ease !important;
+    overflow: hidden;
+
+    &.loan-card-active {
+        border-left: 4px solid #06B6D4 !important;
+    }
+
+    &.loan-card-overdue {
+        border-left: 4px solid #EF4444 !important;
+    }
+
+    &.loan-card-returned {
+        border-left: 4px solid #10B981 !important;
+    }
+
+    .loan-status-ribbon {
+        font-size: 0.7rem;
+        font-weight: 700;
+        letter-spacing: 0.05em;
+        padding: 0.2rem 0.6rem;
+        border-bottom-left-radius: 8px;
+    }
+}
+
+.borrower-card {
+    border-radius: var(--eacta-card-radius) !important;
+    background: #FFFFFF !important;
+    border: 1px solid #E2E8F0 !important;
+    transition: all 0.22s ease !important;
+
+    .stats-grid {
+        display: grid;
+        grid-template-columns: repeat(3, 1fr);
+        gap: 0.5rem;
+
+        .stat-item {
+            background: #F8FAFC;
+            border-radius: 8px;
+            padding: 0.5rem;
+            text-align: center;
+            border: 1px solid #F1F5F9;
+
+            .stat-number {
+                font-size: 1.1rem;
+                font-weight: 700;
+                line-height: 1.2;
+            }
+
+            .stat-label {
+                font-size: 0.7rem;
+                color: #64748B;
+                text-transform: uppercase;
+                letter-spacing: 0.03em;
+            }
+        }
+    }
+}

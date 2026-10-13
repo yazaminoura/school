@@ -4,79 +4,88 @@
 
     <!-- Book Tree View -->
 <!-- Book Tree View -->
+<!-- Book Tree View -->
 <record id="library_book_tree_view" model="ir.ui.view">
-    <field name="name">library.book.tree</field>
+    <field name="name">library.book.list</field>
     <field name="model">library.book</field>
     <field name="arch" type="xml">
-        <list>
-            <field name="name"/>
-            <field name="author"/>
-            <field name="isbn"/>
-            <field name="category_id"/> <!-- Add category column -->
-            <field name="status"/>
-            <field name="total_quantity"/>
-            <field name="available_quantity"/>
+        <list decoration-success="is_available" decoration-danger="not is_available">
+            <field name="name" string="Titre du livre" class="fw-bold"/>
+            <field name="author" string="Auteur"/>
+            <field name="isbn" string="ISBN"/>
+            <field name="category_id" string="Catégorie"/>
+            <field name="status" widget="badge" decoration-success="status == 'available'" decoration-warning="status == 'on_loan'"/>
+            <field name="total_quantity" string="Total"/>
+            <field name="available_quantity" string="Disponibles"/>
+            <field name="is_available" column_invisible="1"/>
         </list>
     </field>
 </record>
 
     <!-- Book Form View -->
-<!-- Book Form View -->
-<!-- 📚 Styled Book Form View -->
-<record id="view_library_book_form" model="ir.ui.view">
+    <record id="view_library_book_form" model="ir.ui.view">
         <field name="name">library.book.form.styled</field>
         <field name="model">library.book</field>
         <field name="arch" type="xml">
-            <form>
+            <form string="Livre">
+                <header>
+                    <button name="action_borrow" type="object" string="Emprunter" class="btn-primary" invisible="not is_available"/>
+                    <button name="action_generate_barcodes" type="object" string="Générer les codes-barres" class="btn-secondary"/>
+                    <field name="status" widget="statusbar" statusbar_visible="available,on_loan"/>
+                </header>
                 <sheet>
-                    <div class="oe_title">
-                        <label for="name" class="oe_edit_only"/>
-                        <h1>
-                            <field name="name" placeholder="Titre du livre"/>
-                        </h1>
+                    <div class="oe_button_box" name="button_box">
+                        <button name="action_view_loans" type="object" class="oe_stat_button" icon="fa-book">
+                            <field name="loan_count" widget="statinfo" string="Emprunts"/>
+                        </button>
                     </div>
-
+                    <field name="image" widget="image" class="oe_avatar eacta_avatar_form" options="{'zoom': true, 'preview_image': 'image'}"/>
+                    <div class="oe_title">
+                        <label for="name" class="oe_edit_only" string="Titre du livre"/>
+                        <h1 class="d-flex align-items-center gap-2">
+                            <field name="name" placeholder="ex: Les Misérables"/>
+                        </h1>
+                        <div class="d-flex align-items-center gap-2 mt-1">
+                            <span class="text-muted"><i class="fa fa-user me-1"/> Auteur:</span>
+                            <field name="author" placeholder="Victor Hugo" class="fw-bold"/>
+                        </div>
+                    </div>
+                    <group>
+                        <group string="Classification &amp; Modalités">
+                            <field name="isbn"/>
+                            <field name="category_id" options="{'no_create': False}"/>
+                            <field name="loan_duration_days"/>
+                        </group>
+                        <group string="Disponibilité &amp; Exemplaires">
+                            <field name="total_quantity"/>
+                            <field name="available_quantity" readonly="1"/>
+                            <field name="is_available" invisible="1"/>
+                        </group>
+                    </group>
                     <notebook>
-                        <page string="Informations">
-                            <group>
-                                <group>
-                                    <field name="author"/>
-                                    <field name="isbn"/>
-                                    <field name="category_id"/>
-                                    <field name="status"/>
-                                    <field name="loan_duration_days"/>
-                                </group>
-                                <group>
-                                    <field name="image" widget="image" class="oe_avatar"/>
-                                </group>
-                            </group>
-                            <h4>Description</h4>
-                            <field name="description" placeholder="Description du livre..." nolabel="1"/>
+                        <page string="Description &amp; Résumé" icon="fa-align-left">
+                            <field name="description" placeholder="Résumé ou extrait de l'ouvrage..."/>
                         </page>
-
-                        <page string="Exemplaires">
-                            <group>
-                                <field name="total_quantity"/>
-                                <field name="available_quantity" readonly="1"/>
-                            </group>
+                        <page string="Exemplaires &amp; Codes-barres" icon="fa-barcode">
                             <field name="barcode_ids">
                                 <list editable="bottom">
                                     <field name="barcode"/>
+                                    <field name="manual_barcode" placeholder="Code manuel optionnel"/>
+                                    <field name="is_available" widget="boolean_toggle"/>
                                     <field name="icon_status" widget="html" readonly="1"/>
                                 </list>
                             </field>
                         </page>
-
-                        <page string="Emprunts">
+                        <page string="Historique des Emprunts" icon="fa-history">
                             <field name="loan_ids">
-                                <list decoration-danger="is_overdue" decoration-success="returned">
+                                <list decoration-danger="is_overdue and not returned" decoration-success="returned">
                                     <field name="name"/>
                                     <field name="barcode_id"/>
                                     <field name="borrower_type"/>
                                     <field name="checkout_date"/>
                                     <field name="due_date"/>
-                                    <field name="returned"/>
-                                    <field name="is_overdue"/>
+                                    <field name="returned" widget="boolean_toggle"/>
+                                    <field name="is_overdue" column_invisible="1"/>
                                 </list>
                             </field>
                         </page>
@@ -89,54 +98,67 @@
                 </div>
             </form>
         </field>
-    </record>    <!-- Book Kanban View -->
-<!-- In the kanban template, add category information -->
-<record id="library_book_kanban_view" model="ir.ui.view">
-    <field name="name">library.book.kanban.compact</field>
-    <field name="model">library.book</field>
-    <field name="arch" type="xml">
-        <kanban>
-            <field name="name"/>
-            <field name="author"/>
-            <field name="category_id" options="{'no_create': False}" placeholder="Sélectionnez une catégorie..."/>
-            <field name="image"/>
-            <field name="is_available"/>
-            <field name="available_quantity"/>
-            <field name="total_quantity"/>
-            <templates>
-                <t t-name="kanban-box">
-                    <div class="oe_kanban_global_click o_kanban_card d-flex align-items-center p-2 shadow-sm rounded">
-                        <div class="me-2">
-                            <img t-if="record.image.raw_value" t-att-src="kanban_image('library.book','image',record.id.raw_value)" style="height:60px; width:45px; object-fit:cover; border-radius:4px;"/>
-                            <div t-else="" class="bg-light text-center d-flex align-items-center justify-content-center" style="height:60px; width:45px; border-radius:4px; font-size:18px;">📕</div>
-                        </div>
-                        <div class="flex-grow-1">
-                            <strong><field name="name"/></strong><br/>
-                            <small class="text-muted"><field name="author"/></small><br/>
-                            <!-- Add category display -->
-                            <t t-if="record.category_id.raw_value">
-                                <small class="text-info"><field name="category_id"/></small><br/>
-                            </t>
+    </record>
 
+    <!-- Book Kanban View -->
+    <record id="library_book_kanban_view" model="ir.ui.view">
+        <field name="name">library.book.kanban.compact</field>
+        <field name="model">library.book</field>
+        <field name="arch" type="xml">
+            <kanban>
+                <field name="id"/>
+                <field name="name"/>
+                <field name="author"/>
+                <field name="category_id"/>
+                <field name="image"/>
+                <field name="is_available"/>
+                <field name="available_quantity"/>
+                <field name="total_quantity"/>
+                <templates>
+                    <t t-name="card">
+                        <div class="oe_kanban_global_click eacta_card_custom eacta_book_card p-3">
+                            <div class="d-flex gap-3 align-items-center">
+                                <div class="eacta_book_cover flex-shrink-0" style="width: 55px; height: 75px; border-radius: 8px; overflow: hidden; box-shadow: 0 4px 10px rgba(0,0,0,0.12); background: #EEF2FF; display: flex; align-items: center; justify-content: center;">
+                                    <img t-if="record.image.raw_value"
+                                         t-att-src="kanban_image('library.book','image',record.id.raw_value)"
+                                         style="width: 100%; height: 100%; object-fit: cover;"
+                                         alt="Book Cover"/>
+                                    <div t-else="" class="text-primary font-weight-bold" style="font-size: 24px;">
+                                        <i class="fa fa-book"/>
+                                    </div>
+                                </div>
+                                <div class="flex-grow-1 min-w-0">
+                                    <h6 class="fw-bold mb-1 text-truncate text-dark">
+                                        <field name="name"/>
+                                    </h6>
+                                    <div class="text-muted small text-truncate mb-1">
+                                        <i class="fa fa-user me-1 text-secondary"/>
+                                        <field name="author"/>
+                                    </div>
+                                    <div t-if="record.category_id.raw_value" class="mb-2">
+                                        <span class="badge bg-light text-primary border rounded-pill px-2 py-0 small">
+                                            <field name="category_id"/>
+                                        </span>
+                                    </div>
+                                    <div class="d-flex align-items-center justify-content-between mt-auto">
+                                        <span t-if="record.is_available.raw_value" class="badge bg-success-subtle text-success border border-success-subtle rounded-pill px-2 py-1 small">
+                                            <i class="fa fa-check-circle me-1"/> Disponible
+                                        </span>
+                                        <span t-else="" class="badge bg-danger-subtle text-danger border border-danger-subtle rounded-pill px-2 py-1 small">
+                                            <i class="fa fa-times-circle me-1"/> Emprunté
+                                        </span>
+                                        <span class="small fw-semibold text-muted">
+                                            <field name="available_quantity"/>/<field name="total_quantity"/> ex.
+                                        </span>
+                                    </div>
+                                </div>
+                            </div>
                         </div>
-                        <div class="d-flex flex-column align-items-center justify-content-center text-muted" style="font-size:12px;">
-    <div class="mb-1">
-        <field name="available_quantity"/> / <field name="total_quantity"/>
-    </div>
-    <t t-if="record.is_available.raw_value">
-        <span class="badge badge-success">Disponible</span>
-    </t>
-    <t t-else="">
-        <span class="badge badge-danger">Indisponible</span>
-    </t>
-</div>
-
-                    </div>
-                </t>
-            </templates>
-        </kanban>
-    </field>
-</record>
+                    </t>
+                </templates>
+            </kanban>
+        </field>
+    </record>
 
     <!-- Book Search View -->
 <!-- Book Search View -->
@@ -315,7 +337,7 @@
                 <field name="complete_return"/>
 
                 <templates>
-                    <t t-name="kanban-box">
+                    <t t-name="card">
                         <div class="oe_kanban_global_click o_kanban_card loan-card shadow-sm rounded p-3 position-relative"
                              t-att-class="{
                                  'loan-card-returned': record.returned.raw_value,
@@ -426,76 +448,6 @@
             </search>
         </field>
     </record>
-
-    <!-- Update Book Form View - Remove multi-copy references -->
-    <record id="view_library_book_form" model="ir.ui.view">
-        <field name="name">library.book.form.styled</field>
-        <field name="model">library.book</field>
-        <field name="arch" type="xml">
-            <form>
-                <sheet>
-                    <div class="oe_title">
-                        <label for="name" class="oe_edit_only"/>
-                        <h1>
-                            <field name="name" placeholder="Titre du livre"/>
-                        </h1>
-                    </div>
-
-                    <notebook>
-                        <page string="Informations">
-                            <group>
-                                <group>
-                                    <field name="author"/>
-                                    <field name="isbn"/>
-                                    <field name="category_id"/>
-                                    <field name="status"/>
-                                    <field name="loan_duration_days"/>
-                                </group>
-                                <group>
-                                    <field name="image" widget="image" class="oe_avatar"/>
-                                </group>
-                            </group>
-                            <h4>Description</h4>
-                            <field name="description" placeholder="Description du livre..." nolabel="1"/>
-                        </page>
-
-                        <page string="Exemplaires">
-                            <group>
-                                <field name="total_quantity"/>
-                                <field name="available_quantity" readonly="1"/>
-                            </group>
-                            <field name="barcode_ids">
-                                <list editable="bottom">
-                                    <field name="barcode"/>
-                                    <field name="icon_status" widget="html" readonly="1"/>
-                                </list>
-                            </field>
-                        </page>
-
-                        <page string="Emprunts">
-                            <field name="loan_ids">
-                                <list decoration-danger="is_overdue" decoration-success="returned">
-                                    <field name="name"/>
-                                    <field name="barcode_id"/>
-                                    <field name="borrower_type"/>
-                                    <field name="checkout_date"/>
-                                    <field name="due_date"/>
-                                    <field name="returned"/>
-                                    <field name="is_overdue"/>
-                                </list>
-                            </field>
-                        </page>
-                    </notebook>
-                </sheet>
-                <div class="oe_chatter">
-                    <field name="message_follower_ids" widget="mail_followers"/>
-                    <field name="activity_ids" widget="mail_activity"/>
-                    <field name="message_ids" widget="mail_thread"/>
-                </div>
-            </form>
-        </field>
-    </record>
-
 
     <!-- Actions -->
    <record id="action_library_book" model="ir.actions.act_window">

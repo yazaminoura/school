@@ -25,6 +25,22 @@ class LibraryBook(models.Model):
     available_quantity = fields.Integer(string='Available Quantity', compute='_compute_available_quantity', store=True)
     is_available = fields.Boolean(string='Available', compute='_compute_is_available', store=True)
     loan_duration_days = fields.Integer(string="Loan Duration (days)", default=7, tracking=True)
+    loan_count = fields.Integer(string="Nombre d'emprunts", compute='_compute_loan_count')
+
+    def _compute_loan_count(self):
+        for book in self:
+            book.loan_count = len(book.loan_ids)
+
+    def action_view_loans(self):
+        self.ensure_one()
+        return {
+            'name': f"Emprunts - {self.name}",
+            'type': 'ir.actions.act_window',
+            'res_model': 'library.loan',
+            'view_mode': 'kanban,list,form',
+            'domain': [('book_id', '=', self.id)],
+            'context': {'default_book_id': self.id},
+        }
 
     @api.depends('total_quantity', 'loan_ids.returned')
     def _compute_available_quantity(self):
