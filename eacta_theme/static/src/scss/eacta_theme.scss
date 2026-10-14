@@ -52,18 +52,20 @@ $eacta-fallback-ink: #3B0A18;
         letter-spacing: .01em;
     }
 
-    .o_menu_sections .dropdown-toggle,
-    .o_menu_sections > a,
-    .o_menu_sections > button,
-    .o_menu_brand,
-    .o_menu_toggle,
-    .o_menu_systray > div > .dropdown-toggle,
-    .o_menu_systray .o_nav_entry {
-        border-radius: 8px;
-        margin-block: 5px;
-        height: calc(var(--o-navbar-height) - 10px) !important;
-        line-height: calc(var(--o-navbar-height) - 10px) !important;
-        transition: background-color .15s ease, color .15s ease;
+    @media (max-width: 767.98px) {
+        .o_menu_sections .dropdown-toggle,
+        .o_menu_sections > a,
+        .o_menu_sections > button,
+        .o_menu_brand,
+        .o_menu_toggle,
+        .o_menu_systray > div > .dropdown-toggle,
+        .o_menu_systray .o_nav_entry {
+            border-radius: 8px;
+            margin-block: 5px;
+            height: calc(var(--o-navbar-height) - 10px) !important;
+            line-height: calc(var(--o-navbar-height) - 10px) !important;
+            transition: background-color .15s ease, color .15s ease;
+        }
     }
 
     .o_menu_sections .dropdown-toggle.show,

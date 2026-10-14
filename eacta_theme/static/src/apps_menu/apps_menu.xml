@@ -1,16 +1,41 @@
 <?xml version="1.0" encoding="UTF-8"?>
 <templates xml:space="preserve">
 
-    <!-- Menu des applications : grille d'icônes avec recherche -->
+    <!-- 1. En-tête de la barre latérale : Logo + Nom d'établissement + Bouton Réduire -->
+    <t t-inherit="web.NavBar" t-inherit-mode="extension">
+        <xpath expr="//nav[hasclass('o_main_navbar')]/*[1]" position="before">
+            <!-- Sidebar Brand Header (Desktop) -->
+            <div class="o_nr_sidebar_brand_bar d-none d-md-flex align-items-center">
+                <a href="/odoo" class="o_nr_sidebar_brand_link d-flex align-items-center text-decoration-none">
+                    <img src="/eacta_school/static/src/img/nr_school_icon.png" class="o_nr_sidebar_logo" alt="NR School"/>
+                    <span class="o_nr_sidebar_brand_title">NR School</span>
+                </a>
+                <button type="button" class="o_nr_sidebar_toggle_btn ms-auto" t-on-click="nrToggleSidebar" title="Réduire / Agrandir le menu">
+                    <i t-attf-class="fa #{this.nrSidebar.collapsed ? 'fa-indent' : 'fa-dedent'}"/>
+                </button>
+            </div>
+        </xpath>
+    </t>
+
+    <!-- 2. Bouton et carte flottante du lanceur d'applications -->
     <t t-inherit="web.NavBar.AppsMenu" t-inherit-mode="extension">
         <xpath expr="//div[hasclass('o_navbar_apps_menu')]/Dropdown" position="attributes">
             <attribute name="menuClass">'o_nr_apps_menu'</attribute>
             <attribute name="onStateChanged">(isOpen) => this.nrOnAppsMenuStateChanged(isOpen)</attribute>
         </xpath>
+        <xpath expr="//div[hasclass('o_navbar_apps_menu')]//button" position="attributes">
+            <attribute name="class">'o_nr_apps_btn'</attribute>
+            <attribute name="title">'Toutes les applications'</attribute>
+        </xpath>
+        <xpath expr="//div[hasclass('o_navbar_apps_menu')]//button/i" position="replace">
+            <i class="oi oi-apps o_nr_apps_btn_icon" />
+            <span class="o_nr_apps_btn_label d-none d-md-inline ms-2">Applications</span>
+        </xpath>
         <xpath expr="//div[hasclass('o_navbar_apps_menu')]//t[@t-set-slot='content']" position="replace">
             <t t-set-slot="content">
                 <div class="o_nr_apps_head">
                     <div class="o_nr_apps_title">
+                        <i class="oi oi-apps me-2"/>
                         <span>Applications</span>
                         <small t-esc="nrFilteredApps.length"/>
                     </div>
@@ -30,7 +55,7 @@
                         attrs="{ href: getMenuItemHref(app), 'data-menu-xmlid': app.xmlid, 'data-section': app.id, title: app.name }">
                         <span class="o_nr_app_icon">
                             <img t-if="app.webIconData" t-att-src="app.webIconData" alt=""/>
-                            <span t-else="" class="o_nr_app_initial" t-esc="nrAppInitial(app)"/>
+                            <span t-else="" class="o_nr_app_initial" t-esc="this.nrAppInitial(app)"/>
                         </span>
                         <span class="o_nr_app_name" t-esc="app.name"/>
                     </DropdownItem>
@@ -39,6 +64,49 @@
                     </div>
                 </div>
             </t>
+        </xpath>
+    </t>
+
+    <!-- 3. Sections du menu avec icônes et affichage vertical -->
+    <t t-inherit="web.NavBar.SectionsMenu" t-inherit-mode="extension">
+        <xpath expr="//DropdownItem[hasclass('o_nav_entry')]" position="replace">
+            <DropdownItem
+                class="'o_nav_entry o_nr_section_entry'"
+                onSelected="() => this.onNavBarDropdownItemSelection(section)"
+                attrs="{
+                    href: getMenuItemHref(section),
+                    'data-hotkey': hotkey,
+                    'data-menu-xmlid': section.xmlid,
+                    'data-section': section.id,
+                    title: section.name,
+                }">
+                <i t-attf-class="fa #{this.nrGetSectionIcon(section)} o_nr_section_icon"/>
+                <span class="o_nr_section_label" t-esc="section.name"/>
+            </DropdownItem>
+        </xpath>
+        <xpath expr="//div[hasclass('o_menu_sections')]//Dropdown/button" position="replace">
+            <button t-att-data-hotkey="hotkey" t-att-data-menu-xmlid="section.xmlid" class="o_nr_section_btn" t-att-title="section.name">
+                <i t-attf-class="fa #{this.nrGetSectionIcon(section)} o_nr_section_icon"/>
+                <span class="o_nr_section_label" t-esc="section.name" t-att-data-section="section.id" />
+                <i class="fa fa-angle-right o_nr_chevron"/>
+            </button>
+        </xpath>
+    </t>
+
+    <!-- 4. Sous-menus déroulants avec icônes -->
+    <t t-inherit="web.NavBar.SectionsMenu.Dropdown.MenuSlot" t-inherit-mode="extension">
+        <xpath expr="//DropdownItem" position="replace">
+            <DropdownItem
+                t-if="!item.childrenTree.length"
+                class="{
+                  'dropdown-item o_nr_sub_entry': true,
+                  o_dropdown_menu_group_entry: decalage gt 20
+                }"
+                onSelected="() => this.onNavBarDropdownItemSelection(item)"
+                attrs="{ style: style, href: getMenuItemHref(item), 'data-menu-xmlid': item.xmlid, 'data-section': item.id, title: item.name }">
+                <i t-attf-class="fa #{this.nrGetSubItemIcon(item)} o_nr_sub_icon me-2"/>
+                <span t-esc="item.name"/>
+            </DropdownItem>
         </xpath>
     </t>
 
