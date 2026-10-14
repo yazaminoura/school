@@ -327,6 +327,9 @@
             <notebook position="inside">
                 <page string="Frais" name="finance" icon="fa-money" groups="eacta_school.group_eacta_school_manager">
                     <div class="d-flex gap-2 mb-2">
+                        <button name="action_register_fee_payment" type="object" string="Encaisser un paiement"
+                                icon="fa-credit-card" class="btn btn-primary btn-sm"
+                                invisible="not fee_balance or fee_balance &lt;= 0"/>
                         <button name="action_print_statement" type="object" string="Relevé de compte"
                                 icon="fa-print" class="btn btn-secondary btn-sm"/>
                         <span class="ms-auto text-muted" invisible="not fee_overdue">

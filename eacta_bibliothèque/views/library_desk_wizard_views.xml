@@ -1,0 +1,151 @@
+<?xml version="1.0" encoding="utf-8"?>
+<odoo>
+
+    <record id="view_library_desk_wizard_form" model="ir.ui.view">
+        <field name="name">library.desk.wizard.form</field>
+        <field name="model">library.desk.wizard</field>
+        <field name="arch" type="xml">
+            <form string="Guichet de prêt &amp; retour rapide">
+                <sheet>
+                    <div class="d-flex justify-content-center mb-3">
+                        <field name="mode" widget="radio" options="{'horizontal': true}" class="fs-5 fw-bold"/>
+                    </div>
+
+                    <!-- ================= PRÊT ================= -->
+                    <div invisible="mode != 'checkout'">
+                        <div class="alert alert-info py-2 mb-3 d-flex align-items-center">
+                            <i class="fa fa-barcode fa-2x me-3"/>
+                            <div class="flex-grow-1">
+                                <strong>Lecteur code-barres :</strong>
+                                Scannez le code-barres de l'exemplaire ou le matricule de l'élève pour sélection automatique.
+                            </div>
+                        </div>
+
+                        <div class="row mb-3">
+                            <div class="col-md-6">
+                                <label for="barcode_scan" class="form-label text-primary fw-bold"/>
+                                <field name="barcode_scan" placeholder="Scanner ici..." class="form-control-lg"/>
+                            </div>
+                            <div class="col-md-6">
+                                <label for="borrower_type" class="form-label"/>
+                                <field name="borrower_type" widget="radio" options="{'horizontal': true}"/>
+                            </div>
+                        </div>
+
+                        <div class="row mb-3">
+                            <div class="col-md-6" invisible="borrower_type != 'student'">
+                                <label for="student_id" class="form-label fw-bold"/>
+                                <field name="student_id" options="{'no_create': True}" placeholder="Choisir un élève..."/>
+                            </div>
+                            <div class="col-md-6" invisible="borrower_type != 'teacher'">
+                                <label for="teacher_id" class="form-label fw-bold"/>
+                                <field name="teacher_id" options="{'no_create': True}" placeholder="Choisir un enseignant..."/>
+                            </div>
+                            <div class="col-md-6">
+                                <label for="barcode_id" class="form-label fw-bold"/>
+                                <field name="barcode_id" options="{'no_create': True}" placeholder="Exemplaire disponible..."/>
+                            </div>
+                        </div>
+
+                        <div class="row mb-3" invisible="not book_id">
+                            <div class="col-md-6">
+                                <label for="book_id" class="form-label"/>
+                                <field name="book_id" readonly="1" class="fw-bold fs-6"/>
+                            </div>
+                            <div class="col-md-3">
+                                <label for="checkout_date" class="form-label"/>
+                                <field name="checkout_date"/>
+                            </div>
+                            <div class="col-md-3">
+                                <label for="due_date" class="form-label"/>
+                                <field name="due_date"/>
+                            </div>
+                        </div>
+
+                        <!-- Active loans for this borrower -->
+                        <div class="mt-3" invisible="not active_loan_ids">
+                            <h6 class="text-muted fw-bold">Emprunts déjà en cours pour ce lecteur :</h6>
+                            <field name="active_loan_ids">
+                                <list decoration-danger="is_overdue" decoration-warning="days_late &gt; 0">
+                                    <field name="book_id"/>
+                                    <field name="barcode_id"/>
+                                    <field name="checkout_date"/>
+                                    <field name="due_date"/>
+                                    <field name="state" widget="badge" decoration-danger="state == 'overdue'" decoration-info="state == 'ongoing'"/>
+                                </list>
+                            </field>
+                        </div>
+                    </div>
+
+                    <!-- ================= RETOUR ================= -->
+                    <div invisible="mode != 'return'">
+                        <div class="alert alert-success py-2 mb-3 d-flex align-items-center">
+                            <i class="fa fa-barcode fa-2x me-3"/>
+                            <div class="flex-grow-1">
+                                <strong>Retour express :</strong>
+                                Scannez le code-barres de l'exemplaire rendu pour retrouver l'emprunt immédiatement.
+                            </div>
+                        </div>
+
+                        <div class="row mb-3">
+                            <div class="col-md-6">
+                                <label for="return_scan" class="form-label text-success fw-bold"/>
+                                <field name="return_scan" placeholder="Scanner le livre à rendre..." class="form-control-lg"/>
+                            </div>
+                            <div class="col-md-6">
+                                <label for="return_barcode_id" class="form-label fw-bold"/>
+                                <field name="return_barcode_id" options="{'no_create': True}" placeholder="Ou sélectionner l'exemplaire emprunté..."/>
+                            </div>
+                        </div>
+
+                        <div class="p-3 bg-light rounded mb-3" invisible="not return_loan_id">
+                            <div class="row">
+                                <div class="col-md-4">
+                                    <span class="text-muted small">Livre :</span>
+                                    <div class="fw-bold fs-6"><field name="return_book"/></div>
+                                </div>
+                                <div class="col-md-4">
+                                    <span class="text-muted small">Emprunteur :</span>
+                                    <div class="fw-bold fs-6"><field name="return_borrower"/></div>
+                                </div>
+                                <div class="col-md-4">
+                                    <span class="text-muted small">Échéance prévue :</span>
+                                    <div class="fw-bold fs-6"><field name="return_due_date"/></div>
+                                </div>
+                            </div>
+
+                            <div class="row mt-3" invisible="return_days_late == 0">
+                                <div class="col-md-6 alert alert-danger mb-0">
+                                    <i class="fa fa-warning me-1"/> Retard de <strong><field name="return_days_late"/> jour(s)</strong>.
+                                    Amende à régler : <strong><field name="return_fine"/></strong>
+                                </div>
+                                <div class="col-md-6 d-flex align-items-center">
+                                    <field name="fine_paid" widget="boolean_toggle"/>
+                                    <label for="fine_paid" class="ms-2 fw-bold text-success"/>
+                                </div>
+                            </div>
+                        </div>
+
+                        <div class="mb-3" invisible="not return_loan_id">
+                            <label for="return_notes" class="form-label"/>
+                            <field name="return_notes" placeholder="État du livre, observations..."/>
+                        </div>
+                    </div>
+                </sheet>
+                <footer>
+                    <button name="action_checkout" type="object" string="Enregistrer le prêt" class="btn-primary" invisible="mode != 'checkout'"/>
+                    <button name="action_return" type="object" string="Valider le retour" class="btn-success" invisible="mode != 'return'"/>
+                    <button string="Fermer" class="btn-secondary" special="cancel"/>
+                </footer>
+            </form>
+        </field>
+    </record>
+
+    <record id="action_library_desk_wizard" model="ir.actions.act_window">
+        <field name="name">Guichet Express</field>
+        <field name="res_model">library.desk.wizard</field>
+        <field name="view_mode">form</field>
+        <field name="target">new</field>
+    </record>
+
+</odoo>

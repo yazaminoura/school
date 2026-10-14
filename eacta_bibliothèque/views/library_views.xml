@@ -73,6 +73,7 @@
                             <field name="shelf_location" placeholder="ex : B-12"/>
                             <field name="total_quantity"/>
                             <field name="loan_duration_days"/>
+                            <field name="replacement_cost"/>
                         </group>
                     </group>
                     <notebook>
@@ -87,6 +88,10 @@
                                     <field name="due_date"/>
                                     <field name="state" widget="badge" decoration-success="state == 'available'"
                                            decoration-warning="state == 'on_loan'" decoration-danger="state == 'lost'"/>
+                                    <button name="action_desk_checkout" type="object" icon="fa-arrow-circle-right text-primary"
+                                            title="Prêter cet exemplaire" class="btn-link" invisible="state != 'available'"/>
+                                    <button name="action_desk_return" type="object" icon="fa-check-circle text-success"
+                                            title="Enregistrer le retour" class="btn-link" invisible="state != 'on_loan'"/>
                                 </list>
                             </field>
                         </page>
@@ -204,6 +209,10 @@
                 <field name="due_date"/>
                 <field name="state" widget="badge" decoration-success="state == 'available'"
                        decoration-warning="state == 'on_loan'" decoration-danger="state == 'lost'"/>
+                <button name="action_desk_checkout" type="object" icon="fa-arrow-circle-right text-primary"
+                        title="Prêter cet exemplaire" class="btn-link" invisible="state != 'available'"/>
+                <button name="action_desk_return" type="object" icon="fa-check-circle text-success"
+                        title="Enregistrer le retour" class="btn-link" invisible="state != 'on_loan'"/>
             </list>
         </field>
     </record>
@@ -214,6 +223,10 @@
         <field name="arch" type="xml">
             <form string="Exemplaire">
                 <header>
+                    <button name="action_desk_checkout" string="Prêter cet exemplaire" type="object"
+                            class="btn-primary" invisible="state != 'available'"/>
+                    <button name="action_desk_return" string="Enregistrer le retour" type="object"
+                            class="btn-success" invisible="state != 'on_loan'"/>
                     <field name="state" widget="statusbar"/>
                 </header>
                 <sheet>

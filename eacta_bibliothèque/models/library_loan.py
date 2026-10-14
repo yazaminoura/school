@@ -82,7 +82,7 @@ class LibraryLoan(models.Model):
     @api.depends('book_id', 'checkout_date')
     def _compute_due_date(self):
         for loan in self:
-            if loan.checkout_date and (not loan.due_date or loan.book_id):
+            if loan.checkout_date and not loan.due_date:
                 days = loan.book_id.loan_duration_days or 14
                 loan.due_date = loan.checkout_date + timedelta(days=days)
 
@@ -123,8 +123,11 @@ class LibraryLoan(models.Model):
 
     @api.onchange('book_id')
     def _onchange_book_id(self):
-        if self.book_id and self.barcode_id.book_id != self.book_id:
-            self.barcode_id = self.book_id.barcode_ids.filtered(lambda c: c.state == 'available')[:1]
+        if self.book_id:
+            days = self.book_id.loan_duration_days or 14
+            self.due_date = (self.checkout_date or fields.Date.context_today(self)) + timedelta(days=days)
+            if self.barcode_id.book_id != self.book_id:
+                self.barcode_id = self.book_id.barcode_ids.filtered(lambda c: c.state == 'available')[:1]
 
     @api.onchange('borrower_type')
     def _onchange_borrower_type(self):
@@ -193,14 +196,36 @@ class LibraryLoan(models.Model):
 
     # ------------------------------------------------------------------
     def action_return_book(self):
+        Fee = self.env['eacta.student.fee']
+        fee_type = False
+        today = fields.Date.context_today(self)
         for loan in self.filtered(lambda l: not l.returned and not l.is_lost):
+            late = max((today - loan.due_date).days, 0) if loan.due_date else 0
+            fine_amount = round(late * loan._param('fine_per_day'), 2)
             loan.write({
                 'returned': True,
-                'return_date': fields.Date.context_today(self),
+                'return_date': today,
                 'return_responsible_id': self.env.user.id,
                 'returned_barcode_id': loan.barcode_id.id,
             })
             loan.activity_unlink(['mail.mail_activity_data_todo'])
+            if not loan.fine_paid and fine_amount > 0 and loan.borrower_type == 'student' and loan.student_id:
+                if not fee_type:
+                    fee_type = self.env['eacta.fee.type'].search([('name', 'ilike', 'Biblioth')], limit=1)
+                if not fee_type:
+                    fee_type = self.env['eacta.fee.type'].create({
+                        'name': 'Bibliothèque & Pénalités',
+                        'sequence': 25,
+                        'default_amount': fine_amount,
+                    })
+                Fee.create({
+                    'student_id': loan.student_id.id,
+                    'class_id': loan.student_id.current_class_id.id if loan.student_id.current_class_id else False,
+                    'fee_type_id': fee_type.id,
+                    'description': f"Amende de retard ({late}j) : {loan.book_id.name}",
+                    'amount': fine_amount,
+                    'due_date': today,
+                })
         return True
 
     def action_renew(self):
@@ -218,7 +243,28 @@ class LibraryLoan(models.Model):
         return True
 
     def action_mark_lost(self):
-        self.filtered(lambda l: not l.returned).write({'is_lost': True})
+        lost_loans = self.filtered(lambda l: not l.returned)
+        lost_loans.write({'is_lost': True})
+        # Facturation automatique des frais de remplacement pour les élèves
+        Fee = self.env['eacta.student.fee']
+        fee_type = self.env['eacta.fee.type'].search([('name', 'ilike', 'Biblioth')], limit=1)
+        for loan in lost_loans.filtered(lambda l: l.borrower_type == 'student' and l.student_id):
+            cost = loan.book_id.replacement_cost or 100.0
+            if not fee_type:
+                fee_type = self.env['eacta.fee.type'].create({
+                    'name': 'Bibliothèque & Matériel',
+                    'sequence': 20,
+                    'default_amount': cost,
+                })
+            fee = Fee.create({
+                'student_id': loan.student_id.id,
+                'class_id': loan.student_id.current_class_id.id if loan.student_id.current_class_id else False,
+                'fee_type_id': fee_type.id,
+                'description': f"Livre perdu : {loan.book_id.name} ({loan.barcode_id.barcode})",
+                'amount': cost,
+                'due_date': fields.Date.context_today(self),
+            })
+            loan.message_post(body=f"Frais de remplacement de {cost:.2f} {loan.currency_id.symbol or ''} généré pour {loan.student_id.name} (Réf : {fee.name}).")
         return True
 
     def action_mark_fine_paid(self):

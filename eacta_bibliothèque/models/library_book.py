@@ -76,6 +76,7 @@ class LibraryBook(models.Model):
         ('on_loan', 'Tous empruntés'),
     ], string='Statut', compute='_compute_quantities', store=True)
     loan_duration_days = fields.Integer(string="Durée de prêt (jours)", default=14, tracking=True)
+    replacement_cost = fields.Float(string="Frais en cas de perte", default=100.0, digits=(10, 2), tracking=True)
 
     loan_ids = fields.One2many('library.loan', 'book_id', string='Emprunts')
     loan_count = fields.Integer(string="Nombre d'emprunts", compute='_compute_loan_count')
@@ -163,12 +164,13 @@ class LibraryBook(models.Model):
             hint = f" Prochain retour prévu le {next_return.due_date.strftime('%d/%m/%Y')}." if next_return else ''
             raise UserError(f"Aucun exemplaire de « {self.name} » n'est disponible.{hint}")
         return {
-            'name': f"Emprunter « {self.name} »",
+            'name': f"Guichet Express - Emprunter « {self.name} »",
             'type': 'ir.actions.act_window',
-            'res_model': 'library.loan',
+            'res_model': 'library.desk.wizard',
             'view_mode': 'form',
             'target': 'new',
             'context': {
+                'default_mode': 'checkout',
                 'default_book_id': self.id,
                 'default_barcode_id': copy.id,
                 'default_borrower_type': 'student',
@@ -290,4 +292,32 @@ class LibraryBookBarcode(models.Model):
             'res_model': 'library.loan',
             'view_mode': 'list,form',
             'domain': [('barcode_id', '=', self.id)],
+        }
+
+    def action_desk_checkout(self):
+        self.ensure_one()
+        return {
+            'name': f"Prêter {self.barcode}",
+            'type': 'ir.actions.act_window',
+            'res_model': 'library.desk.wizard',
+            'view_mode': 'form',
+            'target': 'new',
+            'context': {
+                'default_mode': 'checkout',
+                'default_barcode_id': self.id,
+            },
+        }
+
+    def action_desk_return(self):
+        self.ensure_one()
+        return {
+            'name': f"Retour {self.barcode}",
+            'type': 'ir.actions.act_window',
+            'res_model': 'library.desk.wizard',
+            'view_mode': 'form',
+            'target': 'new',
+            'context': {
+                'default_mode': 'return',
+                'default_return_barcode_id': self.id,
+            },
         }

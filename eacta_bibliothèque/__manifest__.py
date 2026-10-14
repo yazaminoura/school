@@ -26,6 +26,7 @@ Bibliothèque NR School
         'views/library_loan_views.xml',
         'views/library_borrower_views.xml',
         'views/eacta_student_library_views.xml',
+        'views/library_desk_wizard_views.xml',
         'views/library_menu.xml',
     ],
     'demo': [

@@ -19,12 +19,12 @@ class EactaStudent(models.Model):
     def action_new_library_loan(self):
         self.ensure_one()
         return {
-            'name': f"Nouvel emprunt - {self.name}",
+            'name': f"Guichet Express - {self.name}",
             'type': 'ir.actions.act_window',
-            'res_model': 'library.loan',
+            'res_model': 'library.desk.wizard',
             'view_mode': 'form',
             'target': 'new',
-            'context': {'default_student_id': self.id, 'default_borrower_type': 'student'},
+            'context': {'default_student_id': self.id, 'default_borrower_type': 'student', 'default_mode': 'checkout'},
         }
 
     def action_view_borrowed_books(self):

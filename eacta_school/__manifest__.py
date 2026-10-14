@@ -42,6 +42,7 @@ NR School - Gestion scolaire
         'views/eacta_timetable_views.xml',
         'views/eacta_fee_views.xml',
         'wizard/eacta_promotion_wizard_views.xml',
+        'wizard/eacta_attendance_wizard_views.xml',
         'views/eacta_menu.xml',
     ],
     'demo': [

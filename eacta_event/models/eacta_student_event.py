@@ -23,3 +23,18 @@ class EactaStudent(models.Model):
             'domain': [('student_id', '=', self.id)],
             'context': {'default_student_id': self.id},
         }
+
+    def action_register_event(self):
+        """Ouvre un dialogue pour inscrire cet élève à un événement à venir."""
+        self.ensure_one()
+        return {
+            'name': f"Inscrire {self.name} à un événement",
+            'type': 'ir.actions.act_window',
+            'res_model': 'eacta.school.event.registration',
+            'view_mode': 'form',
+            'target': 'new',
+            'context': {
+                'default_student_id': self.id,
+                'default_class_id': self.current_class_id.id if self.current_class_id else False,
+            },
+        }

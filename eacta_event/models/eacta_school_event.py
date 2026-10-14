@@ -28,6 +28,7 @@ class EactaSchoolEvent(models.Model):
     state = fields.Selection([
         ('draft', 'Brouillon'),
         ('confirmed', 'Confirmé'),
+        ('in_progress', 'En cours'),
         ('done', 'Terminé'),
         ('cancel', 'Annulé'),
     ], string='État', default='draft', required=True, tracking=True, group_expand='_group_expand_states')
@@ -129,6 +130,9 @@ class EactaSchoolEvent(models.Model):
     def action_confirm(self):
         self.write({'state': 'confirmed'})
 
+    def action_start(self):
+        self.write({'state': 'in_progress'})
+
     def action_done(self):
         for event in self:
             event.registration_ids.filtered(lambda r: r.state == 'registered').write({'state': 'absent'})
@@ -139,6 +143,40 @@ class EactaSchoolEvent(models.Model):
 
     def action_reset_draft(self):
         self.write({'state': 'draft'})
+
+    def action_sync_school_attendance(self):
+        """Enregistre une présence dans le registre scolaire pour chaque élève ayant participé."""
+        self.ensure_one()
+        Attendance = self.env['eacta.attendance']
+        event_date = self.date or fields.Date.context_today(self)
+        created = 0
+        for reg in self.registration_ids.filtered(lambda r: r.state == 'attended'):
+            existing = Attendance.search([
+                ('student_id', '=', reg.student_id.id),
+                ('date', '=', event_date),
+            ], limit=1)
+            if not existing:
+                Attendance.create({
+                    'student_id': reg.student_id.id,
+                    'class_id': reg.class_id.id if reg.class_id else reg.student_id.current_class_id.id,
+                    'date': event_date,
+                    'session': 'all_day' if self.all_day else 'morning',
+                    'attendance_type': 'present',
+                    'justified': True,
+                    'reason': 'other',
+                    'justification_note': f"Sortie / Événement : {self.name}",
+                })
+                created += 1
+        return {
+            'type': 'ir.actions.client',
+            'tag': 'display_notification',
+            'params': {
+                'title': "Assiduité synchronisée",
+                'message': f"{created} présence(s) enregistrée(s) dans le registre d'assiduité scolaire.",
+                'type': 'success',
+                'sticky': False,
+            }
+        }
 
     def action_register_classes(self):
         """Inscrit tous les élèves actifs des classes concernées (dans la limite des places)."""

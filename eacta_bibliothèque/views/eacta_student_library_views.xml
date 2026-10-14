@@ -32,6 +32,9 @@
                             <field name="state" widget="badge" decoration-info="state == 'ongoing'"
                                    decoration-danger="state == 'overdue'" decoration-success="state == 'returned'"
                                    decoration-muted="state == 'lost'"/>
+                            <button name="action_return_book" type="object" string="Rendre"
+                                    icon="fa-check text-success" class="btn-link"
+                                    invisible="state in ('returned', 'lost')"/>
                         </list>
                     </field>
                 </page>

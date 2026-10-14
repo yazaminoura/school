@@ -24,6 +24,8 @@
               action="action_eacta_class" sequence="20"/>
     <menuitem id="menu_eacta_attendance" name="Assiduité &amp; Absences" parent="menu_eacta_school_scolarite"
               action="action_eacta_attendance" sequence="25"/>
+    <menuitem id="menu_eacta_take_attendance" name="Faire l'appel" parent="menu_eacta_school_scolarite"
+              action="action_eacta_attendance_wizard" sequence="26"/>
     <menuitem id="menu_partner_category_form" name="Parents" parent="menu_eacta_school_scolarite"
               action="action_eacta_school_parents" sequence="30"/>
 
@@ -70,5 +72,28 @@
               action="action_eacta_promotion_wizard" sequence="90" groups="eacta_school.group_eacta_school_manager"/>
     <menuitem id="menu_eacta_fee_type" name="Types de frais" parent="menu_eacta_school_config"
               action="action_eacta_fee_type" sequence="40"/>
+
+    <!-- Actions de masse pour les élèves -->
+    <record id="action_server_enroll_students" model="ir.actions.server">
+        <field name="name">Valider les inscriptions</field>
+        <field name="model_id" ref="model_eacta_student"/>
+        <field name="binding_model_id" ref="model_eacta_student"/>
+        <field name="binding_view_types">list</field>
+        <field name="state">code</field>
+        <field name="code">
+records.filtered(lambda s: s.state == 'draft').action_enroll()
+        </field>
+    </record>
+
+    <record id="action_server_sync_student_courses" model="ir.actions.server">
+        <field name="name">Inscrire aux cours de la classe</field>
+        <field name="model_id" ref="model_eacta_student"/>
+        <field name="binding_model_id" ref="model_eacta_student"/>
+        <field name="binding_view_types">list</field>
+        <field name="state">code</field>
+        <field name="code">
+records._sync_class_courses()
+        </field>
+    </record>
 
 </odoo>

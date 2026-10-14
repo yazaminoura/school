@@ -10,6 +10,8 @@
                 <header>
                     <button name="action_confirm" string="Confirmer" type="object" class="btn-primary"
                             invisible="state != 'draft'"/>
+                    <button name="action_start" string="Démarrer l'événement" type="object" class="btn-primary"
+                            invisible="state != 'confirmed'"/>
                     <button name="action_register_classes" string="Inscrire les classes" type="object"
                             class="btn-primary" icon="fa-users" invisible="state not in ('draft', 'confirmed') or not class_ids"/>
                     <button name="action_print_authorizations" string="Autorisations parentales" type="object"
@@ -20,15 +22,17 @@
                             invisible="not fee_amount or not participant_count or state == 'cancel'"
                             groups="eacta_school.group_eacta_school_manager"/>
                     <button name="action_mark_all_attended" string="Pointer tous présents" type="object" icon="fa-check-circle"
-                            invisible="state != 'confirmed' or not participant_count"
+                            invisible="state not in ('confirmed', 'in_progress') or not participant_count"
                             confirm="Marquer tous les élèves inscrits comme présents ?"/>
-                    <button name="action_done" string="Clôturer" type="object" invisible="state != 'confirmed'"
+                    <button name="action_sync_school_attendance" string="Synchroniser l'assiduité" type="object"
+                            icon="fa-calendar-check-o" invisible="state not in ('in_progress', 'done') or not attended_count"/>
+                    <button name="action_done" string="Clôturer" type="object" invisible="state not in ('confirmed', 'in_progress')"
                             help="Les inscrits non pointés passent en « Absent »"/>
                     <button name="action_cancel" string="Annuler" type="object" invisible="state in ('done', 'cancel')"
                             confirm="Annuler cet événement ?"/>
                     <button name="action_reset_draft" string="Remettre en brouillon" type="object"
                             invisible="state not in ('cancel', 'done')"/>
-                    <field name="state" widget="statusbar" statusbar_visible="draft,confirmed,done"/>
+                    <field name="state" widget="statusbar" statusbar_visible="draft,confirmed,in_progress,done"/>
                 </header>
                 <sheet>
                     <div class="oe_button_box" name="button_box">
@@ -46,6 +50,7 @@
                         </button>
                     </div>
                     <widget name="web_ribbon" title="Annulé" bg_color="text-bg-danger" invisible="state != 'cancel'"/>
+                    <widget name="web_ribbon" title="En cours" bg_color="text-bg-warning" invisible="state != 'in_progress'"/>
                     <widget name="web_ribbon" title="Terminé" bg_color="text-bg-success" invisible="state != 'done'"/>
                     <field name="image" widget="image" class="oe_avatar"/>
                     <div class="oe_title">
@@ -159,7 +164,7 @@
                 <field name="participant_count"/>
                 <field name="fill_rate"/>
                 <field name="state"/>
-                <progressbar field="state" colors='{"draft": "info", "confirmed": "success", "done": "200", "cancel": "danger"}'/>
+                <progressbar field="state" colors='{"draft": "info", "confirmed": "primary", "in_progress": "warning", "done": "success", "cancel": "danger"}'/>
                 <templates>
                     <t t-name="card" class="p-0">
                         <div class="o_event_card">
@@ -316,6 +321,10 @@
                 <field name="fee_id" optional="hide"/>
                 <field name="state" widget="badge" decoration-info="state == 'registered'"
                        decoration-success="state == 'attended'" decoration-danger="state == 'absent'"/>
+                <button name="action_mark_attended" type="object" icon="fa-check text-success" title="Pointer présent"
+                        class="btn-link" invisible="state == 'attended'"/>
+                <button name="action_mark_absent" type="object" icon="fa-times text-danger" title="Pointer absent"
+                        class="btn-link" invisible="state == 'absent'"/>
                 <field name="note" optional="hide"/>
             </list>
         </field>
@@ -421,6 +430,10 @@
             </div>
             <notebook position="inside">
                 <page string="Événements" name="events" icon="fa-calendar">
+                    <div class="mb-2">
+                        <button name="action_register_event" type="object" class="btn btn-primary btn-sm"
+                                icon="fa-plus" string="Inscrire à un événement"/>
+                    </div>
                     <field name="event_registration_ids" readonly="1">
                         <list decoration-muted="state == 'cancelled'" decoration-success="state == 'attended'"
                               decoration-danger="state == 'absent'">

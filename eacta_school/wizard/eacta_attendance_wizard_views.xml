@@ -1,0 +1,67 @@
+<?xml version="1.0" encoding="utf-8"?>
+<odoo>
+
+    <record id="view_eacta_attendance_wizard_form" model="ir.ui.view">
+        <field name="name">eacta.attendance.wizard.form</field>
+        <field name="model">eacta.attendance.wizard</field>
+        <field name="arch" type="xml">
+            <form string="Feuille d'appel">
+                <sheet>
+                    <div class="row align-items-center mb-3">
+                        <div class="col-md-4">
+                            <label for="class_id" class="form-label fw-bold"/>
+                            <field name="class_id" options="{'no_create': True}" placeholder="Sélectionnez la classe..."/>
+                        </div>
+                        <div class="col-md-4">
+                            <label for="date" class="form-label fw-bold"/>
+                            <field name="date"/>
+                        </div>
+                        <div class="col-md-4">
+                            <label for="session" class="form-label fw-bold"/>
+                            <field name="session"/>
+                        </div>
+                    </div>
+
+                    <!-- Summary counters -->
+                    <div class="d-flex gap-3 mb-3 p-2 bg-light rounded align-items-center" invisible="not total_students">
+                        <span class="badge text-bg-secondary fs-6">Effectif : <field name="total_students" readonly="1" class="oe_inline"/></span>
+                        <span class="badge text-bg-success fs-6">Présents : <field name="present_count" readonly="1" class="oe_inline"/></span>
+                        <span class="badge text-bg-danger fs-6">Absents : <field name="absent_count" readonly="1" class="oe_inline"/></span>
+                        <span class="badge text-bg-warning fs-6">Retards : <field name="late_count" readonly="1" class="oe_inline"/></span>
+                        <div class="ms-auto d-flex gap-2">
+                            <button name="action_mark_all_present" type="object" string="Tous présents" class="btn btn-sm btn-outline-success"/>
+                            <button name="action_mark_all_absent" type="object" string="Tous absents" class="btn btn-sm btn-outline-danger"/>
+                        </div>
+                    </div>
+
+                    <!-- Student list -->
+                    <field name="line_ids">
+                        <list editable="bottom" create="false" delete="false"
+                              decoration-success="attendance_type == 'present'"
+                              decoration-danger="attendance_type == 'absent'"
+                              decoration-warning="attendance_type == 'late'">
+                            <field name="student_code" readonly="1" string="Matricule"/>
+                            <field name="student_id" readonly="1" string="Élève"/>
+                            <field name="attendance_type" string="Statut"/>
+                            <field name="justified" string="Justifié" invisible="attendance_type == 'present'"/>
+                            <field name="reason" string="Motif" invisible="not justified"/>
+                            <field name="note" string="Remarque" placeholder="Observation..."/>
+                        </list>
+                    </field>
+                </sheet>
+                <footer>
+                    <button name="action_confirm" type="object" string="Valider l'appel" class="btn-primary"/>
+                    <button string="Annuler" class="btn-secondary" special="cancel"/>
+                </footer>
+            </form>
+        </field>
+    </record>
+
+    <record id="action_eacta_attendance_wizard" model="ir.actions.act_window">
+        <field name="name">Faire l'appel</field>
+        <field name="res_model">eacta.attendance.wizard</field>
+        <field name="view_mode">form</field>
+        <field name="target">new</field>
+    </record>
+
+</odoo>

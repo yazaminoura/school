@@ -354,6 +354,25 @@ class EactaStudent(models.Model):
     def action_print_certificate(self):
         return self.env.ref('eacta_school.action_report_student_certificate').report_action(self)
 
+    def action_register_fee_payment(self):
+        """Ouvre l'assistant de paiement pour le premier frais impayé de l'élève."""
+        self.ensure_one()
+        unpaid = self.fee_ids.filtered(lambda f: f.state in ('unpaid', 'partial'))
+        if not unpaid:
+            raise UserError(f"Aucun frais en attente de paiement pour {self.name}.")
+        fee = unpaid.sorted('due_date')[:1]
+        return {
+            'name': f"Encaisser un paiement - {self.name}",
+            'type': 'ir.actions.act_window',
+            'res_model': 'eacta.fee.payment',
+            'view_mode': 'form',
+            'target': 'new',
+            'context': {
+                'default_fee_id': fee.id,
+                'default_amount': fee.amount_due,
+            },
+        }
+
     # ------------------------------------------------------------------
     # Bulletin
     # ------------------------------------------------------------------

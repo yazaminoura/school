@@ -7,16 +7,38 @@
         <field name="arch" type="xml">
             <form string="Classe">
                 <header>
-                    <button name="action_sync_courses_to_students" string="Inscrire les élèves aux cours"
-                            type="object" class="btn-primary" invisible="not course_ids or not student_ids"
+                    <button name="action_enroll_all_students" string="Valider les inscriptions"
+                            type="object" class="btn-primary" invisible="not has_draft_students"
+                            icon="fa-check-circle"
+                            help="Valide l'inscription de tous les élèves en pré-inscription de cette classe"/>
+                    <button name="action_take_attendance" string="Faire l'appel"
+                            type="object" class="btn-primary" icon="fa-check-square-o"
+                            help="Ouvre la feuille d'appel rapide pour cette classe"/>
+                    <button name="action_generate_class_fees" string="Facturer les frais"
+                            type="object" class="btn-secondary" icon="fa-money"
+                            help="Génère les frais pour les élèves de cette classe"/>
+                    <button name="action_promote_class" string="Passage de classe"
+                            type="object" class="btn-secondary" icon="fa-graduation-cap"
+                            help="Ouvre l'assistant de passage en classe supérieure pour cette classe"/>
+                    <button name="action_sync_courses_to_students" string="Inscrire aux cours"
+                            type="object" class="btn-secondary" invisible="not course_ids or not student_ids"
                             help="Ajoute tous les cours de la classe à chaque élève"/>
+                    <button name="%(eacta_school.action_report_class_timetable)d" string="Emploi du temps"
+                            type="action" icon="fa-calendar"/>
                     <button name="%(eacta_school.action_report_class_results)d" string="Résultats"
                             type="action" icon="fa-print"/>
                 </header>
                 <sheet>
+                    <field name="has_draft_students" invisible="1"/>
                     <div class="oe_button_box" name="button_box">
                         <button name="action_view_students" type="object" class="oe_stat_button" icon="fa-users">
                             <field name="student_count" widget="statinfo" string="Élèves"/>
+                        </button>
+                        <button name="action_view_attendances" type="object" class="oe_stat_button" icon="fa-clock-o">
+                            <div class="o_field_widget o_stat_info">
+                                <span class="o_stat_value">Appel</span>
+                                <span class="o_stat_text">Assiduité</span>
+                            </div>
                         </button>
                         <button name="action_view_courses" type="object" class="oe_stat_button" icon="fa-book">
                             <field name="course_count" widget="statinfo" string="Cours"/>

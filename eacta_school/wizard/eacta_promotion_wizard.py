@@ -22,22 +22,44 @@ class EactaPromotionWizard(models.TransientModel):
             year = wizard.from_class_id.year
             wizard.next_year = str(int(year) + 1) if year and year.isdigit() else year
 
+    def _prepare_student_lines(self, from_class, pass_mark=10.0):
+        if not from_class:
+            return []
+        lines = []
+        Student = self.env['eacta.student']
+        for student in from_class.student_ids.filtered(lambda s: s.state in ('draft', 'enrolled')).sorted('name'):
+            average = Student._get_weighted_average(
+                student.course_grade_ids.filtered(lambda g: g.class_id == from_class))
+            decision = 'promote' if average is None or average >= pass_mark else 'repeat'
+            lines.append((0, 0, {
+                'student_id': student.id,
+                'average': average or 0.0,
+                'has_grades': average is not None,
+                'decision': decision,
+            }))
+        return lines
+
     @api.onchange('from_class_id', 'pass_mark')
     def _onchange_from_class(self):
-        lines = [(5, 0, 0)]
-        for student in self.from_class_id.student_ids.filtered(lambda s: s.state in ('draft', 'enrolled')):
-            average = self.env['eacta.student']._get_weighted_average(
-                student.course_grade_ids.filtered(lambda g: g.class_id == self.from_class_id))
-            decision = 'promote' if average is None or average >= self.pass_mark else 'repeat'
-            lines.append((0, 0, {'student_id': student.id, 'average': average or 0.0,
-                                 'has_grades': average is not None, 'decision': decision}))
-        self.line_ids = lines
+        if not self.from_class_id:
+            self.line_ids = [(5, 0, 0)]
+            return
+        year = self.from_class_id.year
+        self.next_year = str(int(year) + 1) if year and year.isdigit() else year
+        self.line_ids = [(5, 0, 0)] + self._prepare_student_lines(self.from_class_id, self.pass_mark)
 
     @api.model
     def default_get(self, fields_list):
         res = super().default_get(fields_list)
-        if self.env.context.get('active_model') == 'eacta.class' and self.env.context.get('active_id'):
-            res['from_class_id'] = self.env.context['active_id']
+        class_id = res.get('from_class_id') or self.env.context.get('default_from_class_id')
+        if not class_id and self.env.context.get('active_model') == 'eacta.class':
+            class_id = self.env.context.get('active_id')
+        if class_id:
+            res['from_class_id'] = class_id
+            from_class = self.env['eacta.class'].browse(class_id)
+            year = from_class.year
+            res['next_year'] = str(int(year) + 1) if year and year.isdigit() else year
+            res['line_ids'] = self._prepare_student_lines(from_class, res.get('pass_mark', 10.0))
         return res
 
     def action_apply(self):
@@ -54,8 +76,11 @@ class EactaPromotionWizard(models.TransientModel):
             raise UserError("Choisissez la classe de redoublement pour les élèves non admis.")
         if promoted:
             self.to_class_id.student_ids = [(4, s.id) for s in promoted]
+            promoted.filtered(lambda s: s.state == 'draft').write({'state': 'enrolled'})
+            promoted._sync_class_courses()
         if repeating:
             self.repeat_class_id.student_ids = [(4, s.id) for s in repeating]
+            repeating._sync_class_courses()
         graduating.filtered(lambda s: s.state == 'enrolled').write({'state': 'graduated'})
         leaving.write({'state': 'alumni'})
         self.from_class_id.message_post(body=(

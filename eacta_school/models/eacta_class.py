@@ -41,6 +41,7 @@ class EactaClass(models.Model):
     average = fields.Float(string='Moyenne de la classe', compute='_compute_results', digits=(4, 2))
     success_rate = fields.Float(string='Taux de réussite (%)', compute='_compute_results', digits=(5, 1))
     exam_count = fields.Integer(string='Examens', compute='_compute_exam_count')
+    has_draft_students = fields.Boolean(string='Inscriptions en attente', compute='_compute_has_draft_students')
 
     _sql_constraints = [
         ('name_year_unique', 'unique(name, year)', 'Une classe avec le même nom existe déjà pour cette année !'),
@@ -148,3 +149,76 @@ class EactaClass(models.Model):
         for class_ in self:
             class_.student_ids.write({'course_ids': [(4, c.id) for c in class_.course_ids]})
         return True
+
+    @api.depends('student_ids.state')
+    def _compute_has_draft_students(self):
+        for class_ in self:
+            class_.has_draft_students = any(s.state == 'draft' for s in class_.student_ids)
+
+    def action_enroll_all_students(self):
+        """Valide l'inscription de tous les élèves en pré-inscription de la classe."""
+        enrolled_count = 0
+        for class_ in self:
+            drafts = class_.student_ids.filtered(lambda s: s.state == 'draft')
+            enrolled_count += len(drafts)
+            drafts.write({'state': 'enrolled'})
+        return {
+            'type': 'ir.actions.client',
+            'tag': 'display_notification',
+            'params': {
+                'title': "Inscriptions validées",
+                'message': f"{enrolled_count} élève(s) inscrit(s) avec succès.",
+                'type': 'success',
+                'sticky': False,
+            }
+        }
+
+    def action_take_attendance(self):
+        """Ouvre la feuille d'appel rapide pour cette classe."""
+        self.ensure_one()
+        return {
+            'name': f"Feuille d'appel - {self.name}",
+            'type': 'ir.actions.act_window',
+            'res_model': 'eacta.attendance.wizard',
+            'view_mode': 'form',
+            'target': 'new',
+            'context': {'default_class_id': self.id},
+        }
+
+    def action_generate_class_fees(self):
+        """Ouvre l'assistant de facturation pré-rempli pour cette classe."""
+        self.ensure_one()
+        return {
+            'name': f"Facturation - {self.name}",
+            'type': 'ir.actions.act_window',
+            'res_model': 'eacta.fee.generate.wizard',
+            'view_mode': 'form',
+            'target': 'new',
+            'context': {'default_class_ids': [(6, 0, [self.id])]},
+        }
+
+    def action_view_attendances(self):
+        """Affiche le registre d'assiduité de la classe."""
+        self.ensure_one()
+        return self._action_open(
+            f"Assiduité - {self.display_name}", 'eacta.attendance',
+            [('class_id', '=', self.id)],
+            {'default_class_id': self.id, 'search_default_group_date': 1},
+            'list,pivot,graph,form'
+        )
+
+    def action_promote_class(self):
+        """Ouvre l'assistant de passage de fin d'année pour cette classe."""
+        self.ensure_one()
+        return {
+            'name': f"Passage de classe - {self.name}",
+            'type': 'ir.actions.act_window',
+            'res_model': 'eacta.promotion.wizard',
+            'view_mode': 'form',
+            'target': 'new',
+            'context': {
+                'active_model': 'eacta.class',
+                'active_id': self.id,
+                'default_from_class_id': self.id,
+            },
+        }
