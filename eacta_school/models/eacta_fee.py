@@ -224,11 +224,16 @@ class EactaFeeGenerateWizard(models.TransientModel):
     skip_existing = fields.Boolean(string='Ignorer les élèves déjà facturés pour ce type et cette année',
                                    default=True)
     student_count = fields.Integer(string='Élèves concernés', compute='_compute_student_count')
+    student_ids = fields.Many2many('eacta.student', string='Élèves spécifiques (optionnel)',
+                                  help="Laisser vide pour facturer toute la classe")
 
-    @api.depends('class_ids')
+    @api.depends('class_ids', 'student_ids')
     def _compute_student_count(self):
         for wizard in self:
-            wizard.student_count = len(wizard.class_ids.student_ids.filtered(lambda s: s.state in ('draft', 'enrolled')))
+            if wizard.student_ids:
+                wizard.student_count = len(wizard.student_ids)
+            else:
+                wizard.student_count = len(wizard.class_ids.student_ids.filtered(lambda s: s.state in ('draft', 'enrolled')))
 
     @api.onchange('fee_type_id')
     def _onchange_fee_type_id(self):
@@ -245,7 +250,8 @@ class EactaFeeGenerateWizard(models.TransientModel):
         per = round(self.amount / self.installments, 2)
         vals_list = []
         for klass in self.class_ids:
-            for student in klass.student_ids.filtered(lambda s: s.state in ('draft', 'enrolled')):
+            students = self.student_ids if self.student_ids else klass.student_ids.filtered(lambda s: s.state in ('draft', 'enrolled'))
+            for student in students:
                 if self.skip_existing and Fee.search_count([
                         ('student_id', '=', student.id), ('fee_type_id', '=', self.fee_type_id.id),
                         ('year', '=', klass.year), ('is_cancelled', '=', False)]):

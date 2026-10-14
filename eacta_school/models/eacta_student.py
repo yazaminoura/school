@@ -50,10 +50,15 @@ class EactaStudent(models.Model):
     is_graduated = fields.Boolean(string="Diplômé", compute='_compute_is_graduated', store=True)
     class_ids = fields.Many2many('eacta.class', string='Classes', tracking=True)
     current_class_id = fields.Many2one('eacta.class', string='Classe actuelle',
-                                       compute='_compute_current_class', store=True)
+                                       compute='_compute_current_class', inverse='_inverse_current_class',
+                                       store=True, readonly=False, tracking=True,
+                                       domain="[('active', '=', True)]",
+                                       help="Classe principale de l'élève pour l'année scolaire en cours. Affecte automatiquement tous les cours de la classe.")
     current_year = fields.Char(string='Année en cours', compute='_compute_current_class', store=True)
-    course_ids = fields.Many2many('eacta.course', string='Cours', tracking=True)
+    course_ids = fields.Many2many('eacta.course', string='Cours suivis', tracking=True)
     course_count = fields.Integer(string='Nombre de cours', compute='_compute_course_count')
+    class_course_count = fields.Integer(string='Cours de la classe', compute='_compute_course_count')
+    elective_course_count = fields.Integer(string='Cours optionnels', compute='_compute_course_count')
 
     # ------------------------------------------------------------------
     # Résultats
@@ -153,14 +158,58 @@ class EactaStudent(models.Model):
     @api.depends('class_ids', 'class_ids.year')
     def _compute_current_class(self):
         for student in self:
-            latest = student.class_ids.sorted(lambda c: (c.year or '', c.id), reverse=True)[:1]
-            student.current_class_id = latest
-            student.current_year = latest.year if latest else False
+            if student.class_ids:
+                latest = student.class_ids.sorted(lambda c: (c.year or '', c.id), reverse=True)[:1]
+                student.current_class_id = latest
+                student.current_year = latest.year if latest else False
+            elif not student.current_class_id:
+                student.current_class_id = False
+                student.current_year = False
 
-    @api.depends('course_ids')
+    def _inverse_current_class(self):
+        for student in self:
+            if student.current_class_id:
+                same_year = student.class_ids.filtered(
+                    lambda c: c.id != student.current_class_id.id and c.year == student.current_class_id.year
+                )
+                commands = [(3, c.id) for c in same_year]
+                if student.current_class_id not in student.class_ids:
+                    commands.append((4, student.current_class_id.id))
+                if commands:
+                    student.class_ids = commands
+                student.current_year = student.current_class_id.year or str(fields.Date.today().year)
+            elif student.class_ids:
+                curr_classes = student.class_ids.filtered(lambda c: c.year == student.current_year)
+                if curr_classes:
+                    student.class_ids = [(3, c.id) for c in curr_classes]
+                student.current_year = False
+
+    @api.onchange('current_class_id')
+    def _onchange_current_class_id(self):
+        if self.current_class_id:
+            self.current_year = self.current_class_id.year or str(fields.Date.today().year)
+            prev_class = self._origin.current_class_id if (self._origin and self._origin.current_class_id) else False
+            if prev_class:
+                old_class_courses = prev_class.course_ids
+            else:
+                old_class_courses = self.course_ids.filtered(
+                    lambda c: c.class_ids and self.current_class_id not in c.class_ids
+                )
+            extra_courses = self.course_ids - old_class_courses
+            self.course_ids = self.current_class_id.course_ids | extra_courses
+        elif not self.current_class_id:
+            if self._origin and self._origin.current_class_id:
+                self.course_ids = self.course_ids - self._origin.current_class_id.course_ids
+            self.current_year = False
+
+    @api.depends('course_ids', 'current_class_id.course_ids')
     def _compute_course_count(self):
         for student in self:
+            class_courses = student.current_class_id.course_ids if student.current_class_id else self.env['eacta.course']
+            in_class = student.course_ids & class_courses
             student.course_count = len(student.course_ids)
+            student.class_course_count = len(in_class)
+            student.elective_course_count = len(student.course_ids - in_class)
 
     @api.model
     def _get_weighted_average(self, grades, weight='coefficient'):
@@ -262,22 +311,51 @@ class EactaStudent(models.Model):
         for vals in vals_list:
             if not vals.get('code'):
                 vals['code'] = sequence.next_by_code('eacta.student.code') or False
+            class_id = vals.get('current_class_id')
+            if class_id:
+                class_ids = vals.get('class_ids') or []
+                if not any(cmd[0] in (4, 6) and (class_id in (cmd[2] if cmd[0] == 6 else [cmd[1]])) for cmd in class_ids):
+                    class_ids.append((4, class_id))
+                    vals['class_ids'] = class_ids
+                if 'course_ids' not in vals:
+                    klass = self.env['eacta.class'].browse(class_id)
+                    if klass.course_ids:
+                        vals['course_ids'] = [(6, 0, klass.course_ids.ids)]
         students = super().create(vals_list)
         students._sync_class_courses()
         return students
 
     def write(self, vals):
+        if 'current_class_id' in vals:
+            new_class_id = vals['current_class_id']
+            if new_class_id and 'course_ids' not in vals:
+                new_class = self.env['eacta.class'].browse(new_class_id)
+                for student in self:
+                    if student.current_class_id and student.current_class_id.id != new_class_id:
+                        old_courses = student.current_class_id.course_ids
+                        extra_courses = student.course_ids - old_courses
+                        target_courses = new_class.course_ids | extra_courses
+                        super(EactaStudent, student).write({'course_ids': [(6, 0, target_courses.ids)]})
+                    elif not student.current_class_id:
+                        target_courses = new_class.course_ids | student.course_ids
+                        super(EactaStudent, student).write({'course_ids': [(6, 0, target_courses.ids)]})
+            elif not new_class_id and 'course_ids' not in vals:
+                for student in self:
+                    if student.current_class_id:
+                        remaining_courses = student.course_ids - student.current_class_id.course_ids
+                        super(EactaStudent, student).write({'course_ids': [(6, 0, remaining_courses.ids)]})
         res = super().write(vals)
-        if 'class_ids' in vals:
+        if 'class_ids' in vals or 'current_class_id' in vals:
             self._sync_class_courses()
         return res
 
     def _sync_class_courses(self):
-        """Inscrit automatiquement l'élève aux cours de sa classe actuelle."""
+        """Inscrit automatiquement l'élève aux cours de sa classe actuelle sans écraser ses cours optionnels."""
         for student in self:
-            missing = student.current_class_id.course_ids - student.course_ids
-            if missing:
-                super(EactaStudent, student).write({'course_ids': [(4, c.id) for c in missing]})
+            if student.current_class_id and student.current_class_id.course_ids:
+                missing = student.current_class_id.course_ids - student.course_ids
+                if missing:
+                    super(EactaStudent, student).write({'course_ids': [(4, c.id) for c in missing]})
 
     # ------------------------------------------------------------------
     # Workflow
@@ -286,7 +364,7 @@ class EactaStudent(models.Model):
         for student in self:
             if student.state != 'draft':
                 raise UserError(f"Seule une pré-inscription peut être validée ({student.name}).")
-            if not student.class_ids:
+            if not student.current_class_id and not student.class_ids:
                 raise UserError(f"Affectez une classe à {student.name} avant de valider son inscription.")
         self.write({'state': 'enrolled'})
 
@@ -370,6 +448,38 @@ class EactaStudent(models.Model):
             'context': {
                 'default_fee_id': fee.id,
                 'default_amount': fee.amount_due,
+            },
+        }
+
+    def action_declare_attendance(self):
+        """Déclare rapidement une absence ou un retard pour cet élève."""
+        self.ensure_one()
+        return {
+            'name': f"Signaler une absence / retard - {self.name}",
+            'type': 'ir.actions.act_window',
+            'res_model': 'eacta.attendance',
+            'view_mode': 'form',
+            'target': 'new',
+            'context': {
+                'default_student_id': self.id,
+                'default_class_id': self.current_class_id.id if self.current_class_id else False,
+                'default_date': fields.Date.context_today(self),
+                'default_attendance_type': 'absent',
+            },
+        }
+
+    def action_generate_student_fees(self):
+        """Ouvre l'assistant de facturation pré-rempli pour cet élève."""
+        self.ensure_one()
+        return {
+            'name': f"Générer les frais - {self.name}",
+            'type': 'ir.actions.act_window',
+            'res_model': 'eacta.fee.generate.wizard',
+            'view_mode': 'form',
+            'target': 'new',
+            'context': {
+                'default_class_ids': [(6, 0, [self.current_class_id.id])] if self.current_class_id else False,
+                'default_student_ids': [(6, 0, [self.id])],
             },
         }
 

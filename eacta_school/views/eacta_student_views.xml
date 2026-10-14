@@ -37,6 +37,7 @@
         <field name="arch" type="xml">
             <search string="Rechercher des élèves">
                 <field name="name" filter_domain="['|', ('name', 'ilike', self), ('code', 'ilike', self)]"/>
+                <field name="current_class_id"/>
                 <field name="class_ids"/>
                 <field name="course_ids"/>
                 <field name="parent_ids"/>
@@ -79,6 +80,8 @@
                 <field name="course_count"/>
                 <field name="age"/>
                 <field name="color"/>
+                <field name="current_class_id"/>
+                <field name="phone"/>
                 <progressbar field="state"
                              colors='{"draft": "warning", "enrolled": "success", "graduated": "info", "alumni": "200"}'/>
                 <templates>
@@ -174,6 +177,10 @@
                 <header>
                     <button name="action_enroll" string="Valider l'inscription" type="object"
                             class="btn-primary" invisible="state != 'draft'"/>
+                    <button name="action_declare_attendance" string="Signaler absence / retard" type="object"
+                            class="btn-secondary" icon="fa-clock-o" invisible="state == 'draft'"/>
+                    <button name="action_generate_student_fees" string="Facturer la scolarité" type="object"
+                            class="btn-secondary" icon="fa-money" invisible="not current_class_id"/>
                     <button name="action_graduate" string="Diplômer" type="object" class="btn-primary"
                             groups="eacta_school.group_eacta_school_manager" invisible="state != 'enrolled'"/>
                     <button name="action_set_alumni" string="Ancien élève" type="object"
@@ -236,18 +243,23 @@
                     </div>
 
                     <group>
-                        <group string="Identité">
+                        <group string="Scolarité">
+                            <field name="current_class_id" options="{'no_create_edit': True}"
+                                   placeholder="Sélectionner la classe..."/>
+                            <field name="current_year" readonly="1" invisible="not current_class_id"/>
+                            <field name="enrollment_date"/>
+                            <field name="canteen" widget="boolean_toggle"/>
+                            <field name="transport_mode"/>
+                        </group>
+                        <group string="Identité &amp; Contact">
                             <field name="date_of_birth"/>
                             <field name="age" invisible="not date_of_birth"/>
                             <field name="gender" widget="radio" options="{'horizontal': true}"/>
-                            <field name="enrollment_date"/>
-                        </group>
-                        <group string="Contact">
+                            <field name="parent_ids" widget="many2many_tags" placeholder="Parents ou tuteurs..."
+                                   context="{'default_is_school_parent': True}"/>
                             <field name="phone" widget="phone"/>
                             <field name="email" widget="email"/>
                             <field name="address" placeholder="Adresse postale"/>
-                            <field name="parent_ids" widget="many2many_tags"
-                                   context="{'default_is_school_parent': True}"/>
                         </group>
                     </group>
 
@@ -283,8 +295,20 @@
                             </field>
                         </page>
                         <page string="Cours" name="courses" icon="fa-book">
+                            <div class="d-flex align-items-center gap-3 mb-3 p-2 bg-light rounded border">
+                                <span class="text-muted small">
+                                    <i class="fa fa-info-circle me-1 text-primary"/>
+                                    Les cours de la classe sont affectés automatiquement. Vous pouvez ajouter des cours optionnels ou spécifiques ci-dessous.
+                                </span>
+                                <span class="badge bg-primary-subtle text-primary border ms-auto">
+                                    <field name="class_course_count" class="fw-bold me-1"/> matière(s) de classe
+                                </span>
+                                <span class="badge bg-secondary-subtle text-secondary border">
+                                    <field name="elective_course_count" class="fw-bold me-1"/> optionnelle(s)
+                                </span>
+                            </div>
                             <field name="course_ids">
-                                <list>
+                                <list editable="bottom">
                                     <field name="code"/>
                                     <field name="name"/>
                                     <field name="category_id"/>
@@ -305,13 +329,15 @@
                             </field>
                         </page>
                         <page string="Assiduité" name="attendances" icon="fa-calendar-check-o">
-                            <div class="d-flex gap-3 mb-3">
+                            <div class="d-flex align-items-center gap-3 mb-3 flex-wrap">
                                 <span class="badge bg-danger-subtle text-danger border p-2">
                                     <i class="fa fa-times-circle me-1" title="Absences"/> Non justifiées : <field name="unjustified_absence_count" class="fw-bold"/>
                                 </span>
                                 <span class="badge bg-warning-subtle text-warning border p-2">
                                     <i class="fa fa-clock-o me-1" title="Retards"/> Retards : <field name="late_count" class="fw-bold"/>
                                 </span>
+                                <button name="action_declare_attendance" type="object" string="Signaler absence / retard"
+                                        icon="fa-plus" class="btn btn-secondary btn-sm ms-auto"/>
                             </div>
                             <field name="attendance_ids">
                                 <list editable="bottom" decoration-danger="attendance_type == 'absent' and not justified" decoration-warning="attendance_type == 'late'">
@@ -339,14 +365,6 @@
                                     <field name="blood_group"/>
                                     <field name="allergies" placeholder="Allergies connues..."/>
                                     <field name="medical_notes" placeholder="Protocole médical, PAI..."/>
-                                </group>
-                            </group>
-                            <group string="Logistique &amp; Services">
-                                <group>
-                                    <field name="transport_mode" widget="radio"/>
-                                </group>
-                                <group>
-                                    <field name="canteen" widget="boolean_toggle"/>
                                 </group>
                             </group>
                         </page>

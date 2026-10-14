@@ -79,6 +79,13 @@ class EactaClass(models.Model):
         for class_ in self:
             class_.display_name = f"{class_.name} ({class_.year})" if class_.year else class_.name
 
+    @api.model
+    def _name_search(self, name, domain=None, operator='ilike', limit=None, order=None):
+        domain = domain or []
+        if name:
+            domain = ['|', '|', ('name', operator, name), ('year', operator, name), ('level', operator, name)] + list(domain)
+        return self._search(domain, limit=limit, order=order)
+
     @api.constrains('start_date', 'end_date')
     def _check_dates(self):
         for class_ in self:
@@ -109,6 +116,17 @@ class EactaClass(models.Model):
                 raise ValidationError(
                     f"L'élève {student.name} est déjà dans la classe {duplicate.name} pour l'année "
                     f"{class_.year}. Un élève ne peut être que dans une classe par année.")
+
+    def write(self, vals):
+        res = super().write(vals)
+        if 'course_ids' in vals or 'student_ids' in vals:
+            for class_ in self:
+                if class_.course_ids and class_.student_ids:
+                    for student in class_.student_ids:
+                        missing = class_.course_ids - student.course_ids
+                        if missing:
+                            super(models.Model, student).write({'course_ids': [(4, c.id) for c in missing]})
+        return res
 
     def _action_open(self, name, model, domain, context=None, view_mode='list,form'):
         return {
