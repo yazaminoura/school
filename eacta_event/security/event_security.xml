@@ -1,26 +1,31 @@
 <?xml version="1.0" encoding="utf-8"?>
 <odoo>
     <data>
-        <!-- Events Module Category -->
         <record id="module_category_eacta_event" model="ir.module.category">
             <field name="name">NR School - Événements</field>
-            <field name="description">Gestion des utilisateurs pour le module Événements</field>
+            <field name="description">Droits d'accès aux événements scolaires</field>
             <field name="sequence">40</field>
         </record>
 
-        <!-- Events User Group -->
         <record id="group_eacta_event_user" model="res.groups">
-            <field name="name">Utilisateur Événements</field>
+            <field name="name">Utilisateur</field>
             <field name="category_id" ref="module_category_eacta_event"/>
             <field name="implied_ids" eval="[(4, ref('base.group_user'))]"/>
         </record>
 
-        <!-- Events Manager Group -->
         <record id="group_eacta_event_manager" model="res.groups">
-            <field name="name">Manager Événements</field>
+            <field name="name">Responsable</field>
             <field name="category_id" ref="module_category_eacta_event"/>
             <field name="implied_ids" eval="[(4, ref('group_eacta_event_user'))]"/>
             <field name="users" eval="[(4, ref('base.user_root')), (4, ref('base.user_admin'))]"/>
+        </record>
+
+        <!-- Le personnel de l'école organise les événements, la direction les gère -->
+        <record id="eacta_school.group_eacta_school_user" model="res.groups">
+            <field name="implied_ids" eval="[(4, ref('group_eacta_event_user'))]"/>
+        </record>
+        <record id="eacta_school.group_eacta_school_manager" model="res.groups">
+            <field name="implied_ids" eval="[(4, ref('group_eacta_event_manager'))]"/>
         </record>
     </data>
 </odoo>

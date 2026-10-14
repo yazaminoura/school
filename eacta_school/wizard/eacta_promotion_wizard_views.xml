@@ -1,0 +1,49 @@
+<?xml version="1.0" encoding="utf-8"?>
+<odoo>
+    <record id="view_eacta_promotion_wizard_form" model="ir.ui.view">
+        <field name="name">eacta.promotion.wizard.form</field>
+        <field name="model">eacta.promotion.wizard</field>
+        <field name="arch" type="xml">
+            <form string="Passage de fin d'année">
+                <div class="alert alert-info" role="status">
+                    Les décisions sont proposées à partir de la moyenne de l'élève dans la classe.
+                    Ajustez-les si besoin, puis validez : les élèves admis rejoignent la classe supérieure,
+                    les redoublants la classe de redoublement.
+                </div>
+                <group>
+                    <group>
+                        <field name="from_class_id" options="{'no_create': True}"/>
+                        <field name="year"/>
+                        <field name="pass_mark"/>
+                    </group>
+                    <group>
+                        <field name="next_year"/>
+                        <field name="to_class_id" options="{'no_create': True}"/>
+                        <field name="repeat_class_id" options="{'no_create': True}"/>
+                    </group>
+                </group>
+                <field name="line_ids">
+                    <list editable="bottom" create="0" decoration-danger="decision == 'repeat'"
+                          decoration-success="decision == 'promote'" decoration-info="decision == 'graduate'">
+                        <field name="student_id" readonly="1"/>
+                        <field name="average" readonly="1"/>
+                        <field name="has_grades" readonly="1" optional="hide"/>
+                        <field name="decision"/>
+                    </list>
+                </field>
+                <footer>
+                    <button name="action_apply" string="Valider le passage" type="object" class="btn-primary"
+                            confirm="Appliquer ces décisions ?"/>
+                    <button string="Annuler" class="btn-secondary" special="cancel"/>
+                </footer>
+            </form>
+        </field>
+    </record>
+
+    <record id="action_eacta_promotion_wizard" model="ir.actions.act_window">
+        <field name="name">Passage de fin d'année</field>
+        <field name="res_model">eacta.promotion.wizard</field>
+        <field name="view_mode">form</field>
+        <field name="target">new</field>
+    </record>
+</odoo>

@@ -22,11 +22,11 @@
                     <div class="page" style="font-family: 'Inter', 'Segoe UI', Arial, sans-serif; color: #1e293b; padding: 25px 20px;">
                         
                         <!-- Header / Title -->
-                        <div style="text-align: center; margin-top: 30px; margin-bottom: 40px; border-bottom: 3px double #00285C; padding-bottom: 20px;">
-                            <h1 style="font-size: 26px; font-weight: 800; color: #001A3D; text-transform: uppercase; letter-spacing: 2px; margin: 0;">
+                        <div style="text-align: center; margin-top: 30px; margin-bottom: 40px; border-bottom: 3px double #8E1B3A; padding-bottom: 20px;">
+                            <h1 style="font-size: 26px; font-weight: 800; color: #3B0A18; text-transform: uppercase; letter-spacing: 2px; margin: 0;">
                                 Attestation de Scolarité
                             </h1>
-                            <div style="font-size: 14px; color: #00285C; font-weight: 600; margin-top: 6px;">
+                            <div style="font-size: 14px; color: #8E1B3A; font-weight: 600; margin-top: 6px;">
                                 Année académique : <span t-out="o.current_year or (o.current_class_id.year if o.current_class_id else '-')"/>
                             </div>
                         </div>
@@ -42,11 +42,11 @@
                                 <table style="width: 100%; border-collapse: collapse; font-size: 14px;">
                                     <tr>
                                         <td style="width: 35%; padding: 8px 0; color: #64748b; font-weight: 600; text-transform: uppercase; font-size: 12px;">Nom et Prénom :</td>
-                                        <td style="width: 65%; padding: 8px 0; font-size: 16px; font-weight: 700; color: #0f172a;" t-field="o.name"/>
+                                        <td style="width: 65%; padding: 8px 0; font-size: 16px; font-weight: 700; color: #0f172a;"><span t-field="o.name"/></td>
                                     </tr>
                                     <tr t-if="o.code">
                                         <td style="padding: 8px 0; color: #64748b; font-weight: 600; text-transform: uppercase; font-size: 12px;">Matricule officiel :</td>
-                                        <td style="padding: 8px 0; font-weight: 700; color: #00285C;" t-field="o.code"/>
+                                        <td style="padding: 8px 0; font-weight: 700; color: #8E1B3A;"><span t-field="o.code"/></td>
                                     </tr>
                                     <tr t-if="o.date_of_birth">
                                         <td style="padding: 8px 0; color: #64748b; font-weight: 600; text-transform: uppercase; font-size: 12px;">Date de naissance :</td>
@@ -61,11 +61,11 @@
                                     </tr>
                                     <tr t-if="o.enrollment_date">
                                         <td style="padding: 8px 0; color: #64748b; font-weight: 600; text-transform: uppercase; font-size: 12px;">Date d'admission :</td>
-                                        <td style="padding: 8px 0; font-weight: 500; color: #1e293b;" t-field="o.enrollment_date"/>
+                                        <td style="padding: 8px 0; font-weight: 500; color: #1e293b;"><span t-field="o.enrollment_date"/></td>
                                     </tr>
                                     <tr t-if="o.honor_mention and o.honor_mention != 'none'">
                                         <td style="padding: 8px 0; color: #64748b; font-weight: 600; text-transform: uppercase; font-size: 12px;">Distinction :</td>
-                                        <td style="padding: 8px 0; font-weight: 700; color: #F5A524;" t-field="o.honor_mention"/>
+                                        <td style="padding: 8px 0; font-weight: 700; color: #F5A524;"><span t-field="o.honor_mention"/></td>
                                     </tr>
                                 </table>
                             </div>
@@ -84,7 +84,7 @@
                                 </div>
                             </div>
                             <div style="display: table-cell; width: 50%; text-align: center; vertical-align: top;">
-                                <div style="font-size: 14px; font-weight: 700; color: #001A3D; margin-bottom: 70px;">
+                                <div style="font-size: 14px; font-weight: 700; color: #3B0A18; margin-bottom: 70px;">
                                     La Direction Générale
                                 </div>
                                 <div style="border: 1px dashed #94a3b8; border-radius: 8px; height: 80px; width: 220px; margin: 0 auto; display: flex; align-items: center; justify-content: center; font-size: 11px; color: #94a3b8;">

@@ -8,3 +8,5 @@ from . import res_users
 from . import eacta_course_grade
 from . import eacta_exam
 from . import eacta_attendance
+from . import eacta_timetable
+from . import eacta_fee

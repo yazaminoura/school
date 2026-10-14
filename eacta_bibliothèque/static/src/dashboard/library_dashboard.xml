@@ -1,0 +1,158 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<templates xml:space="preserve">
+
+    <t t-name="eacta_bibliotheque.LibraryDashboard">
+        <div class="o_action o_eacta_dashboard h-100 overflow-auto">
+            <div t-if="state.loading" class="o_eacta_dash_loading">
+                <i class="fa fa-circle-o-notch fa-spin fa-2x" title="Chargement"/>
+            </div>
+            <div t-else="" class="o_eacta_dash_inner">
+                <t t-set="d" t-value="state.data"/>
+                <div class="o_eacta_dash_hero">
+                    <div>
+                        <h1>Bibliothèque</h1>
+                        <p>Fonds, emprunts en cours, retards et lectures les plus populaires.</p>
+                    </div>
+                    <div class="o_eacta_dash_actions">
+                        <button class="btn btn-light" t-on-click="() => this.load()">
+                            <i class="fa fa-refresh me-1"/>Actualiser
+                        </button>
+                        <button class="btn btn-primary" t-on-click="() => this.open('eacta_bibliothèque.action_library_book')">
+                            <i class="fa fa-book me-1"/>Catalogue
+                        </button>
+                        <button class="btn btn-primary" t-on-click="() => this.open('eacta_bibliothèque.action_library_loan')">
+                            <i class="fa fa-exchange me-1"/>Emprunts
+                        </button>
+                    </div>
+                </div>
+
+                <div class="o_eacta_dash_kpis">
+                    <div class="o_eacta_dash_kpi" t-on-click="() => this.open('eacta_bibliothèque.action_library_book')">
+                        <div class="o_eacta_dash_kpi_icon o_eacta_tone_primary"><i class="fa fa-book"/></div>
+                        <div>
+                            <div class="o_eacta_dash_kpi_value" t-out="kpis.titles"/>
+                            <div class="o_eacta_dash_kpi_label">Titres</div>
+                            <div class="o_eacta_dash_kpi_hint"><t t-out="kpis.copies"/> exemplaires · <t t-out="kpis.available"/> disponibles</div>
+                        </div>
+                    </div>
+                    <div class="o_eacta_dash_kpi" t-on-click="() => this.open('eacta_bibliothèque.action_library_loan')">
+                        <div class="o_eacta_dash_kpi_icon o_eacta_tone_info"><i class="fa fa-exchange"/></div>
+                        <div>
+                            <div class="o_eacta_dash_kpi_value" t-out="kpis.on_loan"/>
+                            <div class="o_eacta_dash_kpi_label">Emprunts en cours</div>
+                            <div class="o_eacta_dash_kpi_hint"><t t-out="kpis.readers"/> lecteur(s) · <t t-out="kpis.month_loans"/> ce mois-ci</div>
+                        </div>
+                    </div>
+                    <div class="o_eacta_dash_kpi" t-on-click="() => this.open('eacta_bibliothèque.action_overdue_loans')">
+                        <div class="o_eacta_dash_kpi_icon o_eacta_tone_warning"><i class="fa fa-clock-o"/></div>
+                        <div>
+                            <div class="o_eacta_dash_kpi_value" t-out="kpis.overdue"/>
+                            <div class="o_eacta_dash_kpi_label">En retard</div>
+                            <div class="o_eacta_dash_kpi_hint">relance planifiée chaque jour</div>
+                        </div>
+                    </div>
+                    <div class="o_eacta_dash_kpi">
+                        <div class="o_eacta_dash_kpi_icon o_eacta_tone_accent"><i class="fa fa-money"/></div>
+                        <div>
+                            <div class="o_eacta_dash_kpi_value" t-out="money(kpis.fines_due)"/>
+                            <div class="o_eacta_dash_kpi_label">Amendes à régler</div>
+                            <div class="o_eacta_dash_kpi_hint">retards cumulés</div>
+                        </div>
+                    </div>
+                    <div class="o_eacta_dash_kpi">
+                        <div class="o_eacta_dash_kpi_icon o_eacta_tone_success"><i class="fa fa-pie-chart"/></div>
+                        <div>
+                            <div class="o_eacta_dash_kpi_value"><t t-out="pct(kpis.copies - kpis.available, kpis.copies)"/><small>%</small></div>
+                            <div class="o_eacta_dash_kpi_label">Taux de rotation</div>
+                            <div class="o_eacta_dash_kpi_hint">exemplaires actuellement prêtés</div>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="o_eacta_dash_grid">
+                    <section class="o_eacta_panel o_eacta_span_2">
+                        <header>
+                            <h3>Retards</h3>
+                            <a href="#" t-on-click.prevent="() => this.open('eacta_bibliothèque.action_overdue_loans')">Tout voir</a>
+                        </header>
+                        <div t-if="d.overdue.length" class="o_eacta_rows">
+                            <div t-foreach="d.overdue" t-as="l" t-key="l.id" class="o_eacta_exam_row">
+                                <div class="o_eacta_exam_when o_library_late"><t t-out="l.days"/> j</div>
+                                <div class="min-w-0 flex-grow-1 o_eacta_clickable" t-on-click="() => this.openRecord('library.loan', l.id)">
+                                    <div class="fw-semibold text-truncate" t-out="l.book"/>
+                                    <div class="small text-muted text-truncate"><t t-out="l.borrower"/><t t-if="l.class"> · <t t-out="l.class"/></t><t t-if="l.fine"> · amende <t t-out="money(l.fine)"/></t></div>
+                                </div>
+                                <button class="btn btn-sm btn-primary" t-on-click="() => this.returnLoan(l.id)">Retour</button>
+                            </div>
+                        </div>
+                        <div t-else="" class="o_eacta_empty"><i class="fa fa-check-circle me-1"/>Aucun retard. Bravo !</div>
+                    </section>
+
+                    <section class="o_eacta_panel">
+                        <header><h3>Retours à venir</h3></header>
+                        <div t-if="d.due_soon.length" class="o_eacta_rows">
+                            <div t-foreach="d.due_soon" t-as="l" t-key="l.id" class="o_eacta_exam_row o_eacta_clickable"
+                                 t-on-click="() => this.openRecord('library.loan', l.id)">
+                                <div class="o_eacta_exam_when" t-out="dueLabel(l.days)"/>
+                                <div class="min-w-0 flex-grow-1">
+                                    <div class="fw-semibold text-truncate" t-out="l.book"/>
+                                    <div class="small text-muted text-truncate" t-out="l.borrower"/>
+                                </div>
+                            </div>
+                        </div>
+                        <div t-else="" class="o_eacta_empty">Aucun emprunt en cours.</div>
+                    </section>
+
+                    <section class="o_eacta_panel">
+                        <header><h3>Livres les plus empruntés</h3></header>
+                        <div t-if="d.top_books.length" class="o_eacta_rows">
+                            <div t-foreach="d.top_books" t-as="b" t-key="b.id" class="o_eacta_person_row o_eacta_clickable"
+                                 t-on-click="() => this.openRecord('library.book', b.id)">
+                                <span class="o_eacta_rank" t-out="b_index + 1"/>
+                                <div class="min-w-0 flex-grow-1">
+                                    <div class="fw-semibold text-truncate" t-out="b.name"/>
+                                    <div class="small text-muted text-truncate" t-out="b.author"/>
+                                </div>
+                                <span class="o_eacta_score"><t t-out="b.count"/></span>
+                            </div>
+                        </div>
+                        <div t-else="" class="o_eacta_empty">Pas encore d'emprunts.</div>
+                    </section>
+
+                    <section class="o_eacta_panel">
+                        <header><h3>Meilleurs lecteurs</h3></header>
+                        <div t-if="d.top_readers.length" class="o_eacta_rows">
+                            <div t-foreach="d.top_readers" t-as="r" t-key="r.id" class="o_eacta_person_row o_eacta_clickable"
+                                 t-on-click="() => this.openRecord('library.borrower', r.id)">
+                                <span class="o_eacta_mini_avatar o_eacta_avatar_initials" t-out="r.name.charAt(0)"/>
+                                <div class="min-w-0 flex-grow-1">
+                                    <div class="fw-semibold text-truncate" t-out="r.name"/>
+                                    <div class="small text-muted" t-out="r.type"/>
+                                </div>
+                                <span class="o_eacta_score o_eacta_score_high"><t t-out="r.count"/></span>
+                            </div>
+                        </div>
+                        <div t-else="" class="o_eacta_empty">Pas encore de lecteurs.</div>
+                    </section>
+
+                    <section class="o_eacta_panel">
+                        <header><h3>Fonds par catégorie</h3><span class="text-muted small">disponibles / total</span></header>
+                        <div t-if="d.categories.length" class="o_eacta_rows">
+                            <div t-foreach="d.categories" t-as="c" t-key="c.id" class="o_eacta_row">
+                                <div class="d-flex justify-content-between small">
+                                    <strong class="text-truncate" t-out="c.name"/>
+                                    <span class="text-muted"><t t-out="c.available"/> / <t t-out="c.copies"/></span>
+                                </div>
+                                <div class="o_eacta_meter_track">
+                                    <div class="o_eacta_meter_fill" t-attf-style="width: #{pct(c.copies, maxCategory)}%"/>
+                                </div>
+                            </div>
+                        </div>
+                        <div t-else="" class="o_eacta_empty">Aucun livre catalogué.</div>
+                    </section>
+                </div>
+            </div>
+        </div>
+    </t>
+
+</templates>

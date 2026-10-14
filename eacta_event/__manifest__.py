@@ -1,21 +1,37 @@
 {
     'name': 'NR School - Événements',
-    'icon': '/eacta_event/static/desciption/icon.png',
-    'version': '18.0.1.1',
-    'license': 'LGPL-3',
-    'depends': ['base', 'mail', 'eacta_school'],
-    'author': 'NR School',
-    'category': 'Education',
-    'summary': 'Gestion des événements scolaires NR School',
+    'version': '18.0.2.0',
+    'summary': "Sorties, voyages, cérémonies et réunions : inscriptions, autorisations parentales, présences",
     'description': """
-        Ce module ajoute la gestion des événements scolaires à NR School.
+Événements scolaires NR School
+==============================
+- Types d'événements, workflow Brouillon → Confirmé → Terminé, calendrier
+- Classes concernées, inscription d'une classe entière en un clic, nombre de places
+- Autorisations parentales, participation financière, pointage des présences
+- Feuille de présence et lettres d'autorisation parentale imprimables
+- Bouton « Événements » sur la fiche élève
     """,
+    'category': 'Education',
+    'author': 'NR School',
+    'license': 'LGPL-3',
+    'icon': '/eacta_event/static/description/icon.png',
+    'depends': ['base', 'mail', 'web', 'eacta_school'],
     'data': [
         'security/event_security.xml',
         'security/ir.model.access.csv',
         'security/event_rules.xml',
+        'reports/event_reports.xml',
         'views/eacta_school_event.xml',
     ],
+    'demo': [
+        'demo/event_demo.xml',
+    ],
+    'assets': {
+        'web.assets_backend': [
+            'eacta_event/static/src/event.scss',
+        ],
+    },
     'installable': True,
-    'application': False,
+    'application': True,
+    'sequence': 3,
 }

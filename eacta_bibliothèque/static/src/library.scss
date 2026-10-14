@@ -1,0 +1,38 @@
+// NR School — Bibliothèque
+
+.o_library_book_kanban .o_library_book_card {
+    .o_library_cover_tile {
+        flex: 0 0 auto;
+        width: 64px;
+        height: 90px;
+        border-radius: 6px 10px 10px 6px;
+        overflow: hidden;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        font-size: 1.6rem;
+        color: #fff;
+        background: linear-gradient(135deg, var(--eacta-c-primary), var(--eacta-c-secondary));
+        box-shadow: inset 4px 0 0 rgba(0, 0, 0, .18), 0 4px 10px rgba(15, 23, 42, .15);
+
+        .o_field_image, img, .o_library_cover_img {
+            width: 64px !important;
+            height: 90px !important;
+            object-fit: cover;
+        }
+    }
+}
+
+.o_form_view .o_library_cover img {
+    border-radius: 6px 12px 12px 6px !important;
+    object-fit: cover;
+}
+
+.o_eacta_card.o_library_loan_overdue { border-top-color: var(--eacta-c-danger); }
+.o_eacta_card.o_library_loan_ongoing { border-top-color: var(--eacta-c-secondary); }
+.o_eacta_card.o_library_loan_returned { border-top-color: var(--eacta-c-success); }
+
+.o_eacta_dashboard .o_eacta_exam_when.o_library_late {
+    color: #b91c1c;
+    background: #fee2e2;
+}

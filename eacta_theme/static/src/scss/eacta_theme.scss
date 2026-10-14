@@ -4,9 +4,9 @@
 // eacta.theme.config._get_theme_css() (voir views/dynamic_styles.xml).
 // ==========================================================================
 
-$eacta-fallback-primary: #00285C;
-$eacta-fallback-secondary: #00B8C8;
-$eacta-fallback-ink: #001A3D;
+$eacta-fallback-primary: #8E1B3A;
+$eacta-fallback-secondary: #E0A630;
+$eacta-fallback-ink: #3B0A18;
 
 :root {
     --eacta-primary: #{$eacta-fallback-primary};
@@ -395,4 +395,27 @@ button.btn-primary,
 
 ::selection {
     background: color-mix(in srgb, var(--eacta-secondary) 30%, transparent);
+}
+
+// Bouton de vue actif (Kanban / Liste / …) : bordure aux couleurs du thème au lieu du violet Odoo
+.o_control_panel .o_cp_switch_buttons .o_switch_view.active,
+.o_control_panel .o_switch_view.active {
+    border-color: var(--eacta-primary) !important;
+    --btn-border-color: var(--eacta-primary);
+}
+
+// Boutons statistiques (icône + valeur) et indicateur de chargement
+.o_form_view .oe_button_box .oe_stat_button,
+.oe_stat_button {
+    .o_button_icon,
+    .o_stat_info .o_stat_value,
+    .o_stat_value {
+        color: var(--eacta-primary) !important;
+    }
+
+    &:hover .o_stat_text { color: var(--eacta-primary); }
+}
+
+.o_loading_indicator {
+    background-color: var(--eacta-primary) !important;
 }

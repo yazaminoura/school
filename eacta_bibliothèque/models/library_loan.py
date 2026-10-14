@@ -1,211 +1,332 @@
-from odoo import models, fields, api
-from odoo.exceptions import ValidationError
-import json
-import logging
-from datetime import datetime, date
+from datetime import timedelta
 
-_logger = logging.getLogger(__name__)
+from odoo import api, fields, models
+from odoo.exceptions import UserError, ValidationError
+
+PARAM_DEFAULTS = {
+    'fine_per_day': 1.0,
+    'max_loans_student': 3,
+    'max_loans_teacher': 10,
+    'max_renewals': 2,
+}
 
 
 class LibraryLoan(models.Model):
     _name = 'library.loan'
-    _description = 'Library Loan'
+    _description = 'Emprunt'
     _inherit = ['mail.thread', 'mail.activity.mixin']
+    _order = 'checkout_date desc, id desc'
 
-    name = fields.Char(string='Nom', compute='_compute_name', store=True)
-    checkout_date = fields.Date(string="Date d'emprunt", required=True, default=fields.Date.today, tracking=True)
-    due_date = fields.Date(string="Date de retour prévue", required=True, tracking=True)
-    book_id = fields.Many2one(
-        'library.book',
-        string="Livre",
-        required=True,
-        tracking=True,
-        ondelete='cascade',
-        domain="[('category_id', '=', category_id)]"
-    )
+    reference = fields.Char(string='Référence', readonly=True, copy=False, index=True, default='/')
+    name = fields.Char(string='Libellé', compute='_compute_name', store=True)
 
-    # SINGLE COPY: Replace Many2many with Many2one
+    borrower_type = fields.Selection([
+        ('student', 'Élève'),
+        ('teacher', 'Enseignant'),
+    ], string="Type de lecteur", required=True, default='student', tracking=True)
+    student_id = fields.Many2one('eacta.student', string="Élève", tracking=True, index=True)
+    teacher_id = fields.Many2one('res.users', string="Enseignant", tracking=True, domain="[('is_teacher', '=', True)]")
+    borrower_id = fields.Many2one('library.borrower', string='Lecteur', ondelete='cascade', index=True, readonly=True)
+    borrower_name = fields.Char(string='Emprunteur', compute='_compute_name', store=True)
+    class_id = fields.Many2one(related='student_id.current_class_id', string='Classe', store=True)
+
+    book_id = fields.Many2one('library.book', string="Livre", required=True, tracking=True, ondelete='cascade',
+                              index=True)
+    category_id = fields.Many2one(related='book_id.category_id', store=True, string='Catégorie')
+    book_image = fields.Binary(related='book_id.image', string='Couverture')
     barcode_id = fields.Many2one(
-        'library.book.barcode',
-        string='Code-barres emprunté',
-        domain="[('book_id', '=', book_id), ('is_available', '=', True)]",
-        required=True
-    )
+        'library.book.barcode', string='Exemplaire', required=True, tracking=True,
+        domain="[('book_id', '=', book_id), ('state', '=', 'available')]")
+    returned_barcode_id = fields.Many2one('library.book.barcode', string='Exemplaire rendu')
 
-    returned_barcode_id = fields.Many2one('library.book.barcode', string='Code-barres retourné')
+    checkout_date = fields.Date(string="Date d'emprunt", required=True, default=fields.Date.context_today,
+                                tracking=True)
+    due_date = fields.Date(string="Retour prévu", required=True, tracking=True,
+                           compute='_compute_due_date', store=True, readonly=False, precompute=True)
+    return_date = fields.Date(string="Rendu le", tracking=True)
+    returned = fields.Boolean(string="Rendu", default=False, tracking=True)
+    is_lost = fields.Boolean(string="Perdu", default=False, tracking=True)
+    state = fields.Selection([
+        ('ongoing', 'En cours'),
+        ('overdue', 'En retard'),
+        ('returned', 'Rendu'),
+        ('lost', 'Perdu'),
+    ], string='État', compute='_compute_state', store=True, tracking=True, index=True)
+    is_overdue = fields.Boolean(string="En retard", compute='_compute_state', store=True)
+    was_overdue = fields.Boolean(string="Rendu en retard", compute='_compute_state', store=True)
+    complete_return = fields.Boolean(string="Retour conforme", compute='_compute_state', store=True)
+    days_late = fields.Integer(string='Jours de retard', compute='_compute_state', store=True)
+    renew_count = fields.Integer(string='Prolongations', default=0, tracking=True)
 
-    # REMOVED: Multi-copy fields
-    # barcode_ids, returned_barcode_ids, copies_count, returned_copies_count, requested_copies
+    fine_amount = fields.Float(string='Amende', compute='_compute_state', store=True, digits=(10, 2))
+    fine_paid = fields.Boolean(string='Amende réglée', tracking=True)
+    currency_id = fields.Many2one('res.currency', default=lambda self: self.env.company.currency_id)
 
-    returned = fields.Boolean(string="Retourné", default=False, tracking=True)
-    is_overdue = fields.Boolean(string="En retard", compute="_compute_is_overdue", store=True)
-    was_overdue = fields.Boolean(string="Était en retard", compute="_compute_was_overdue", store=True)
-    responsible_id = fields.Many2one(
-        'res.users', string="Responsable d'emprunt", default=lambda self: self.env.user, required=True, tracking=True,
-        readonly=True
-    )
-    processed_date = fields.Datetime(
-        string="Emprunté le", default=lambda self: fields.Datetime.now(), tracking=True, readonly=True
-    )
-    return_responsible_id = fields.Many2one('res.users', string="Responsable retour", tracking=True, readonly=True)
-    return_date = fields.Date(string="Retourné le", tracking=True)
-    return_notes = fields.Text(string="Notes de retour")
+    responsible_id = fields.Many2one('res.users', string="Prêté par", default=lambda self: self.env.user,
+                                     tracking=True, readonly=True)
+    processed_date = fields.Datetime(string="Enregistré le", default=fields.Datetime.now, readonly=True)
+    return_responsible_id = fields.Many2one('res.users', string="Retour enregistré par", readonly=True)
+    return_notes = fields.Text(string="Observations au retour")
+    color = fields.Integer(string='Couleur', compute='_compute_color')
 
-    category_id = fields.Many2one(
-        'library.book.category',
-        string='Catégorie',
-        required=True,
-        tracking=True
-    )
+    # ------------------------------------------------------------------
+    @api.model
+    def _param(self, key):
+        value = self.env['ir.config_parameter'].sudo().get_param(f'library.{key}')
+        default = PARAM_DEFAULTS[key]
+        try:
+            return type(default)(value) if value not in (None, False, '') else default
+        except ValueError:
+            return default
 
-    @api.onchange('category_id')
-    def _onchange_category_id(self):
-        if self.category_id and self.category_id != self._origin.category_id:
-            self.book_id = False
-            self.barcode_id = False
+    @api.depends('book_id', 'checkout_date')
+    def _compute_due_date(self):
+        for loan in self:
+            if loan.checkout_date and (not loan.due_date or loan.book_id):
+                days = loan.book_id.loan_duration_days or 14
+                loan.due_date = loan.checkout_date + timedelta(days=days)
+
+    @api.depends('book_id.name', 'student_id.name', 'teacher_id.name', 'borrower_type')
+    def _compute_name(self):
+        for loan in self:
+            borrower = loan.student_id if loan.borrower_type == 'student' else loan.teacher_id
+            loan.borrower_name = borrower.name or ''
+            loan.name = f"{loan.book_id.name or ''} - {loan.borrower_name}"
+
+    @api.depends('returned', 'is_lost', 'due_date', 'return_date', 'returned_barcode_id', 'barcode_id')
+    def _compute_state(self):
+        today = fields.Date.context_today(self)
+        fine_per_day = self._param('fine_per_day')
+        for loan in self:
+            end = loan.return_date if loan.returned else today
+            late = (end - loan.due_date).days if loan.due_date and end else 0
+            late = max(late, 0)
+            if loan.is_lost:
+                state = 'lost'
+            elif loan.returned:
+                state = 'returned'
+            elif late:
+                state = 'overdue'
+            else:
+                state = 'ongoing'
+            loan.state = state
+            loan.is_overdue = state == 'overdue'
+            loan.was_overdue = state == 'returned' and late > 0
+            loan.complete_return = state == 'returned' and loan.returned_barcode_id == loan.barcode_id
+            loan.days_late = late if state != 'lost' else 0
+            loan.fine_amount = round(late * fine_per_day, 2) if state in ('overdue', 'returned') else 0.0
+
+    def _compute_color(self):
+        colors = {'ongoing': 10, 'overdue': 1, 'returned': 0, 'lost': 9}
+        for loan in self:
+            loan.color = colors.get(loan.state, 0)
 
     @api.onchange('book_id')
     def _onchange_book_id(self):
-        if self.book_id and self.checkout_date:
-            self.due_date = fields.Date.add(self.checkout_date, days=self.book_id.loan_duration_days)
-        if self.book_id and self._origin.book_id != self.book_id:
-            self.barcode_id = False
+        if self.book_id and self.barcode_id.book_id != self.book_id:
+            self.barcode_id = self.book_id.barcode_ids.filtered(lambda c: c.state == 'available')[:1]
 
-    @api.onchange('returned')
-    def _onchange_returned(self):
-        if self.returned:
-            self.returned_barcode_id = self.barcode_id
-            self.return_responsible_id = self.env.user
-            self.return_date = fields.Date.today()
+    @api.onchange('borrower_type')
+    def _onchange_borrower_type(self):
+        if self.borrower_type == 'student':
+            self.teacher_id = False
         else:
-            self.returned_barcode_id = False
-            self.return_responsible_id = False
-            self.return_date = False
+            self.student_id = False
 
+    # ------------------------------------------------------------------
     @api.constrains('checkout_date', 'due_date')
     def _check_dates(self):
         for loan in self:
             if loan.checkout_date and loan.due_date and loan.checkout_date > loan.due_date:
-                raise ValidationError("La date d'emprunt doit être antérieure à la date de retour prévue.")
+                raise ValidationError("La date de retour prévue doit être postérieure à la date d'emprunt.")
 
-    @api.constrains('barcode_id')
-    def _check_barcode(self):
+    @api.constrains('barcode_id', 'book_id', 'returned', 'is_lost')
+    def _check_copy(self):
         for loan in self:
-            if not loan.barcode_id:
-                raise ValidationError("Vous devez sélectionner un code-barres.")
-
             if loan.barcode_id.book_id != loan.book_id:
                 raise ValidationError(
-                    f"Le code-barres '{loan.barcode_id.barcode}' n'appartient pas au livre '{loan.book_id.name}'.")
-
-            # Check if barcode is already borrowed
-            if loan.checkout_date and loan.due_date:
-                overlapping_loans = self.env['library.loan'].search([
-                    ('barcode_id', '=', loan.barcode_id.id),
-                    ('returned', '=', False),
-                    ('id', '!=', loan.id)
-                ])
-                if overlapping_loans:
+                    f"L'exemplaire « {loan.barcode_id.barcode} » n'appartient pas au livre « {loan.book_id.name} ».")
+            if not loan.returned and not loan.is_lost:
+                other = self.search([('barcode_id', '=', loan.barcode_id.id), ('id', '!=', loan.id),
+                                     ('returned', '=', False), ('is_lost', '=', False)], limit=1)
+                if other:
                     raise ValidationError(
-                        f"Le code-barres '{loan.barcode_id.barcode}' est déjà emprunté.")
+                        f"L'exemplaire « {loan.barcode_id.barcode} » est déjà emprunté par {other.borrower_name}.")
 
-    @api.depends('due_date', 'returned')
-    def _compute_is_overdue(self):
+    @api.constrains('borrower_type', 'student_id', 'teacher_id')
+    def _check_borrower(self):
         for loan in self:
-            loan.is_overdue = loan.due_date and not loan.returned and loan.due_date < fields.Date.today()
+            if loan.borrower_type == 'student' and not loan.student_id:
+                raise ValidationError("Sélectionnez l'élève emprunteur.")
+            if loan.borrower_type == 'teacher' and not loan.teacher_id:
+                raise ValidationError("Sélectionnez l'enseignant emprunteur.")
 
-    @api.depends('due_date', 'return_date', 'returned')
-    def _compute_was_overdue(self):
+    @api.constrains('borrower_id', 'returned', 'is_lost')
+    def _check_loan_limit(self):
+        for loan in self.filtered(lambda l: not l.returned and not l.is_lost):
+            key = 'max_loans_student' if loan.borrower_type == 'student' else 'max_loans_teacher'
+            limit = self._param(key)
+            active = self.search_count([('borrower_id', '=', loan.borrower_id.id), ('returned', '=', False),
+                                        ('is_lost', '=', False)])
+            if limit and active > limit:
+                raise ValidationError(
+                    f"{loan.borrower_name} a déjà atteint la limite de {limit} emprunt(s) simultané(s).")
+
+    # ------------------------------------------------------------------
+    @api.model_create_multi
+    def create(self, vals_list):
+        Borrower = self.env['library.borrower']
+        sequence = self.env['ir.sequence']
+        for vals in vals_list:
+            if not vals.get('borrower_id'):
+                btype = vals.get('borrower_type', 'student')
+                vals['borrower_id'] = Borrower._get_or_create(
+                    btype, vals.get('student_id'), vals.get('teacher_id')).id
+            if not vals.get('reference') or vals['reference'] == '/':
+                vals['reference'] = sequence.next_by_code('library.loan') or '/'
+        return super().create(vals_list)
+
+    @api.depends('reference', 'name')
+    def _compute_display_name(self):
         for loan in self:
-            loan.was_overdue = loan.returned and loan.return_date and loan.due_date and loan.return_date > loan.due_date
+            loan.display_name = f"{loan.reference} · {loan.name}" if loan.reference and loan.reference != '/' else loan.name
 
-    complete_return = fields.Boolean(
-        string="Retour complet",
-        compute="_compute_complete_return",
-        store=True
-    )
-
-    @api.depends('returned', 'returned_barcode_id')
-    def _compute_complete_return(self):
-        for loan in self:
-            loan.complete_return = loan.returned and loan.returned_barcode_id.id == loan.barcode_id.id
-
-    borrower_type = fields.Selection([
-        ('student', 'Élève'),
-        ('teacher', 'Professeur'),
-    ], string="Type d'utilisateur", required=True, tracking=True)
-
-    student_id = fields.Many2one('eacta.student', string="Élève")
-    teacher_id = fields.Many2one('res.users', string="Professeur")
-    borrower_id = fields.Many2one('library.borrower', string='Emprunteur', ondelete='cascade')
-
-    @api.model
-    def create(self, vals):
-        # Create borrower record if needed
-        if 'borrower_id' not in vals:
-            borrower_vals = {
-                'borrower_type': vals.get('borrower_type', 'student'),
-            }
-
-            if vals.get('borrower_type') == 'student' and vals.get('student_id'):
-                borrower_vals['student_id'] = vals['student_id']
-                student = self.env['eacta.student'].browse(vals['student_id'])
-                borrower_vals['name'] = student.name
-            elif vals.get('borrower_type') == 'teacher' and vals.get('teacher_id'):
-                borrower_vals['teacher_id'] = vals['teacher_id']
-                teacher = self.env['res.users'].browse(vals['teacher_id'])
-                borrower_vals['name'] = teacher.name
-
-            domain = []
-            if borrower_vals.get('student_id'):
-                domain = [('student_id', '=', borrower_vals['student_id'])]
-            elif borrower_vals.get('teacher_id'):
-                domain = [('teacher_id', '=', borrower_vals['teacher_id'])]
-
-            existing_borrower = self.env['library.borrower'].search(domain, limit=1)
-
-            if existing_borrower:
-                vals['borrower_id'] = existing_borrower.id
-            else:
-                borrower = self.env['library.borrower'].create(borrower_vals)
-                vals['borrower_id'] = borrower.id
-
-        if 'responsible_id' not in vals:
-            vals['responsible_id'] = self.env.user.id
-        if 'processed_date' not in vals:
-            vals['processed_date'] = fields.Datetime.now()
-        return super(LibraryLoan, self).create(vals)
-
-    @api.depends('book_id', 'borrower_type', 'student_id', 'teacher_id', 'barcode_id')
-    def _compute_name(self):
-        for loan in self:
-            book_name = loan.book_id.name if loan.book_id else ''
-            borrower_name = ''
-            if loan.borrower_type == 'student' and loan.student_id:
-                borrower_name = loan.student_id.name
-            elif loan.borrower_type == 'teacher' and loan.teacher_id:
-                borrower_name = loan.teacher_id.name
-
-            barcode_info = f" - {loan.barcode_id.barcode}" if loan.barcode_id else ""
-            loan.name = f"{book_name} - {borrower_name}{barcode_info}"
-
+    # ------------------------------------------------------------------
     def action_return_book(self):
-        for loan in self:
-            if not loan.returned:
-                loan.write({
-                    'returned': True,
-                    'return_responsible_id': self.env.user.id,
-                    'return_date': fields.Date.today(),
-                    'returned_barcode_id': loan.barcode_id.id
-                })
+        for loan in self.filtered(lambda l: not l.returned and not l.is_lost):
+            loan.write({
+                'returned': True,
+                'return_date': fields.Date.context_today(self),
+                'return_responsible_id': self.env.user.id,
+                'returned_barcode_id': loan.barcode_id.id,
+            })
+            loan.activity_unlink(['mail.mail_activity_data_todo'])
         return True
+
+    def action_renew(self):
+        max_renewals = self._param('max_renewals')
+        for loan in self:
+            if loan.state not in ('ongoing', 'overdue'):
+                raise UserError("Seul un emprunt en cours peut être prolongé.")
+            if max_renewals and loan.renew_count >= max_renewals:
+                raise UserError(f"Cet emprunt a déjà été prolongé {loan.renew_count} fois (maximum {max_renewals}).")
+            start = max(loan.due_date, fields.Date.context_today(self))
+            loan.write({
+                'due_date': start + timedelta(days=loan.book_id.loan_duration_days or 14),
+                'renew_count': loan.renew_count + 1,
+            })
+        return True
+
+    def action_mark_lost(self):
+        self.filtered(lambda l: not l.returned).write({'is_lost': True})
+        return True
+
+    def action_mark_fine_paid(self):
+        self.write({'fine_paid': True})
+        return True
+
+    def action_reopen(self):
+        self.write({'returned': False, 'is_lost': False, 'return_date': False, 'returned_barcode_id': False})
+        return True
+
+    def action_print_receipt(self):
+        return self.env.ref('eacta_bibliothèque.action_report_loan_receipt').report_action(self)
 
     def action_view_details(self):
         self.ensure_one()
+        return {'type': 'ir.actions.act_window', 'res_model': 'library.loan', 'view_mode': 'form',
+                'res_id': self.id, 'target': 'current'}
+
+    # ------------------------------------------------------------------
+    @api.model
+    def _cron_check_overdue(self):
+        """Met à jour les retards et planifie une relance pour chaque nouvel emprunt en retard."""
+        active = self.search([('returned', '=', False), ('is_lost', '=', False)])
+        self.env.add_to_compute(self._fields['state'], active)
+        active.flush_recordset()
+        todo = self.env.ref('mail.mail_activity_data_todo', raise_if_not_found=False)
+        for loan in active.filtered(lambda l: l.state == 'overdue'):
+            if todo and not loan.activity_ids.filtered(lambda a: a.activity_type_id == todo):
+                loan.activity_schedule(
+                    'mail.mail_activity_data_todo',
+                    summary="Relancer l'emprunteur (retard)",
+                    note=f"« {loan.book_id.name} » devait être rendu le {loan.due_date.strftime('%d/%m/%Y')} "
+                         f"par {loan.borrower_name}.",
+                    user_id=loan.responsible_id.id or self.env.user.id,
+                )
+
+    @api.model
+    def _generate_demo_loans(self):
+        """Emprunts de démonstration : en cours, en retard et rendus (déterministe)."""
+        self = self.with_context(tracking_disable=True, mail_create_nolog=True, mail_notrack=True)
+        students = self.env['eacta.student'].search([], limit=24, order='id')
+        books = self.env['library.book'].search([], order='id')
+        if not students or not books:
+            return
+        today = fields.Date.context_today(self)
+        plans = [  # (jours depuis l'emprunt, rendu ?)
+            (3, False), (9, False), (20, False), (26, False), (40, True), (35, True),
+            (16, False), (1, False), (60, True), (28, False), (12, True), (5, False),
+        ]
+        for i, (age, returned) in enumerate(plans):
+            book = books[i % len(books)]
+            copy = book.barcode_ids.filtered(lambda c: c.state == 'available')[:1]
+            student = students[(i * 5) % len(students)]
+            if not copy:
+                continue
+            checkout = today - timedelta(days=age)
+            loan = self.create({
+                'borrower_type': 'student',
+                'student_id': student.id,
+                'book_id': book.id,
+                'barcode_id': copy.id,
+                'checkout_date': checkout,
+                'due_date': checkout + timedelta(days=book.loan_duration_days),
+            })
+            if returned:
+                late = 3 if i % 2 else 0
+                loan.write({
+                    'returned': True,
+                    'return_date': checkout + timedelta(days=book.loan_duration_days + late),
+                    'returned_barcode_id': copy.id,
+                })
+
+    @api.model
+    def get_library_dashboard_data(self):
+        Book = self.env['library.book']
+        Copy = self.env['library.book.barcode']
+        today = fields.Date.context_today(self)
+        active = self.search([('state', 'in', ('ongoing', 'overdue'))])
+        overdue = active.filtered(lambda l: l.state == 'overdue').sorted('due_date')
+        month_start = today.replace(day=1)
+        top_books = self._read_group([], ['book_id'], ['__count'], order='__count desc', limit=6)
+        top_readers = self._read_group([('borrower_id', '!=', False)], ['borrower_id'], ['__count'],
+                                       order='__count desc', limit=6)
+        categories = self.env['library.book.category'].search([])
         return {
-            'type': 'ir.actions.act_window',
-            'res_model': 'library.loan',
-            'view_mode': 'form',
-            'res_id': self.id,
-            'target': 'current',
+            'kpis': {
+                'titles': Book.search_count([]),
+                'copies': Copy.search_count([('state', '!=', 'lost')]),
+                'available': Copy.search_count([('state', '=', 'available')]),
+                'on_loan': len(active),
+                'overdue': len(overdue),
+                'month_loans': self.search_count([('checkout_date', '>=', month_start)]),
+                'readers': self.env['library.borrower'].search_count([('active_loans_count', '>', 0)]),
+                'fines_due': round(sum(self.search([('fine_paid', '=', False), ('fine_amount', '>', 0)])
+                                       .mapped('fine_amount')), 2),
+                'currency': self.env.company.currency_id.symbol or '',
+            },
+            'overdue': [{
+                'id': l.id, 'book': l.book_id.name, 'borrower': l.borrower_name, 'class': l.class_id.name or '',
+                'days': l.days_late, 'fine': l.fine_amount,
+            } for l in overdue[:8]],
+            'due_soon': [{
+                'id': l.id, 'book': l.book_id.name, 'borrower': l.borrower_name,
+                'date': fields.Date.to_string(l.due_date), 'days': (l.due_date - today).days,
+            } for l in active.filtered(lambda l: l.state == 'ongoing').sorted('due_date')[:6]],
+            'top_books': [{'id': b.id, 'name': b.name, 'author': b.author or '', 'count': c} for b, c in top_books],
+            'top_readers': [{'id': r.id, 'name': r.name, 'type': dict(r._fields['borrower_type'].selection)
+                             .get(r.borrower_type), 'count': c} for r, c in top_readers],
+            'categories': [{'id': c.id, 'name': c.name, 'copies': c.copy_count, 'available': c.available_book_count}
+                           for c in categories if c.copy_count],
         }

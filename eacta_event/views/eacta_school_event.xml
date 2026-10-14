@@ -1,118 +1,200 @@
 <?xml version="1.0" encoding="utf-8"?>
 <odoo>
-    <!-- Form View -->
+
+    <!-- ============================== FORM ============================== -->
     <record id="view_eacta_school_event_form" model="ir.ui.view">
         <field name="name">eacta.school.event.form</field>
         <field name="model">eacta.school.event</field>
         <field name="arch" type="xml">
-            <form string="Événement Scolaire">
+            <form string="Événement">
+                <header>
+                    <button name="action_confirm" string="Confirmer" type="object" class="btn-primary"
+                            invisible="state != 'draft'"/>
+                    <button name="action_register_classes" string="Inscrire les classes" type="object"
+                            class="btn-primary" icon="fa-users" invisible="state not in ('draft', 'confirmed') or not class_ids"/>
+                    <button name="action_print_authorizations" string="Autorisations parentales" type="object"
+                            icon="fa-print" invisible="not requires_authorization or not participant_count or state == 'cancel'"/>
+                    <button name="action_print_attendance" string="Feuille de présence" type="object" icon="fa-print"
+                            invisible="not participant_count"/>
+                    <button name="action_generate_fees" string="Facturer les élèves" type="object" icon="fa-money"
+                            invisible="not fee_amount or not participant_count or state == 'cancel'"
+                            groups="eacta_school.group_eacta_school_manager"/>
+                    <button name="action_mark_all_attended" string="Pointer tous présents" type="object" icon="fa-check-circle"
+                            invisible="state != 'confirmed' or not participant_count"
+                            confirm="Marquer tous les élèves inscrits comme présents ?"/>
+                    <button name="action_done" string="Clôturer" type="object" invisible="state != 'confirmed'"
+                            help="Les inscrits non pointés passent en « Absent »"/>
+                    <button name="action_cancel" string="Annuler" type="object" invisible="state in ('done', 'cancel')"
+                            confirm="Annuler cet événement ?"/>
+                    <button name="action_reset_draft" string="Remettre en brouillon" type="object"
+                            invisible="state not in ('cancel', 'done')"/>
+                    <field name="state" widget="statusbar" statusbar_visible="draft,confirmed,done"/>
+                </header>
                 <sheet>
                     <div class="oe_button_box" name="button_box">
-                        <button name="action_view_participants" type="object" class="oe_stat_button" icon="fa-users">
-                            <field name="participant_count" widget="statinfo" string="Participants"/>
+                        <button name="action_view_registrations" type="object" class="oe_stat_button" icon="fa-users">
+                            <div class="o_field_widget o_stat_info">
+                                <span class="o_stat_value">
+                                    <field name="participant_count"/><span invisible="not capacity"> / <field name="capacity" readonly="1"/></span>
+                                </span>
+                                <span class="o_stat_text">Inscrits</span>
+                            </div>
+                        </button>
+                        <button name="action_view_registrations" type="object" class="oe_stat_button" icon="fa-check-square-o"
+                                invisible="state != 'done'">
+                            <field name="attended_count" widget="statinfo" string="Présents"/>
                         </button>
                     </div>
-                    <field name="image" widget="image" class="oe_avatar eacta_avatar_form" options="{'zoom': true, 'preview_image': 'image'}"/>
+                    <widget name="web_ribbon" title="Annulé" bg_color="text-bg-danger" invisible="state != 'cancel'"/>
+                    <widget name="web_ribbon" title="Terminé" bg_color="text-bg-success" invisible="state != 'done'"/>
+                    <field name="image" widget="image" class="oe_avatar"/>
                     <div class="oe_title">
-                        <label for="name" string="Nom de l'Événement" class="oe_edit_only"/>
-                        <h1 class="d-flex align-items-center gap-2">
-                            <field name="name" placeholder="ex: Cérémonie de Remise des Diplômes 2026"/>
-                        </h1>
+                        <field name="event_type" class="o_eacta_chip"/>
+                        <h1><field name="name" placeholder="ex : Sortie au musée"/></h1>
                     </div>
+
+                    <div class="o_eacta_kpis" invisible="not participant_count">
+                        <div class="o_eacta_kpi">
+                            <span class="o_eacta_kpi_label">Inscrits</span>
+                            <span class="o_eacta_kpi_value"><field name="participant_count" class="oe_inline"/>
+                                <small invisible="not capacity"> / <field name="capacity" class="oe_inline" readonly="1"/></small></span>
+                            <field name="fill_rate" widget="progressbar" class="o_eacta_kpi_bar" invisible="not capacity"/>
+                        </div>
+                        <div class="o_eacta_kpi" invisible="not requires_authorization">
+                            <span class="o_eacta_kpi_label">Autorisations</span>
+                            <span class="o_eacta_kpi_value"><field name="authorized_count" class="oe_inline"/><small> / <field name="participant_count" class="oe_inline"/></small></span>
+                        </div>
+                        <div class="o_eacta_kpi" invisible="not fee_amount">
+                            <span class="o_eacta_kpi_label">Encaissé</span>
+                            <span class="o_eacta_kpi_value"><field name="amount_collected" class="oe_inline"/></span>
+                            <small class="text-muted">sur <field name="amount_expected" class="oe_inline"/></small>
+                        </div>
+                    </div>
+
                     <group>
-                        <group string="Planning &amp; Organisation">
-                            <field name="date"/>
-                            <field name="organizer_id" widget="many2one_avatar_user"/>
+                        <group string="Quand &amp; où">
+                            <field name="date_start"/>
+                            <field name="date_end"/>
+                            <field name="location" placeholder="ex : Musée Mohammed VI, Rabat"/>
+                            <field name="registration_deadline"/>
                         </group>
-                        <group string="Inscriptions">
-                            <field name="participant_ids" widget="many2many_tags" placeholder="Sélectionner les élèves participants..."/>
+                        <group string="Organisation">
+                            <field name="organizer_id" widget="many2one_avatar_user"/>
+                            <field name="supervisor_ids" widget="many2many_avatar_user"/>
+                            <field name="class_ids" widget="many2many_tags" options="{'no_create': True}"/>
+                            <field name="capacity"/>
+                            <field name="requires_authorization"/>
+                            <field name="fee_amount"/>
+                            <field name="currency_id" invisible="1"/>
                         </group>
                     </group>
                     <notebook>
-                        <page string="Description &amp; Programme" icon="fa-file-text-o">
-                            <field name="description" placeholder="Détails du programme, objectifs, consignes pour les élèves et intervenants..."/>
-                        </page>
-                        <page string="Liste des Participants" icon="fa-users">
-                            <field name="participant_ids">
-                                <list string="Participants">
-                                    <field name="image_128" widget="image" options="{'size': [32, 32]}" optional="show"/>
-                                    <field name="code" string="Matricule"/>
-                                    <field name="name" string="Nom complet"/>
-                                    <field name="class_ids" widget="many2many_tags" string="Classe(s)"/>
-                                    <field name="gender" string="Genre" optional="show"/>
-                                    <field name="state" widget="badge" decoration-success="state == 'enrolled'" decoration-info="state == 'graduated'" optional="show"/>
+                        <page string="Inscriptions" name="registrations" icon="fa-users">
+                            <field name="registration_ids" context="{'default_event_id': id}">
+                                <list editable="bottom" decoration-muted="state == 'cancelled'"
+                                      decoration-success="state == 'attended'" decoration-danger="state == 'absent'">
+                                    <field name="student_id" options="{'no_create': True}"/>
+                                    <field name="class_id"/>
+                                    <field name="parent_id" optional="show"/>
+                                    <field name="authorized" widget="boolean_toggle"
+                                           column_invisible="not parent.requires_authorization"/>
+                                    <field name="paid" widget="boolean_toggle" column_invisible="not parent.fee_amount"/>
+                                    <field name="fee_state" widget="badge" optional="show"
+                                           decoration-success="fee_state == 'paid'" decoration-warning="fee_state == 'unpaid'"
+                                           column_invisible="not parent.fee_amount"/>
+                                    <field name="fee_id" optional="hide" column_invisible="not parent.fee_amount"/>
+                                    <field name="state" widget="badge" decoration-info="state == 'registered'"
+                                           decoration-success="state == 'attended'" decoration-danger="state == 'absent'"/>
+                                    <button name="action_mark_attended" type="object" icon="fa-check" title="Présent"
+                                            class="btn-link text-success" invisible="state == 'attended'"/>
+                                    <button name="action_mark_absent" type="object" icon="fa-times" title="Absent"
+                                            class="btn-link text-danger" invisible="state == 'absent'"/>
+                                    <field name="note" optional="hide"/>
                                 </list>
                             </field>
                         </page>
+                        <page string="Programme" name="program" icon="fa-list-ol">
+                            <field name="description" placeholder="Résumé affiché sur les autorisations parentales…"/>
+                            <field name="program" placeholder="Déroulé de la journée, matériel à prévoir…"/>
+                        </page>
                     </notebook>
                 </sheet>
-                <div class="oe_chatter">
-                    <field name="message_follower_ids"/>
-                    <field name="activity_ids"/>
-                    <field name="message_ids"/>
-                </div>
+                <chatter/>
             </form>
         </field>
     </record>
 
-    <!-- List View -->
+    <!-- ============================== LIST ============================== -->
     <record id="view_eacta_school_event_tree" model="ir.ui.view">
         <field name="name">eacta.school.event.list</field>
         <field name="model">eacta.school.event</field>
         <field name="arch" type="xml">
-            <list string="Événements Scolaires" decoration-info="date and date &gt;= current_date">
-                <field name="name" string="Événement" class="fw-bold"/>
-                <field name="date" widget="date" string="Date"/>
-                <field name="organizer_id" widget="many2one_avatar_user" string="Organisateur"/>
-                <field name="participant_count" string="Participants" widget="badge"/>
+            <list string="Événements" sample="1" decoration-muted="state == 'cancel'">
+                <field name="date_start"/>
+                <field name="name"/>
+                <field name="event_type"/>
+                <field name="location" optional="show"/>
+                <field name="class_ids" widget="many2many_tags" optional="show"/>
+                <field name="organizer_id" widget="many2one_avatar_user" optional="show"/>
+                <field name="participant_count" string="Inscrits"/>
+                <field name="capacity" optional="hide"/>
+                <field name="amount_collected" optional="hide" sum="Total"/>
+                <field name="state" widget="badge" decoration-info="state == 'draft'"
+                       decoration-success="state == 'confirmed'" decoration-muted="state in ('done', 'cancel')"/>
             </list>
         </field>
     </record>
 
-    <!-- Kanban View -->
+    <!-- ============================= KANBAN ============================= -->
     <record id="view_eacta_school_event_kanban" model="ir.ui.view">
         <field name="name">eacta.school.event.kanban</field>
         <field name="model">eacta.school.event</field>
         <field name="arch" type="xml">
-            <kanban>
+            <kanban class="o_eacta_kanban o_event_kanban" default_group_by="state" sample="1" quick_create="false"
+                    group_create="false" group_delete="false" group_edit="false">
                 <field name="id"/>
-                <field name="name"/>
-                <field name="date"/>
-                <field name="organizer_id"/>
                 <field name="image"/>
+                <field name="date_start"/>
+                <field name="capacity"/>
                 <field name="participant_count"/>
+                <field name="fill_rate"/>
+                <field name="state"/>
+                <progressbar field="state" colors='{"draft": "info", "confirmed": "success", "done": "200", "cancel": "danger"}'/>
                 <templates>
-                    <t t-name="card">
-                        <div class="oe_kanban_global_click eacta_card_custom eacta_event_card p-0 overflow-hidden">
-                            <div class="eacta_event_banner position-relative" style="height: 120px; background: linear-gradient(135deg, var(--eacta-primary, #00285C) 0%, var(--eacta-secondary, #00B8C8) 100%);">
-                                <img t-if="record.image.raw_value"
-                                     t-att-src="kanban_image('eacta.school.event', 'image', record.id.raw_value)"
-                                     style="width: 100%; height: 100%; object-fit: cover;"
-                                     alt="Event Banner"/>
-                                <div t-else="" class="h-100 d-flex align-items-center justify-content-center text-white">
-                                    <i class="fa fa-calendar-check-o fa-3x opacity-50" title="Événement" aria-label="Événement" role="img"/>
-                                </div>
-                                <div class="position-absolute top-0 end-0 m-2">
-                                    <span class="badge bg-white text-dark shadow-sm px-2 py-1 rounded-pill small">
-                                        <i class="fa fa-calendar me-1 text-primary" title="Date" aria-label="Date" role="img"/>
-                                        <field name="date"/>
-                                    </span>
+                    <t t-name="card" class="p-0">
+                        <div class="o_event_card">
+                            <div class="o_event_banner">
+                                <t t-if="record.image.raw_value">
+                                    <field name="image" widget="image" options="{'img_class': 'o_event_banner_img'}"/>
+                                </t>
+                                <i t-else="" class="fa fa-calendar-check-o" title="Événement"/>
+                                <div class="o_event_date" t-if="record.date_start.raw_value">
+                                    <strong t-out="record.date_start.raw_value.toFormat('dd')"/>
+                                    <small t-out="record.date_start.raw_value.toFormat('LLL')"/>
                                 </div>
                             </div>
-                            <div class="p-3">
-                                <h5 class="fw-bold text-dark mb-1 text-truncate">
-                                    <field name="name"/>
-                                </h5>
-                                <div class="d-flex align-items-center justify-content-between mt-3 pt-2 border-top">
-                                    <div class="d-flex align-items-center gap-2">
-                                        <field name="organizer_id" widget="many2one_avatar_user"/>
-                                        <small class="text-muted text-truncate" style="max-width: 110px;">
-                                            <field name="organizer_id"/>
-                                        </small>
+                            <div class="o_eacta_card">
+                                <div>
+                                    <field name="name" class="o_eacta_card_title d-block text-truncate"/>
+                                    <div class="o_eacta_card_meta text-truncate">
+                                        <field name="event_type"/>
+                                        <t t-if="record.location.raw_value"> · <field name="location"/></t>
                                     </div>
-                                    <span class="badge bg-light text-primary border rounded-pill px-2 py-1">
-                                        <i class="fa fa-users me-1" title="Participants" aria-label="Participants" role="img"/>
-                                        <field name="participant_count"/> élèves
+                                </div>
+                                <div class="o_eacta_meter" t-if="record.capacity.raw_value">
+                                    <div class="d-flex justify-content-between small">
+                                        <span class="text-muted">Places</span>
+                                        <strong><t t-out="record.participant_count.raw_value"/> / <t t-out="record.capacity.raw_value"/></strong>
+                                    </div>
+                                    <div class="o_eacta_meter_track">
+                                        <div t-attf-class="o_eacta_meter_fill #{record.fill_rate.raw_value &gt;= 100 ? 'o_eacta_meter_full' : ''}"
+                                             t-attf-style="width: #{Math.min(record.fill_rate.raw_value, 100)}%"/>
+                                    </div>
+                                </div>
+                                <div class="o_eacta_card_foot">
+                                    <field name="organizer_id" widget="many2one_avatar_user"/>
+                                    <span class="text-muted small">
+                                        <i class="fa fa-users me-1" title="Inscrits"/><t t-out="record.participant_count.raw_value"/> inscrit(s)
                                     </span>
                                 </div>
                             </div>
@@ -123,29 +205,210 @@
         </field>
     </record>
 
-    <!-- Action -->
-    <record id="action_eacta_school_event" model="ir.actions.act_window">
-        <field name="name">Événements Scolaires</field>
-        <field name="res_model">eacta.school.event</field>
-        <field name="view_mode">kanban,list,form</field>
-        <field name="help" type="html">
-            <p class="o_view_nocontent_smiling_face">
-                Créez votre premier événement scolaire !
-            </p>
-            <p>
-                Organisez les sorties scolaires, journées portes ouvertes, compétitions et remises de diplômes.
-            </p>
+    <record id="view_eacta_school_event_calendar" model="ir.ui.view">
+        <field name="name">eacta.school.event.calendar</field>
+        <field name="model">eacta.school.event</field>
+        <field name="arch" type="xml">
+            <calendar string="Calendrier des événements" date_start="date_start" date_stop="date_end"
+                      color="event_type" mode="month" event_open_popup="1" all_day="all_day">
+                <field name="name"/>
+                <field name="event_type" filters="1"/>
+                <field name="location"/>
+                <field name="participant_count"/>
+                <field name="state"/>
+            </calendar>
         </field>
     </record>
 
-    <!-- Menu Items -->
-    <menuitem id="menu_eacta_event"
-              name="Événements"
-              parent="eacta_school.menu_eacta_school_root"
-              action="action_eacta_school_event"
-              sequence="60"/>
+    <record id="view_eacta_school_event_pivot" model="ir.ui.view">
+        <field name="name">eacta.school.event.pivot</field>
+        <field name="model">eacta.school.event</field>
+        <field name="arch" type="xml">
+            <pivot string="Analyse des événements" sample="1">
+                <field name="event_type" type="row"/>
+                <field name="date_start" interval="month" type="col"/>
+                <field name="participant_count" type="measure"/>
+            </pivot>
+        </field>
+    </record>
 
-    <!-- Bouton « Événements » sur la fiche élève -->
+    <record id="view_eacta_school_event_graph" model="ir.ui.view">
+        <field name="name">eacta.school.event.graph</field>
+        <field name="model">eacta.school.event</field>
+        <field name="arch" type="xml">
+            <graph string="Participants par type d'événement" type="bar" sample="1">
+                <field name="event_type"/>
+                <field name="participant_count" type="measure"/>
+            </graph>
+        </field>
+    </record>
+
+    <record id="view_eacta_school_event_search" model="ir.ui.view">
+        <field name="name">eacta.school.event.search</field>
+        <field name="model">eacta.school.event</field>
+        <field name="arch" type="xml">
+            <search string="Rechercher un événement">
+                <field name="name"/>
+                <field name="location"/>
+                <field name="class_ids"/>
+                <field name="participant_ids" string="Élève"/>
+                <filter string="Mes événements" name="mine" domain="['|', ('organizer_id', '=', uid), ('supervisor_ids', 'in', uid)]"/>
+                <separator/>
+                <filter string="À venir" name="upcoming" domain="[('date', '>=', context_today().strftime('%Y-%m-%d')), ('state', '!=', 'cancel')]"/>
+                <filter string="Passés" name="past" domain="[('date', '&lt;', context_today().strftime('%Y-%m-%d'))]"/>
+                <separator/>
+                <filter string="Confirmés" name="confirmed" domain="[('state', '=', 'confirmed')]"/>
+                <filter string="Date" name="filter_date" date="date"/>
+                <group expand="0" string="Regrouper par">
+                    <filter string="Type" name="group_type" context="{'group_by': 'event_type'}"/>
+                    <filter string="État" name="group_state" context="{'group_by': 'state'}"/>
+                    <filter string="Mois" name="group_month" context="{'group_by': 'date:month'}"/>
+                </group>
+            </search>
+        </field>
+    </record>
+
+    <record id="action_eacta_school_event" model="ir.actions.act_window">
+        <field name="name">Événements</field>
+        <field name="res_model">eacta.school.event</field>
+        <field name="view_mode">kanban,calendar,list,pivot,graph,form</field>
+        <field name="search_view_id" ref="view_eacta_school_event_search"/>
+        <field name="help" type="html">
+            <p class="o_view_nocontent_smiling_face">Planifiez votre premier événement</p>
+            <p>Sorties, voyages, cérémonies, réunions parents… Inscrivez des classes entières en un clic,
+               suivez les autorisations parentales, les paiements et les présences.</p>
+        </field>
+    </record>
+
+    <record id="action_eacta_school_event_calendar" model="ir.actions.act_window">
+        <field name="name">Calendrier des événements</field>
+        <field name="res_model">eacta.school.event</field>
+        <field name="view_mode">calendar,kanban,list,form</field>
+        <field name="search_view_id" ref="view_eacta_school_event_search"/>
+        <field name="context">{'search_default_upcoming': 1}</field>
+    </record>
+
+    <record id="action_eacta_school_event_analysis" model="ir.actions.act_window">
+        <field name="name">Analyse des événements</field>
+        <field name="res_model">eacta.school.event</field>
+        <field name="view_mode">graph,pivot,list</field>
+        <field name="search_view_id" ref="view_eacta_school_event_search"/>
+        <field name="context">{'search_default_group_type': 1}</field>
+    </record>
+
+    <!-- ========================== INSCRIPTIONS ========================== -->
+    <record id="view_event_registration_list" model="ir.ui.view">
+        <field name="name">eacta.school.event.registration.list</field>
+        <field name="model">eacta.school.event.registration</field>
+        <field name="arch" type="xml">
+            <list string="Inscriptions" editable="bottom" decoration-muted="state == 'cancelled'"
+                  decoration-success="state == 'attended'" decoration-danger="state == 'absent'">
+                <field name="event_id"/>
+                <field name="event_date" optional="show"/>
+                <field name="student_id"/>
+                <field name="class_id"/>
+                <field name="parent_id" optional="hide"/>
+                <field name="authorized" widget="boolean_toggle"/>
+                <field name="paid" widget="boolean_toggle"/>
+                <field name="fee_state" widget="badge" optional="show"
+                       decoration-success="fee_state == 'paid'" decoration-warning="fee_state == 'unpaid'"/>
+                <field name="amount" optional="hide"/>
+                <field name="fee_id" optional="hide"/>
+                <field name="state" widget="badge" decoration-info="state == 'registered'"
+                       decoration-success="state == 'attended'" decoration-danger="state == 'absent'"/>
+                <field name="note" optional="hide"/>
+            </list>
+        </field>
+    </record>
+
+    <record id="view_event_registration_form" model="ir.ui.view">
+        <field name="name">eacta.school.event.registration.form</field>
+        <field name="model">eacta.school.event.registration</field>
+        <field name="arch" type="xml">
+            <form string="Inscription">
+                <header>
+                    <button name="action_mark_attended" string="Présent" type="object" class="btn-primary"
+                            invisible="state == 'attended'"/>
+                    <button name="action_mark_absent" string="Absent" type="object" invisible="state == 'absent'"/>
+                    <button name="action_cancel" string="Annuler l'inscription" type="object"
+                            invisible="state == 'cancelled'"/>
+                    <field name="state" widget="statusbar"/>
+                </header>
+                <sheet>
+                    <group>
+                        <group>
+                            <field name="event_id"/>
+                            <field name="student_id"/>
+                            <field name="class_id"/>
+                            <field name="parent_id"/>
+                        </group>
+                        <group>
+                            <field name="authorized"/>
+                            <field name="authorization_date" invisible="not authorized"/>
+                            <field name="paid"/>
+                            <field name="fee_id" readonly="1" invisible="not fee_id"/>
+                            <field name="fee_state" invisible="not fee_id"/>
+                            <field name="amount"/>
+                            <field name="currency_id" invisible="1"/>
+                            <field name="note"/>
+                        </group>
+                    </group>
+                </sheet>
+            </form>
+        </field>
+    </record>
+
+    <record id="view_event_registration_search" model="ir.ui.view">
+        <field name="name">eacta.school.event.registration.search</field>
+        <field name="model">eacta.school.event.registration</field>
+        <field name="arch" type="xml">
+            <search>
+                <field name="student_id"/>
+                <field name="event_id"/>
+                <field name="class_id"/>
+                <filter string="Autorisation manquante" name="no_authorization" domain="[('authorized', '=', False)]"/>
+                <filter string="Non payé" name="unpaid" domain="[('paid', '=', False), ('amount', '>', 0)]"/>
+                <filter string="Absents" name="absent" domain="[('state', '=', 'absent')]"/>
+                <group expand="0" string="Regrouper par">
+                    <filter string="Événement" name="group_event" context="{'group_by': 'event_id'}"/>
+                    <filter string="Classe" name="group_class" context="{'group_by': 'class_id'}"/>
+                    <filter string="Statut" name="group_state" context="{'group_by': 'state'}"/>
+                </group>
+            </search>
+        </field>
+    </record>
+
+    <record id="action_event_registration" model="ir.actions.act_window">
+        <field name="name">Inscriptions</field>
+        <field name="res_model">eacta.school.event.registration</field>
+        <field name="view_mode">list,form</field>
+        <field name="search_view_id" ref="view_event_registration_search"/>
+        <field name="context">{'search_default_group_event': 1}</field>
+    </record>
+
+    <!-- ============================ MENUS ============================ -->
+    <!-- Application autonome Événements -->
+    <menuitem id="menu_eacta_event_app_root" name="Événements" sequence="52"
+              action="action_eacta_school_event"
+              web_icon="eacta_event,static/description/icon.png"
+              groups="eacta_event.group_eacta_event_user"/>
+    <menuitem id="menu_eacta_event_app_events" name="Événements" parent="menu_eacta_event_app_root"
+              action="action_eacta_school_event" sequence="10"/>
+    <menuitem id="menu_eacta_event_app_calendar" name="Calendrier" parent="menu_eacta_event_app_root"
+              action="action_eacta_school_event_calendar" sequence="20"/>
+    <menuitem id="menu_eacta_event_app_registration" name="Inscriptions" parent="menu_eacta_event_app_root"
+              action="action_event_registration" sequence="30"/>
+    <menuitem id="menu_eacta_event_app_reporting" name="Analyse" parent="menu_eacta_event_app_root"
+              action="action_eacta_school_event_analysis" sequence="40"/>
+
+    <!-- Raccourci dans le menu NR School -->
+    <menuitem id="menu_eacta_event_root" name="Événements" parent="eacta_school.menu_eacta_school_root" sequence="60"/>
+    <menuitem id="menu_eacta_event" name="Événements" parent="menu_eacta_event_root"
+              action="action_eacta_school_event" sequence="10"/>
+    <menuitem id="menu_eacta_event_registration" name="Inscriptions" parent="menu_eacta_event_root"
+              action="action_event_registration" sequence="20"/>
+
+    <!-- Bouton et onglet « Événements » sur la fiche élève -->
     <record id="view_eacta_student_form_events" model="ir.ui.view">
         <field name="name">eacta.student.form.events</field>
         <field name="model">eacta.student</field>
@@ -156,7 +419,22 @@
                     <field name="event_count" widget="statinfo" string="Événements"/>
                 </button>
             </div>
+            <notebook position="inside">
+                <page string="Événements" name="events" icon="fa-calendar">
+                    <field name="event_registration_ids" readonly="1">
+                        <list decoration-muted="state == 'cancelled'" decoration-success="state == 'attended'"
+                              decoration-danger="state == 'absent'">
+                            <field name="event_id"/>
+                            <field name="event_date"/>
+                            <field name="authorized" widget="boolean_toggle"/>
+                            <field name="paid" widget="boolean_toggle"/>
+                            <field name="state" widget="badge" decoration-info="state == 'registered'"
+                                   decoration-success="state == 'attended'" decoration-danger="state == 'absent'"/>
+                        </list>
+                    </field>
+                </page>
+            </notebook>
         </field>
     </record>
-</odoo>
 
+</odoo>

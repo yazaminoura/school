@@ -1,0 +1,360 @@
+<?xml version="1.0" encoding="utf-8"?>
+<odoo>
+
+    <!-- ============================ TYPES DE FRAIS ============================ -->
+    <record id="view_eacta_fee_type_list" model="ir.ui.view">
+        <field name="name">eacta.fee.type.list</field>
+        <field name="model">eacta.fee.type</field>
+        <field name="arch" type="xml">
+            <list string="Types de frais" editable="bottom">
+                <field name="sequence" widget="handle"/>
+                <field name="name"/>
+                <field name="default_amount"/>
+                <field name="currency_id" column_invisible="1"/>
+                <field name="description" optional="show"/>
+            </list>
+        </field>
+    </record>
+
+    <record id="action_eacta_fee_type" model="ir.actions.act_window">
+        <field name="name">Types de frais</field>
+        <field name="res_model">eacta.fee.type</field>
+        <field name="view_mode">list</field>
+    </record>
+
+    <!-- ================================ FRAIS ================================ -->
+    <record id="view_eacta_student_fee_list" model="ir.ui.view">
+        <field name="name">eacta.student.fee.list</field>
+        <field name="model">eacta.student.fee</field>
+        <field name="arch" type="xml">
+            <list string="Frais de scolarité" sample="1" decoration-muted="state == 'cancelled'"
+                  decoration-danger="is_overdue" decoration-success="state == 'paid'">
+                <field name="name"/>
+                <field name="student_id"/>
+                <field name="class_id" optional="show"/>
+                <field name="fee_type_id"/>
+                <field name="description" optional="show"/>
+                <field name="due_date"/>
+                <field name="amount_total" sum="Total"/>
+                <field name="amount_paid" sum="Total" optional="show"/>
+                <field name="amount_due" sum="Total"/>
+                <field name="currency_id" column_invisible="1"/>
+                <field name="is_overdue" column_invisible="1"/>
+                <field name="state" widget="badge" decoration-warning="state == 'unpaid'"
+                       decoration-info="state == 'partial'" decoration-success="state == 'paid'"/>
+                <button name="action_register_payment" type="object" string="Encaisser" icon="fa-money"
+                        class="btn-link" invisible="state not in ('unpaid', 'partial')"
+                        groups="eacta_school.group_eacta_school_manager"/>
+            </list>
+        </field>
+    </record>
+
+    <record id="view_eacta_student_fee_form" model="ir.ui.view">
+        <field name="name">eacta.student.fee.form</field>
+        <field name="model">eacta.student.fee</field>
+        <field name="arch" type="xml">
+            <form string="Frais">
+                <header>
+                    <button name="action_register_payment" string="Enregistrer un paiement" type="object"
+                            class="btn-primary" icon="fa-money" invisible="not id or state not in ('unpaid', 'partial')"
+                            groups="eacta_school.group_eacta_school_manager"/>
+                    <button name="action_cancel" string="Annuler" type="object"
+                            invisible="not id or state in ('paid', 'cancelled') or amount_paid"
+                            groups="eacta_school.group_eacta_school_manager"/>
+                    <button name="action_reset" string="Rétablir" type="object" invisible="state != 'cancelled'"
+                            groups="eacta_school.group_eacta_school_manager"/>
+                    <field name="state" widget="statusbar" statusbar_visible="unpaid,partial,paid"/>
+                </header>
+                <sheet>
+                    <widget name="web_ribbon" title="Payé" bg_color="text-bg-success" invisible="state != 'paid'"/>
+                    <widget name="web_ribbon" title="En retard" bg_color="text-bg-danger" invisible="not is_overdue"/>
+                    <field name="is_overdue" invisible="1"/>
+                    <div class="oe_title">
+                        <div class="o_eacta_code"><field name="name"/></div>
+                        <h1><field name="student_id" placeholder="Élève…" options="{'no_create': True}"/></h1>
+                    </div>
+                    <div class="o_eacta_kpis">
+                        <div class="o_eacta_kpi">
+                            <span class="o_eacta_kpi_label">Total</span>
+                            <span class="o_eacta_kpi_value"><field name="amount_total" class="oe_inline"/></span>
+                        </div>
+                        <div class="o_eacta_kpi">
+                            <span class="o_eacta_kpi_label">Payé</span>
+                            <span class="o_eacta_kpi_value"><field name="amount_paid" class="oe_inline"/></span>
+                        </div>
+                        <div class="o_eacta_kpi">
+                            <span class="o_eacta_kpi_label">Reste à payer</span>
+                            <span class="o_eacta_kpi_value"><field name="amount_due" class="oe_inline"/></span>
+                        </div>
+                    </div>
+                    <group>
+                        <group string="Facturation">
+                            <field name="fee_type_id" options="{'no_create': True}"/>
+                            <field name="description" placeholder="ex : Scolarité - octobre"/>
+                            <field name="amount"/>
+                            <field name="discount"/>
+                            <field name="currency_id" groups="base.group_multi_currency"/>
+                        </group>
+                        <group string="Élève">
+                            <field name="class_id"/>
+                            <field name="year"/>
+                            <field name="parent_id"/>
+                            <field name="date"/>
+                            <field name="due_date"/>
+                        </group>
+                    </group>
+                    <notebook>
+                        <page string="Paiements" name="payments" icon="fa-money">
+                            <field name="payment_ids" readonly="1">
+                                <list>
+                                    <field name="name"/>
+                                    <field name="date"/>
+                                    <field name="method"/>
+                                    <field name="reference"/>
+                                    <field name="amount" sum="Total"/>
+                                    <field name="currency_id" column_invisible="1"/>
+                                    <field name="received_by" optional="show"/>
+                                    <button name="action_print_receipt" type="object" icon="fa-print" title="Reçu"
+                                            class="btn-link"/>
+                                </list>
+                            </field>
+                        </page>
+                    </notebook>
+                </sheet>
+                <chatter/>
+            </form>
+        </field>
+    </record>
+
+    <record id="view_eacta_student_fee_search" model="ir.ui.view">
+        <field name="name">eacta.student.fee.search</field>
+        <field name="model">eacta.student.fee</field>
+        <field name="arch" type="xml">
+            <search>
+                <field name="name"/>
+                <field name="student_id"/>
+                <field name="class_id"/>
+                <field name="parent_id"/>
+                <field name="fee_type_id"/>
+                <filter string="À encaisser" name="open" domain="[('state', 'in', ('unpaid', 'partial'))]"/>
+                <filter string="En retard" name="overdue" domain="[('is_overdue', '=', True)]"/>
+                <filter string="Payés" name="paid" domain="[('state', '=', 'paid')]"/>
+                <separator/>
+                <filter string="Échéance" name="filter_due" date="due_date"/>
+                <group expand="0" string="Regrouper par">
+                    <filter string="Élève" name="group_student" context="{'group_by': 'student_id'}"/>
+                    <filter string="Classe" name="group_class" context="{'group_by': 'class_id'}"/>
+                    <filter string="Type" name="group_type" context="{'group_by': 'fee_type_id'}"/>
+                    <filter string="État" name="group_state" context="{'group_by': 'state'}"/>
+                    <filter string="Mois d'échéance" name="group_month" context="{'group_by': 'due_date:month'}"/>
+                </group>
+            </search>
+        </field>
+    </record>
+
+    <record id="view_eacta_student_fee_pivot" model="ir.ui.view">
+        <field name="name">eacta.student.fee.pivot</field>
+        <field name="model">eacta.student.fee</field>
+        <field name="arch" type="xml">
+            <pivot string="Analyse des frais" sample="1">
+                <field name="class_id" type="row"/>
+                <field name="state" type="col"/>
+                <field name="amount_total" type="measure"/>
+                <field name="amount_due" type="measure"/>
+            </pivot>
+        </field>
+    </record>
+
+    <record id="view_eacta_student_fee_graph" model="ir.ui.view">
+        <field name="name">eacta.student.fee.graph</field>
+        <field name="model">eacta.student.fee</field>
+        <field name="arch" type="xml">
+            <graph string="Recouvrement" type="bar" stacked="1" sample="1">
+                <field name="due_date" interval="month"/>
+                <field name="amount_paid" type="measure"/>
+                <field name="amount_due" type="measure"/>
+            </graph>
+        </field>
+    </record>
+
+    <record id="action_eacta_student_fee" model="ir.actions.act_window">
+        <field name="name">Frais de scolarité</field>
+        <field name="res_model">eacta.student.fee</field>
+        <field name="view_mode">list,form,pivot,graph</field>
+        <field name="search_view_id" ref="view_eacta_student_fee_search"/>
+        <field name="context">{'search_default_open': 1}</field>
+        <field name="help" type="html">
+            <p class="o_view_nocontent_smiling_face">Aucun frais à encaisser</p>
+            <p>Utilisez « Générer des frais » pour facturer des classes entières, en une ou plusieurs échéances.</p>
+        </field>
+    </record>
+
+    <!-- ============================== PAIEMENTS ============================== -->
+    <record id="view_eacta_fee_payment_list" model="ir.ui.view">
+        <field name="name">eacta.fee.payment.list</field>
+        <field name="model">eacta.fee.payment</field>
+        <field name="arch" type="xml">
+            <list string="Paiements" sample="1" create="0">
+                <field name="name"/>
+                <field name="date"/>
+                <field name="student_id"/>
+                <field name="class_id" optional="show"/>
+                <field name="fee_type_id"/>
+                <field name="method"/>
+                <field name="reference" optional="hide"/>
+                <field name="amount" sum="Total"/>
+                <field name="currency_id" column_invisible="1"/>
+                <field name="received_by" optional="show"/>
+                <button name="action_print_receipt" type="object" icon="fa-print" title="Reçu" class="btn-link"/>
+            </list>
+        </field>
+    </record>
+
+    <record id="view_eacta_fee_payment_form" model="ir.ui.view">
+        <field name="name">eacta.fee.payment.form</field>
+        <field name="model">eacta.fee.payment</field>
+        <field name="arch" type="xml">
+            <form string="Paiement">
+                <header>
+                    <button name="action_print_receipt" string="Imprimer le reçu" type="object" icon="fa-print"
+                            invisible="not id"/>
+                </header>
+                <sheet>
+                    <div class="oe_title" invisible="not id">
+                        <div class="o_eacta_code"><field name="name"/></div>
+                    </div>
+                    <group>
+                        <group>
+                            <field name="fee_id" options="{'no_create': True}" readonly="id"/>
+                            <field name="student_id"/>
+                            <field name="fee_type_id"/>
+                        </group>
+                        <group>
+                            <field name="date"/>
+                            <field name="amount"/>
+                            <field name="currency_id" invisible="1"/>
+                            <field name="method"/>
+                            <field name="reference" invisible="method == 'cash'"/>
+                            <field name="note"/>
+                        </group>
+                    </group>
+                </sheet>
+            </form>
+        </field>
+    </record>
+
+    <record id="view_eacta_fee_payment_search" model="ir.ui.view">
+        <field name="name">eacta.fee.payment.search</field>
+        <field name="model">eacta.fee.payment</field>
+        <field name="arch" type="xml">
+            <search>
+                <field name="name"/>
+                <field name="student_id"/>
+                <field name="class_id"/>
+                <filter string="Date" name="filter_date" date="date"/>
+                <group expand="0" string="Regrouper par">
+                    <filter string="Moyen de paiement" name="group_method" context="{'group_by': 'method'}"/>
+                    <filter string="Mois" name="group_month" context="{'group_by': 'date:month'}"/>
+                    <filter string="Encaissé par" name="group_user" context="{'group_by': 'received_by'}"/>
+                </group>
+            </search>
+        </field>
+    </record>
+
+    <record id="action_eacta_fee_payment" model="ir.actions.act_window">
+        <field name="name">Paiements</field>
+        <field name="res_model">eacta.fee.payment</field>
+        <field name="view_mode">list,form</field>
+        <field name="search_view_id" ref="view_eacta_fee_payment_search"/>
+    </record>
+
+    <!-- ========================= ASSISTANT DE GÉNÉRATION ========================= -->
+    <record id="view_eacta_fee_generate_wizard_form" model="ir.ui.view">
+        <field name="name">eacta.fee.generate.wizard.form</field>
+        <field name="model">eacta.fee.generate.wizard</field>
+        <field name="arch" type="xml">
+            <form string="Générer des frais">
+                <group>
+                    <group>
+                        <field name="fee_type_id" options="{'no_create': True}"/>
+                        <field name="description"/>
+                        <field name="amount"/>
+                        <field name="currency_id" invisible="1"/>
+                    </group>
+                    <group>
+                        <field name="installments"/>
+                        <field name="first_due_date"/>
+                        <field name="skip_existing"/>
+                    </group>
+                </group>
+                <field name="class_ids" widget="many2many_tags" options="{'no_create': True}"
+                       placeholder="Classes à facturer…"/>
+                <div class="alert alert-info mt-3" role="status" invisible="not student_count">
+                    <field name="student_count" class="oe_inline"/> élève(s) concerné(s)
+                    <span invisible="installments &lt;= 1"> · <field name="installments" class="oe_inline" readonly="1"/> échéances mensuelles</span>
+                </div>
+                <footer>
+                    <button name="action_generate" string="Générer" type="object" class="btn-primary"/>
+                    <button string="Annuler" class="btn-secondary" special="cancel"/>
+                </footer>
+            </form>
+        </field>
+    </record>
+
+    <record id="action_eacta_fee_generate_wizard" model="ir.actions.act_window">
+        <field name="name">Générer des frais</field>
+        <field name="res_model">eacta.fee.generate.wizard</field>
+        <field name="view_mode">form</field>
+        <field name="target">new</field>
+    </record>
+
+    <!-- ============================ FICHE ÉLÈVE ============================ -->
+    <record id="view_eacta_student_form_finance" model="ir.ui.view">
+        <field name="name">eacta.student.form.finance</field>
+        <field name="model">eacta.student</field>
+        <field name="inherit_id" ref="eacta_school.view_eacta_student_form"/>
+        <field name="arch" type="xml">
+            <div name="button_box" position="inside">
+                <button name="action_view_fees" type="object" class="oe_stat_button" icon="fa-money"
+                        groups="eacta_school.group_eacta_school_manager">
+                    <div class="o_field_widget o_stat_info">
+                        <span class="o_stat_value"><field name="fee_balance" widget="monetary"
+                              options="{'currency_field': 'fee_currency_id'}"/></span>
+                        <span class="o_stat_text">Solde dû</span>
+                    </div>
+                </button>
+            </div>
+            <notebook position="inside">
+                <page string="Frais" name="finance" icon="fa-money" groups="eacta_school.group_eacta_school_manager">
+                    <div class="d-flex gap-2 mb-2">
+                        <button name="action_print_statement" type="object" string="Relevé de compte"
+                                icon="fa-print" class="btn btn-secondary btn-sm"/>
+                        <span class="ms-auto text-muted" invisible="not fee_overdue">
+                            Dont en retard : <strong class="text-danger"><field name="fee_overdue" class="oe_inline"
+                                options="{'currency_field': 'fee_currency_id'}"/></strong>
+                        </span>
+                    </div>
+                    <field name="fee_currency_id" invisible="1"/>
+                    <field name="fee_ids" context="{'default_student_id': id}">
+                        <list decoration-muted="state == 'cancelled'" decoration-success="state == 'paid'"
+                              decoration-danger="is_overdue">
+                            <field name="name"/>
+                            <field name="fee_type_id"/>
+                            <field name="description"/>
+                            <field name="due_date"/>
+                            <field name="amount_total" sum="Total"/>
+                            <field name="amount_due" sum="Total"/>
+                            <field name="currency_id" column_invisible="1"/>
+                            <field name="is_overdue" column_invisible="1"/>
+                            <field name="state" widget="badge" decoration-warning="state == 'unpaid'"
+                                   decoration-info="state == 'partial'" decoration-success="state == 'paid'"/>
+                            <button name="action_register_payment" type="object" icon="fa-money" title="Encaisser"
+                                    class="btn-link" invisible="state not in ('unpaid', 'partial')"/>
+                        </list>
+                    </field>
+                </page>
+            </notebook>
+        </field>
+    </record>
+
+</odoo>

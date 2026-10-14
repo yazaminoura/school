@@ -6,10 +6,10 @@
             <field name="name">NR School</field>
             <field name="sequence">1</field>
             <field name="color_scheme">nr_school</field>
-            <field name="primary_color">#00285C</field>
-            <field name="secondary_color">#00B8C8</field>
-            <field name="accent_color">#F5A524</field>
-            <field name="ink_color">#001A3D</field>
+            <field name="primary_color">#8E1B3A</field>
+            <field name="secondary_color">#E0A630</field>
+            <field name="accent_color">#F2784B</field>
+            <field name="ink_color">#3B0A18</field>
             <field name="navbar_style">gradient</field>
             <field name="card_style">modern</field>
             <field name="card_radius">medium</field>

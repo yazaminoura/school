@@ -1,0 +1,74 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<templates xml:space="preserve">
+
+    <t t-name="eacta_school.Timetable">
+        <div class="o_action o_eacta_dashboard o_eacta_timetable h-100 overflow-auto">
+            <div class="o_eacta_dash_inner">
+                <div class="o_eacta_tt_toolbar">
+                    <div class="o_eacta_tt_title">
+                        <h1>Emploi du temps</h1>
+                        <span t-if="state.data" class="o_eacta_tag">
+                            <i class="fa fa-clock-o me-1"/><t t-out="state.data.total_hours"/> h / semaine
+                        </span>
+                    </div>
+                    <div class="o_eacta_tt_filters">
+                        <select class="form-select" t-on-change="onModeChange">
+                            <option value="class" t-att-selected="state.mode === 'class'">Par classe</option>
+                            <option value="teacher" t-att-selected="state.mode === 'teacher'">Par enseignant</option>
+                            <option value="room" t-att-selected="state.mode === 'room'">Par salle</option>
+                        </select>
+                        <select class="form-select" t-on-change="onRecordChange">
+                            <option t-foreach="options" t-as="opt" t-key="opt.id" t-att-value="opt.id"
+                                    t-att-selected="opt.id === state.recordId" t-out="opt.name"/>
+                        </select>
+                        <button class="btn btn-primary" t-on-click="() => this.newSlot()">
+                            <i class="fa fa-plus me-1"/>Créneau
+                        </button>
+                        <button class="btn btn-secondary" t-on-click="() => this.openList()" title="Liste des créneaux">
+                            <i class="fa fa-list"/>
+                        </button>
+                        <button t-if="state.mode === 'class'" class="btn btn-secondary" t-on-click="() => this.print()" title="Imprimer">
+                            <i class="fa fa-print"/>
+                        </button>
+                    </div>
+                </div>
+
+                <div t-if="!options.length" class="o_eacta_panel o_eacta_empty">
+                    Aucune donnée : créez d'abord des classes, des enseignants ou des créneaux avec une salle.
+                </div>
+                <div t-elif="state.data" class="o_eacta_panel o_eacta_tt_panel">
+                    <div class="o_eacta_tt_grid">
+                        <div class="o_eacta_tt_corner"/>
+                        <div t-foreach="state.data.days" t-as="day" t-key="day.key" class="o_eacta_tt_dayhead">
+                            <span t-out="day.label"/>
+                            <button class="btn btn-link btn-sm p-0" t-on-click="() => this.newSlot(day.key)" title="Ajouter">
+                                <i class="fa fa-plus-circle"/>
+                            </button>
+                        </div>
+                        <div class="o_eacta_tt_hours" t-attf-style="height: #{gridHeight}px">
+                            <div t-foreach="hours" t-as="h" t-key="h" class="o_eacta_tt_hour">
+                                <t t-out="(h &lt; 10 ? '0' : '') + h"/>:00
+                            </div>
+                        </div>
+                        <div t-foreach="state.data.days" t-as="day" t-key="'col' + day.key"
+                             class="o_eacta_tt_col" t-attf-style="height: #{gridHeight}px">
+                            <div t-foreach="hours" t-as="h" t-key="h" class="o_eacta_tt_line"/>
+                            <div t-foreach="slotsFor(day.key)" t-as="slot" t-key="slot.id"
+                                 t-attf-class="o_eacta_tt_slot o_eacta_tt_color_#{slot.color % 12}"
+                                 t-att-style="slotStyle(slot)" t-on-click="() => this.openSlot(slot.id)">
+                                <div class="o_eacta_tt_time"><t t-out="slot.label_from"/> – <t t-out="slot.label_to"/></div>
+                                <div class="o_eacta_tt_course" t-out="slot.course"/>
+                                <div class="o_eacta_tt_meta">
+                                    <t t-if="state.mode !== 'class'"><t t-out="slot.class"/> · </t>
+                                    <t t-if="state.mode !== 'teacher' and slot.teacher"><t t-out="slot.teacher"/></t>
+                                    <t t-if="slot.room and state.mode !== 'room'"> · <i class="fa fa-map-marker"/> <t t-out="slot.room"/></t>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </t>
+
+</templates>

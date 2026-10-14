@@ -404,6 +404,24 @@ class EactaStudent(models.Model):
     # Tableau de bord
     # ------------------------------------------------------------------
     @api.model
+    def _get_dashboard_finance(self):
+        Fee = self.env['eacta.student.fee']
+        if not Fee.has_access('read'):
+            return {'finance': False}
+        today = fields.Date.context_today(self)
+        open_fees = Fee.search([('state', 'in', ('unpaid', 'partial'))])
+        month_start = today.replace(day=1)
+        collected = sum(self.env['eacta.fee.payment'].search([('date', '>=', month_start)]).mapped('amount'))
+        return {
+            'finance': True,
+            'fees_due': round(sum(open_fees.mapped('amount_due')), 2),
+            'fees_overdue': round(sum(open_fees.filtered(lambda f: f.due_date and f.due_date < today)
+                                      .mapped('amount_due')), 2),
+            'fees_collected_month': round(collected, 2),
+            'currency': self.env.company.currency_id.symbol or '',
+        }
+
+    @api.model
     def get_school_dashboard_data(self):
         Student = self.env['eacta.student']
         Class = self.env['eacta.class']
@@ -450,6 +468,7 @@ class EactaStudent(models.Model):
                 'grades': len(values),
                 'today_absences': today_absences,
                 'unjustified_absences': unjustified_total,
+                **self._get_dashboard_finance(),
             },
             'states': [
                 {'key': key, 'label': state_labels[key], 'count': by_state.get(key, 0)}

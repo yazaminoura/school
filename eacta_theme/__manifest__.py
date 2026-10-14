@@ -1,7 +1,7 @@
 # -*- coding: utf-8 -*-
 {
     'name': 'NR School - Thème',
-    'version': '18.0.2.3',
+    'version': '18.0.2.4',
     'category': 'Theme/Backend',
     'summary': "Charte graphique de l'établissement pour l'interface Odoo",
     'description': """
@@ -27,6 +27,9 @@ Thème NR School
     'assets': {
         'web.assets_backend': [
             'eacta_theme/static/src/scss/eacta_theme.scss',
+            'eacta_theme/static/src/apps_menu/apps_menu.scss',
+            'eacta_theme/static/src/apps_menu/apps_menu.js',
+            'eacta_theme/static/src/apps_menu/apps_menu.xml',
         ],
     },
     'images': ['static/description/icon.png'],

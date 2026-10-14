@@ -51,4 +51,24 @@
     <menuitem id="menu_eacta_teachers" name="Enseignants" parent="menu_eacta_school_config"
               action="action_eacta_teachers" sequence="30"/>
 
+    <!-- Emploi du temps -->
+    <menuitem id="menu_eacta_timetable" name="Emploi du temps" parent="menu_eacta_school_pedagogie"
+              action="action_eacta_timetable" sequence="5"/>
+    <menuitem id="menu_eacta_timetable_slot" name="Créneaux" parent="menu_eacta_school_pedagogie"
+              action="action_eacta_timetable_slot" sequence="6" groups="eacta_school.group_eacta_school_manager"/>
+
+    <!-- Finances -->
+    <menuitem id="menu_eacta_school_finance" name="Finances" parent="menu_eacta_school_root" sequence="40"
+              groups="eacta_school.group_eacta_school_manager"/>
+    <menuitem id="menu_eacta_student_fee" name="Frais de scolarité" parent="menu_eacta_school_finance"
+              action="action_eacta_student_fee" sequence="10"/>
+    <menuitem id="menu_eacta_fee_payment" name="Paiements" parent="menu_eacta_school_finance"
+              action="action_eacta_fee_payment" sequence="20"/>
+    <menuitem id="menu_eacta_fee_generate" name="Générer des frais" parent="menu_eacta_school_finance"
+              action="action_eacta_fee_generate_wizard" sequence="30"/>
+    <menuitem id="menu_eacta_promotion" name="Passage de fin d'année" parent="menu_eacta_school_scolarite"
+              action="action_eacta_promotion_wizard" sequence="90" groups="eacta_school.group_eacta_school_manager"/>
+    <menuitem id="menu_eacta_fee_type" name="Types de frais" parent="menu_eacta_school_config"
+              action="action_eacta_fee_type" sequence="40"/>
+
 </odoo>

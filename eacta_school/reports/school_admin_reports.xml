@@ -1,0 +1,201 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<odoo>
+
+    <!-- ============================ REÇU DE PAIEMENT ============================ -->
+    <template id="report_fee_receipt">
+        <t t-call="web.html_container">
+            <t t-foreach="docs" t-as="o">
+                <t t-call="web.external_layout">
+                    <t t-call="eacta_school.eacta_school_report_assets"/>
+                    <div class="page eacta_report">
+                        <div class="eacta_report_title">
+                            <h2>Reçu de paiement</h2>
+                            <div class="eacta_report_sub">N° <strong t-out="o.name"/></div>
+                        </div>
+                        <div class="eacta_identity">
+                            <div>
+                                <div class="eacta_label">Élève</div>
+                                <div class="eacta_value" t-out="o.student_id.name"/>
+                                <div class="text-muted" t-if="o.student_id.code">Matricule : <t t-out="o.student_id.code"/></div>
+                            </div>
+                            <div>
+                                <div class="eacta_label">Classe</div>
+                                <div class="eacta_value" t-out="o.class_id.display_name or '-'"/>
+                            </div>
+                            <div>
+                                <div class="eacta_label">Date</div>
+                                <div class="eacta_value" t-field="o.date"/>
+                            </div>
+                        </div>
+                        <table class="eacta_table">
+                            <thead>
+                                <tr><th>Désignation</th><th>Moyen de paiement</th><th class="text-end">Montant</th></tr>
+                            </thead>
+                            <tbody>
+                                <tr>
+                                    <td>
+                                        <strong t-out="o.fee_id.description or o.fee_type_id.name"/>
+                                        <div class="text-muted small" t-out="o.fee_id.name"/>
+                                    </td>
+                                    <td>
+                                        <t t-out="dict(o._fields['method'].selection).get(o.method)"/>
+                                        <t t-if="o.reference"> · <t t-out="o.reference"/></t>
+                                    </td>
+                                    <td class="text-end"><strong t-field="o.amount"/></td>
+                                </tr>
+                            </tbody>
+                        </table>
+                        <div class="eacta_summary">
+                            <div><div class="eacta_label">Montant des frais</div><div class="eacta_big" t-field="o.fee_id.amount_total"/></div>
+                            <div><div class="eacta_label">Total réglé</div><div class="eacta_big" t-field="o.fee_id.amount_paid"/></div>
+                            <div><div class="eacta_label">Reste à payer</div><div class="eacta_big" t-field="o.fee_id.amount_due"/></div>
+                        </div>
+                        <div class="eacta_signatures">
+                            <div>Encaissé par<br/><t t-out="o.received_by.name"/></div>
+                            <div>Cachet de l'établissement</div>
+                        </div>
+                    </div>
+                </t>
+            </t>
+        </t>
+    </template>
+
+    <record id="action_report_fee_receipt" model="ir.actions.report">
+        <field name="name">Reçu de paiement</field>
+        <field name="model">eacta.fee.payment</field>
+        <field name="report_type">qweb-pdf</field>
+        <field name="report_name">eacta_school.report_fee_receipt</field>
+        <field name="report_file">eacta_school.report_fee_receipt</field>
+        <field name="print_report_name">'Reçu - %s' % (object.name)</field>
+        <field name="binding_model_id" ref="model_eacta_fee_payment"/>
+        <field name="binding_type">report</field>
+    </record>
+
+    <!-- ============================ RELEVÉ DE COMPTE ============================ -->
+    <template id="report_fee_statement">
+        <t t-call="web.html_container">
+            <t t-foreach="docs" t-as="o">
+                <t t-call="web.external_layout">
+                    <t t-call="eacta_school.eacta_school_report_assets"/>
+                    <t t-set="fees" t-value="o.fee_ids.filtered(lambda f: f.state != 'cancelled').sorted('due_date')"/>
+                    <div class="page eacta_report">
+                        <div class="eacta_report_title">
+                            <h2>Relevé de compte</h2>
+                            <div class="eacta_report_sub">au <span t-out="context_timestamp(datetime.datetime.now()).strftime('%d/%m/%Y')"/></div>
+                        </div>
+                        <div class="eacta_identity">
+                            <div>
+                                <div class="eacta_label">Élève</div>
+                                <div class="eacta_value" t-out="o.name"/>
+                                <div class="text-muted" t-if="o.code">Matricule : <t t-out="o.code"/></div>
+                            </div>
+                            <div>
+                                <div class="eacta_label">Classe</div>
+                                <div class="eacta_value" t-out="o.current_class_id.display_name or '-'"/>
+                            </div>
+                            <div>
+                                <div class="eacta_label">Parent / tuteur</div>
+                                <div class="eacta_value" t-out="', '.join(o.parent_ids.mapped('name')) or '-'"/>
+                            </div>
+                        </div>
+                        <table class="eacta_table">
+                            <thead>
+                                <tr>
+                                    <th>Référence</th><th>Désignation</th><th>Échéance</th>
+                                    <th class="text-end">Montant</th><th class="text-end">Payé</th><th class="text-end">Reste</th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                                <tr t-foreach="fees" t-as="f">
+                                    <td t-out="f.name"/>
+                                    <td t-out="f.description or f.fee_type_id.name"/>
+                                    <td><span t-field="f.due_date"/></td>
+                                    <td class="text-end"><span t-field="f.amount_total"/></td>
+                                    <td class="text-end"><span t-field="f.amount_paid"/></td>
+                                    <td t-attf-class="text-end #{'eacta_fail' if f.is_overdue else ''}"><span t-field="f.amount_due"/></td>
+                                </tr>
+                                <tr t-if="not fees"><td colspan="6" class="text-center text-muted">Aucun frais.</td></tr>
+                            </tbody>
+                        </table>
+                        <div class="eacta_summary" t-if="fees">
+                            <div><div class="eacta_label">Total facturé</div>
+                                <div class="eacta_big" t-out="'%.2f %s' % (sum(fees.mapped('amount_total')), o.fee_currency_id.symbol or '')"/></div>
+                            <div><div class="eacta_label">Total réglé</div>
+                                <div class="eacta_big" t-out="'%.2f %s' % (sum(fees.mapped('amount_paid')), o.fee_currency_id.symbol or '')"/></div>
+                            <div><div class="eacta_label">Solde dû</div>
+                                <div t-attf-class="eacta_big #{'eacta_fail' if o.fee_overdue else ''}"
+                                     t-out="'%.2f %s' % (o.fee_balance, o.fee_currency_id.symbol or '')"/></div>
+                        </div>
+                    </div>
+                </t>
+            </t>
+        </t>
+    </template>
+
+    <record id="action_report_fee_statement" model="ir.actions.report">
+        <field name="name">Relevé de compte</field>
+        <field name="model">eacta.student</field>
+        <field name="report_type">qweb-pdf</field>
+        <field name="report_name">eacta_school.report_fee_statement</field>
+        <field name="report_file">eacta_school.report_fee_statement</field>
+        <field name="print_report_name">'Relevé - %s' % (object.name)</field>
+        <field name="binding_model_id" ref="model_eacta_student"/>
+        <field name="binding_type">report</field>
+        <field name="groups_id" eval="[(4, ref('eacta_school.group_eacta_school_manager'))]"/>
+    </record>
+
+    <!-- ============================ EMPLOI DU TEMPS ============================ -->
+    <template id="report_class_timetable">
+        <t t-call="web.html_container">
+            <t t-foreach="docs" t-as="klass">
+                <t t-call="web.external_layout">
+                    <t t-set="o" t-value="klass"/>
+                    <t t-call="eacta_school.eacta_school_report_assets"/>
+                    <t t-set="slots" t-value="klass.timetable_slot_ids.sorted(lambda s: (s.hour_from, s.weekday))"/>
+                    <t t-set="days" t-value="[('0', 'Lundi'), ('1', 'Mardi'), ('2', 'Mercredi'), ('3', 'Jeudi'), ('4', 'Vendredi'), ('5', 'Samedi')]"/>
+                    <t t-set="ranges" t-value="sorted(set((s.hour_from, s.hour_to) for s in slots))"/>
+                    <div class="page eacta_report">
+                        <div class="eacta_report_title">
+                            <h2>Emploi du temps — <t t-out="klass.name"/></h2>
+                            <div class="eacta_report_sub">Année <strong t-out="klass.year"/> · <t t-out="'%g' % klass.weekly_hours"/> h / semaine</div>
+                        </div>
+                        <table class="eacta_table">
+                            <thead>
+                                <tr>
+                                    <th style="width: 12%;">Horaire</th>
+                                    <th t-foreach="days" t-as="d" class="text-center" t-out="d[1]"/>
+                                </tr>
+                            </thead>
+                            <tbody>
+                                <tr t-foreach="ranges" t-as="r">
+                                    <td><strong t-out="'%02d:%02d - %02d:%02d' % (int(r[0]), round((r[0] % 1) * 60), int(r[1]), round((r[1] % 1) * 60))"/></td>
+                                    <td t-foreach="days" t-as="d" class="text-center">
+                                        <t t-foreach="slots.filtered(lambda s: s.weekday == d[0] and (s.hour_from, s.hour_to) == r)" t-as="s">
+                                            <strong t-out="s.course_id.name"/>
+                                            <div class="small" style="color: #64748b;">
+                                                <t t-out="s.teacher_id.name or ''"/><t t-if="s.room"> · <t t-out="s.room"/></t>
+                                            </div>
+                                        </t>
+                                    </td>
+                                </tr>
+                                <tr t-if="not ranges"><td colspan="7" class="text-center text-muted">Aucun créneau.</td></tr>
+                            </tbody>
+                        </table>
+                    </div>
+                </t>
+            </t>
+        </t>
+    </template>
+
+    <record id="action_report_class_timetable" model="ir.actions.report">
+        <field name="name">Emploi du temps</field>
+        <field name="model">eacta.class</field>
+        <field name="report_type">qweb-pdf</field>
+        <field name="report_name">eacta_school.report_class_timetable</field>
+        <field name="report_file">eacta_school.report_class_timetable</field>
+        <field name="print_report_name">'Emploi du temps - %s' % (object.display_name)</field>
+        <field name="binding_model_id" ref="model_eacta_class"/>
+        <field name="binding_type">report</field>
+    </record>
+
+</odoo>

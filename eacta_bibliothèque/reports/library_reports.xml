@@ -1,0 +1,116 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<odoo>
+
+    <!-- Bon d'emprunt -->
+    <template id="report_loan_receipt">
+        <t t-call="web.html_container">
+            <t t-foreach="docs" t-as="o">
+                <t t-call="web.external_layout">
+                    <t t-call="eacta_school.eacta_school_report_assets"/>
+                    <div class="page eacta_report">
+                        <div class="eacta_report_title">
+                            <h2>Bon d'emprunt</h2>
+                            <div class="eacta_report_sub">Référence <strong t-out="o.reference"/></div>
+                        </div>
+                        <div class="eacta_identity">
+                            <div>
+                                <div class="eacta_label">Emprunteur</div>
+                                <div class="eacta_value" t-out="o.borrower_name"/>
+                                <div class="text-muted" t-if="o.class_id">Classe : <t t-out="o.class_id.display_name"/></div>
+                            </div>
+                            <div>
+                                <div class="eacta_label">Emprunté le</div>
+                                <div class="eacta_value" t-field="o.checkout_date"/>
+                            </div>
+                            <div>
+                                <div class="eacta_label">À rendre avant le</div>
+                                <div class="eacta_value" t-field="o.due_date"/>
+                            </div>
+                        </div>
+                        <table class="eacta_table">
+                            <thead>
+                                <tr><th>Titre</th><th>Auteur</th><th>Exemplaire</th><th>Cote</th></tr>
+                            </thead>
+                            <tbody>
+                                <tr>
+                                    <td><strong t-out="o.book_id.name"/></td>
+                                    <td t-out="o.book_id.author or ''"/>
+                                    <td t-out="o.barcode_id.barcode"/>
+                                    <td t-out="o.book_id.shelf_location or ''"/>
+                                </tr>
+                            </tbody>
+                        </table>
+                        <div class="text-center" style="margin-top: 18px;">
+                            <img t-att-src="'/report/barcode/?barcode_type=Code128&amp;value=%s&amp;width=520&amp;height=70' % o.barcode_id.barcode"
+                                 style="width: 260px; height: 35px;" alt="Code-barres"/>
+                        </div>
+                        <p style="margin-top: 18px; color: #64748b;">
+                            Merci de prendre soin de ce livre. Tout retard entraîne une amende par jour ;
+                            un livre perdu ou abîmé doit être remplacé.
+                        </p>
+                        <div class="eacta_signatures">
+                            <div>Le bibliothécaire<br/><t t-out="o.responsible_id.name"/></div>
+                            <div>L'emprunteur</div>
+                        </div>
+                    </div>
+                </t>
+            </t>
+        </t>
+    </template>
+
+    <record id="action_report_loan_receipt" model="ir.actions.report">
+        <field name="name">Bon d'emprunt</field>
+        <field name="model">library.loan</field>
+        <field name="report_type">qweb-pdf</field>
+        <field name="report_name">eacta_bibliothèque.report_loan_receipt</field>
+        <field name="report_file">eacta_bibliothèque.report_loan_receipt</field>
+        <field name="print_report_name">'Bon - %s' % (object.reference)</field>
+        <field name="binding_model_id" ref="model_library_loan"/>
+        <field name="binding_type">report</field>
+    </record>
+
+    <!-- Étiquettes d'exemplaires (3 colonnes) -->
+    <template id="report_copy_labels">
+        <t t-call="web.html_container">
+            <t t-call="web.basic_layout">
+                <div class="page">
+                    <style>
+                        .nr_labels { width: 100%; border-collapse: separate; border-spacing: 6px; }
+                        .nr_labels td { width: 33%; border: 1px dashed #94a3b8; border-radius: 6px; padding: 8px;
+                                        text-align: center; vertical-align: top; height: 120px; }
+                        .nr_label_title { font-weight: 700; font-size: 11px; color: #1e293b; }
+                        .nr_label_meta { font-size: 9px; color: #64748b; }
+                        .nr_label_code { font-family: monospace; font-size: 10px; }
+                    </style>
+                    <table class="nr_labels">
+                        <t t-foreach="[docs[i:i + 3] for i in range(0, len(docs), 3)]" t-as="row">
+                            <tr>
+                                <td t-foreach="row" t-as="copy">
+                                    <div class="nr_label_title" t-out="copy.book_id.name[:42]"/>
+                                    <div class="nr_label_meta">
+                                        <t t-out="copy.book_id.author or ''"/>
+                                        <t t-if="copy.book_id.shelf_location"> · <t t-out="copy.book_id.shelf_location"/></t>
+                                    </div>
+                                    <img t-att-src="'/report/barcode/?barcode_type=Code128&amp;value=%s&amp;width=440&amp;height=80' % copy.barcode"
+                                         style="width: 180px; height: 34px; margin-top: 6px;" alt=""/>
+                                    <div class="nr_label_code" t-out="copy.barcode"/>
+                                </td>
+                            </tr>
+                        </t>
+                    </table>
+                </div>
+            </t>
+        </t>
+    </template>
+
+    <record id="action_report_copy_labels" model="ir.actions.report">
+        <field name="name">Étiquettes code-barres</field>
+        <field name="model">library.book.barcode</field>
+        <field name="report_type">qweb-pdf</field>
+        <field name="report_name">eacta_bibliothèque.report_copy_labels</field>
+        <field name="report_file">eacta_bibliothèque.report_copy_labels</field>
+        <field name="binding_model_id" ref="model_library_book_barcode"/>
+        <field name="binding_type">report</field>
+    </record>
+
+</odoo>

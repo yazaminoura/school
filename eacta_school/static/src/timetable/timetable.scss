@@ -1,0 +1,108 @@
+// NR School — grille d'emploi du temps
+
+$tt-hour: 64px;
+
+.o_eacta_timetable {
+    .o_eacta_tt_toolbar {
+        display: flex;
+        flex-wrap: wrap;
+        align-items: center;
+        justify-content: space-between;
+        gap: 1rem;
+        margin-bottom: 1rem;
+    }
+
+    .o_eacta_tt_title {
+        display: flex;
+        align-items: center;
+        gap: .75rem;
+
+        h1 { margin: 0; font-size: 1.5rem; font-weight: 800; color: var(--eacta-c-ink); }
+    }
+
+    .o_eacta_tt_filters {
+        display: flex;
+        flex-wrap: wrap;
+        gap: .5rem;
+
+        .form-select { width: auto; min-width: 180px; }
+    }
+
+    .o_eacta_tt_panel { padding: .75rem; overflow-x: auto; }
+
+    .o_eacta_tt_grid {
+        display: grid;
+        grid-template-columns: 56px repeat(6, minmax(130px, 1fr));
+        min-width: 860px;
+    }
+
+    .o_eacta_tt_corner, .o_eacta_tt_dayhead {
+        position: sticky;
+        top: 0;
+        z-index: 2;
+        background: #fff;
+        border-bottom: 2px solid var(--eacta-c-line);
+    }
+
+    .o_eacta_tt_dayhead {
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        gap: .35rem;
+        padding: .55rem 0;
+        font-weight: 700;
+        color: var(--eacta-c-ink);
+    }
+
+    .o_eacta_tt_hours { position: relative; }
+
+    .o_eacta_tt_hour {
+        height: $tt-hour;
+        padding-right: .4rem;
+        text-align: right;
+        font-size: .72rem;
+        color: var(--eacta-c-muted);
+        transform: translateY(-.5em);
+    }
+
+    .o_eacta_tt_col {
+        position: relative;
+        border-left: 1px solid var(--eacta-c-line);
+    }
+
+    .o_eacta_tt_line {
+        height: $tt-hour;
+        border-bottom: 1px dashed #eef1f5;
+    }
+
+    .o_eacta_tt_slot {
+        position: absolute;
+        left: 4px;
+        right: 4px;
+        margin-top: 2px;
+        padding: .3rem .45rem;
+        overflow: hidden;
+        border-radius: 8px;
+        border-left: 4px solid currentColor;
+        cursor: pointer;
+        font-size: .75rem;
+        line-height: 1.25;
+        box-shadow: 0 1px 3px rgba(15, 23, 42, .08);
+        transition: transform .12s ease, box-shadow .12s ease;
+
+        &:hover { transform: translateY(-1px); box-shadow: 0 6px 14px rgba(15, 23, 42, .14); z-index: 1; }
+
+        .o_eacta_tt_time { font-weight: 700; opacity: .85; }
+        .o_eacta_tt_course { font-weight: 800; font-size: .82rem; color: #0f172a; }
+        .o_eacta_tt_meta { color: #475569; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+    }
+
+    $tt-colors: #8e1b3a, #0e7490, #b45309, #4338ca, #047857, #be185d, #7c3aed, #0369a1, #a16207, #15803d, #c2410c, #475569;
+    @for $i from 1 through length($tt-colors) {
+        $c: nth($tt-colors, $i);
+        .o_eacta_tt_color_#{$i - 1} {
+            color: $c;
+            background: mix($c, #fff, 12%);
+        }
+    }
+}

@@ -1,0 +1,68 @@
+<?xml version="1.0" encoding="utf-8"?>
+<odoo>
+    <data noupdate="1">
+
+        <record id="demo_cat_novel" model="library.book.category"><field name="name">Romans</field><field name="color">1</field></record>
+        <record id="demo_cat_youth" model="library.book.category"><field name="name">Jeunesse</field><field name="color">3</field></record>
+        <record id="demo_cat_science" model="library.book.category"><field name="name">Sciences</field><field name="color">4</field></record>
+        <record id="demo_cat_history" model="library.book.category"><field name="name">Histoire &amp; Géographie</field><field name="color">5</field></record>
+        <record id="demo_cat_lang" model="library.book.category"><field name="name">Langues</field><field name="color">7</field></record>
+
+        <record id="demo_book_petit_prince" model="library.book">
+            <field name="name">Le Petit Prince</field><field name="author">Antoine de Saint-Exupéry</field>
+            <field name="isbn">9782070612758</field><field name="publisher">Gallimard</field>
+            <field name="publication_year">1943</field><field name="category_id" ref="demo_cat_youth"/>
+            <field name="shelf_location">J-01</field><field name="pages">96</field><field name="total_quantity">5</field>
+        </record>
+        <record id="demo_book_miserables" model="library.book">
+            <field name="name">Les Misérables</field><field name="author">Victor Hugo</field>
+            <field name="isbn">9782253096344</field><field name="publisher">Le Livre de Poche</field>
+            <field name="publication_year">1862</field><field name="category_id" ref="demo_cat_novel"/>
+            <field name="shelf_location">R-04</field><field name="total_quantity">2</field>
+        </record>
+        <record id="demo_book_etranger" model="library.book">
+            <field name="name">L'Étranger</field><field name="author">Albert Camus</field>
+            <field name="isbn">9782070360024</field><field name="publisher">Gallimard</field>
+            <field name="publication_year">1942</field><field name="category_id" ref="demo_cat_novel"/>
+            <field name="shelf_location">R-02</field><field name="total_quantity">3</field>
+        </record>
+        <record id="demo_book_pain_nu" model="library.book">
+            <field name="name">Le Pain nu</field><field name="author">Mohamed Choukri</field>
+            <field name="isbn">9782020237561</field><field name="category_id" ref="demo_cat_novel"/>
+            <field name="shelf_location">R-07</field><field name="total_quantity">2</field>
+        </record>
+        <record id="demo_book_cosmos" model="library.book">
+            <field name="name">Une brève histoire du temps</field><field name="author">Stephen Hawking</field>
+            <field name="isbn">9782081363830</field><field name="category_id" ref="demo_cat_science"/>
+            <field name="shelf_location">S-10</field><field name="total_quantity">2</field>
+        </record>
+        <record id="demo_book_maths" model="library.book">
+            <field name="name">Mathématiques - Collection Phare 3e</field><field name="author">Hachette Éducation</field>
+            <field name="isbn">9782011256335</field><field name="category_id" ref="demo_cat_science"/>
+            <field name="shelf_location">S-02</field><field name="total_quantity">6</field><field name="loan_duration_days">30</field>
+        </record>
+        <record id="demo_book_maroc" model="library.book">
+            <field name="name">Histoire du Maroc</field><field name="author">Bernard Lugan</field>
+            <field name="isbn">9782262016722</field><field name="category_id" ref="demo_cat_history"/>
+            <field name="shelf_location">H-03</field><field name="total_quantity">2</field>
+        </record>
+        <record id="demo_book_alchimiste" model="library.book">
+            <field name="name">L'Alchimiste</field><field name="author">Paulo Coelho</field>
+            <field name="isbn">9782290004449</field><field name="category_id" ref="demo_cat_novel"/>
+            <field name="shelf_location">R-09</field><field name="total_quantity">3</field>
+        </record>
+        <record id="demo_book_english" model="library.book">
+            <field name="name">English Grammar in Use</field><field name="author">Raymond Murphy</field>
+            <field name="isbn">9781108457651</field><field name="language">en</field>
+            <field name="category_id" ref="demo_cat_lang"/><field name="shelf_location">L-01</field>
+            <field name="total_quantity">4</field>
+        </record>
+        <record id="demo_book_harry" model="library.book">
+            <field name="name">Harry Potter à l'école des sorciers</field><field name="author">J.K. Rowling</field>
+            <field name="isbn">9782070584628</field><field name="category_id" ref="demo_cat_youth"/>
+            <field name="shelf_location">J-05</field><field name="total_quantity">4</field>
+        </record>
+
+        <function model="library.loan" name="_generate_demo_loans"/>
+    </data>
+</odoo>

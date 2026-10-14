@@ -1,0 +1,150 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<odoo>
+
+    <!-- Feuille de présence -->
+    <template id="report_event_attendance">
+        <t t-call="web.html_container">
+            <t t-foreach="docs" t-as="o">
+                <t t-call="web.external_layout">
+                    <t t-call="eacta_school.eacta_school_report_assets"/>
+                    <div class="page eacta_report">
+                        <div class="eacta_report_title">
+                            <h2>Feuille de présence</h2>
+                            <div class="eacta_report_sub" t-field="o.date_start"/>
+                        </div>
+                        <div class="eacta_identity">
+                            <div>
+                                <div class="eacta_label">Événement</div>
+                                <div class="eacta_value" t-out="o.name"/>
+                            </div>
+                            <div>
+                                <div class="eacta_label">Lieu</div>
+                                <div class="eacta_value" t-out="o.location or '-'"/>
+                            </div>
+                            <div>
+                                <div class="eacta_label">Encadrement</div>
+                                <div class="eacta_value" t-out="', '.join((o.organizer_id | o.supervisor_ids).mapped('name')) or '-'"/>
+                            </div>
+                        </div>
+                        <table class="eacta_table">
+                            <thead>
+                                <tr>
+                                    <th class="text-center">#</th>
+                                    <th>Matricule</th>
+                                    <th>Élève</th>
+                                    <th>Classe</th>
+                                    <th class="text-center" t-if="o.requires_authorization">Autorisation</th>
+                                    <th class="text-center" t-if="o.fee_amount">Payé</th>
+                                    <th class="text-center">Présent</th>
+                                    <th>Signature / remarque</th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                                <tr t-foreach="o.registration_ids.filtered(lambda r: r.state != 'cancelled').sorted(lambda r: (r.class_id.name or '', r.student_id.name))"
+                                    t-as="reg">
+                                    <td class="text-center" t-out="reg_index + 1"/>
+                                    <td t-out="reg.student_code or ''"/>
+                                    <td t-out="reg.student_id.name"/>
+                                    <td t-out="reg.class_id.name or ''"/>
+                                    <td class="text-center" t-if="o.requires_authorization" t-out="'✔' if reg.authorized else '✘'"/>
+                                    <td class="text-center" t-if="o.fee_amount" t-out="'✔' if reg.paid else '✘'"/>
+                                    <td class="text-center">☐</td>
+                                    <td style="width: 28%;"/>
+                                </tr>
+                            </tbody>
+                        </table>
+                        <div class="eacta_summary">
+                            <div><div class="eacta_label">Inscrits</div><div class="eacta_big" t-out="o.participant_count"/></div>
+                            <div t-if="o.requires_authorization"><div class="eacta_label">Autorisations</div><div class="eacta_big" t-out="o.authorized_count"/></div>
+                            <div t-if="o.fee_amount"><div class="eacta_label">Encaissé</div><div class="eacta_big" t-field="o.amount_collected"/></div>
+                        </div>
+                    </div>
+                </t>
+            </t>
+        </t>
+    </template>
+
+    <record id="action_report_event_attendance" model="ir.actions.report">
+        <field name="name">Feuille de présence</field>
+        <field name="model">eacta.school.event</field>
+        <field name="report_type">qweb-pdf</field>
+        <field name="report_name">eacta_event.report_event_attendance</field>
+        <field name="report_file">eacta_event.report_event_attendance</field>
+        <field name="print_report_name">'Présence - %s' % (object.name)</field>
+        <field name="binding_model_id" ref="model_eacta_school_event"/>
+        <field name="binding_type">report</field>
+    </record>
+
+    <!-- Autorisation parentale (une page par élève, avec coupon-réponse) -->
+    <template id="report_event_authorization">
+        <t t-call="web.html_container">
+            <t t-foreach="docs" t-as="reg">
+                <t t-set="o" t-value="reg.event_id"/>
+                <t t-call="web.external_layout">
+                    <t t-call="eacta_school.eacta_school_report_assets"/>
+                    <div class="page eacta_report">
+                        <div class="eacta_report_title">
+                            <h2>Autorisation parentale</h2>
+                            <div class="eacta_report_sub" t-out="dict(o._fields['event_type'].selection).get(o.event_type)"/>
+                        </div>
+                        <p>Madame, Monsieur,</p>
+                        <p>
+                            Nous avons le plaisir de vous informer que votre enfant
+                            <strong t-out="reg.student_id.name"/>
+                            <t t-if="reg.class_id">(classe <t t-out="reg.class_id.name"/>)</t>
+                            est invité(e) à participer à l'événement suivant :
+                        </p>
+                        <div class="eacta_identity">
+                            <div>
+                                <div class="eacta_label">Événement</div>
+                                <div class="eacta_value" t-out="o.name"/>
+                            </div>
+                            <div>
+                                <div class="eacta_label">Date</div>
+                                <div class="eacta_value"><span t-field="o.date_start"/><t t-if="o.date_end"> → <span t-field="o.date_end"/></t></div>
+                            </div>
+                            <div>
+                                <div class="eacta_label">Lieu</div>
+                                <div class="eacta_value" t-out="o.location or '-'"/>
+                            </div>
+                        </div>
+                        <p t-if="o.description" t-out="o.description"/>
+                        <p t-if="o.fee_amount">
+                            Participation demandée : <strong t-field="o.fee_amount"/>.
+                        </p>
+                        <p t-if="o.registration_deadline">
+                            Merci de retourner le coupon ci-dessous avant le <strong t-field="o.registration_deadline"/>.
+                        </p>
+                        <p>Nous vous prions d'agréer, Madame, Monsieur, nos salutations distinguées.</p>
+                        <p style="text-align: right;">La direction</p>
+
+                        <div style="border-top: 2px dashed #94a3b8; margin: 28px 0 14px; position: relative;">
+                            <span style="position: absolute; top: -11px; left: 10px; background: #fff; padding: 0 6px; color: #64748b;">✂ à découper et à retourner</span>
+                        </div>
+                        <p>
+                            Je soussigné(e) <span style="display: inline-block; width: 45%; border-bottom: 1px dotted #475569;">
+                                <t t-out="reg.parent_id.name or ''"/></span>,
+                            responsable légal(e) de <strong t-out="reg.student_id.name"/>,
+                        </p>
+                        <p>☐ autorise &#160;&#160; ☐ n'autorise pas mon enfant à participer à « <t t-out="o.name"/> ».</p>
+                        <div class="eacta_signatures">
+                            <div>Date : ____ / ____ / ________</div>
+                            <div>Signature du parent / tuteur</div>
+                        </div>
+                    </div>
+                </t>
+            </t>
+        </t>
+    </template>
+
+    <record id="action_report_event_authorization" model="ir.actions.report">
+        <field name="name">Autorisation parentale</field>
+        <field name="model">eacta.school.event.registration</field>
+        <field name="report_type">qweb-pdf</field>
+        <field name="report_name">eacta_event.report_event_authorization</field>
+        <field name="report_file">eacta_event.report_event_authorization</field>
+        <field name="binding_model_id" ref="model_eacta_school_event_registration"/>
+        <field name="binding_type">report</field>
+    </record>
+
+</odoo>

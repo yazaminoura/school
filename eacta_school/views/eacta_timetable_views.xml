@@ -1,0 +1,109 @@
+<?xml version="1.0" encoding="utf-8"?>
+<odoo>
+
+    <record id="view_eacta_timetable_slot_list" model="ir.ui.view">
+        <field name="name">eacta.timetable.slot.list</field>
+        <field name="model">eacta.timetable.slot</field>
+        <field name="arch" type="xml">
+            <list string="Emploi du temps" editable="bottom" sample="1">
+                <field name="class_id" options="{'no_create': True}"/>
+                <field name="weekday"/>
+                <field name="hour_from" widget="float_time"/>
+                <field name="hour_to" widget="float_time"/>
+                <field name="allowed_course_ids" column_invisible="1"/>
+                <field name="course_id" options="{'no_create': True}"/>
+                <field name="teacher_id" options="{'no_create': True}"/>
+                <field name="room"/>
+                <field name="duration" widget="float_time" sum="Total" optional="show"/>
+                <field name="note" optional="hide"/>
+            </list>
+        </field>
+    </record>
+
+    <record id="view_eacta_timetable_slot_form" model="ir.ui.view">
+        <field name="name">eacta.timetable.slot.form</field>
+        <field name="model">eacta.timetable.slot</field>
+        <field name="arch" type="xml">
+            <form string="Créneau">
+                <sheet>
+                    <group>
+                        <group>
+                            <field name="class_id" options="{'no_create': True}"/>
+                            <field name="allowed_course_ids" invisible="1"/>
+                            <field name="course_id" options="{'no_create': True}"/>
+                            <field name="teacher_id" options="{'no_create': True}"/>
+                            <field name="room"/>
+                        </group>
+                        <group>
+                            <field name="weekday"/>
+                            <field name="hour_from" widget="float_time"/>
+                            <field name="hour_to" widget="float_time"/>
+                            <field name="note"/>
+                        </group>
+                    </group>
+                </sheet>
+            </form>
+        </field>
+    </record>
+
+    <record id="view_eacta_timetable_slot_search" model="ir.ui.view">
+        <field name="name">eacta.timetable.slot.search</field>
+        <field name="model">eacta.timetable.slot</field>
+        <field name="arch" type="xml">
+            <search>
+                <field name="class_id"/>
+                <field name="teacher_id"/>
+                <field name="course_id"/>
+                <field name="room"/>
+                <filter string="Mes cours" name="mine" domain="[('teacher_id', '=', uid)]"/>
+                <group expand="0" string="Regrouper par">
+                    <filter string="Classe" name="group_class" context="{'group_by': 'class_id'}"/>
+                    <filter string="Jour" name="group_day" context="{'group_by': 'weekday'}"/>
+                    <filter string="Enseignant" name="group_teacher" context="{'group_by': 'teacher_id'}"/>
+                </group>
+            </search>
+        </field>
+    </record>
+
+    <record id="action_eacta_timetable_slot" model="ir.actions.act_window">
+        <field name="name">Créneaux</field>
+        <field name="res_model">eacta.timetable.slot</field>
+        <field name="view_mode">list,form</field>
+        <field name="search_view_id" ref="view_eacta_timetable_slot_search"/>
+        <field name="context">{'search_default_group_class': 1}</field>
+        <field name="help" type="html">
+            <p class="o_view_nocontent_smiling_face">Construisez l'emploi du temps</p>
+            <p>Chaque créneau associe une classe, une matière, un enseignant, une salle et un horaire.
+               Les conflits (enseignant, classe ou salle déjà occupés) sont détectés automatiquement.</p>
+        </field>
+    </record>
+
+    <record id="action_eacta_timetable" model="ir.actions.client">
+        <field name="name">Emploi du temps</field>
+        <field name="tag">eacta_school.timetable</field>
+    </record>
+
+    <!-- Boutons sur la fiche classe -->
+    <record id="view_eacta_class_form_extras" model="ir.ui.view">
+        <field name="name">eacta.class.form.extras</field>
+        <field name="model">eacta.class</field>
+        <field name="inherit_id" ref="eacta_school.view_eacta_class_form"/>
+        <field name="arch" type="xml">
+            <header position="inside">
+                <button name="action_open_promotion" string="Passage de fin d'année" type="object" icon="fa-level-up"
+                        groups="eacta_school.group_eacta_school_manager" invisible="not student_ids"/>
+                <button name="action_print_timetable" string="Emploi du temps" type="object" icon="fa-print"
+                        invisible="not weekly_hours"/>
+            </header>
+            <div name="button_box" position="inside">
+                <button name="action_open_timetable" type="object" class="oe_stat_button" icon="fa-th">
+                    <div class="o_field_widget o_stat_info">
+                        <span class="o_stat_value"><field name="weekly_hours" widget="float_time"/></span>
+                        <span class="o_stat_text">h / semaine</span>
+                    </div>
+                </button>
+            </div>
+        </field>
+    </record>
+
+</odoo>

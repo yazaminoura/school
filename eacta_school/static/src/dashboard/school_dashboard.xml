@@ -82,6 +82,17 @@
                             <div class="o_eacta_dash_kpi_hint"><t t-out="kpis.unjustified_absences"/> non justifiée(s)</div>
                         </div>
                     </div>
+                    <div t-if="kpis.finance" class="o_eacta_dash_kpi" t-on-click="() => this.openAction('eacta_school.action_eacta_student_fee')">
+                        <div class="o_eacta_dash_kpi_icon o_eacta_tone_accent"><i class="fa fa-money"/></div>
+                        <div>
+                            <div class="o_eacta_dash_kpi_value"><t t-out="Math.round(kpis.fees_due).toLocaleString('fr-FR')"/><small> <t t-out="kpis.currency"/></small></div>
+                            <div class="o_eacta_dash_kpi_label">Frais à encaisser</div>
+                            <div class="o_eacta_dash_kpi_hint">
+                                <t t-out="Math.round(kpis.fees_overdue).toLocaleString('fr-FR')"/> en retard ·
+                                <t t-out="Math.round(kpis.fees_collected_month).toLocaleString('fr-FR')"/> encaissés ce mois
+                            </div>
+                        </div>
+                    </div>
                 </div>
 
                 <div class="o_eacta_dash_grid">

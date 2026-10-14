@@ -1,0 +1,46 @@
+// NR School — Événements
+
+.o_event_kanban .o_event_card {
+    width: 100%;
+
+    .o_event_banner {
+        position: relative;
+        height: 110px;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        overflow: hidden;
+        color: rgba(255, 255, 255, .55);
+        font-size: 2.6rem;
+        background:
+            radial-gradient(circle at 85% 0%, color-mix(in srgb, var(--eacta-c-secondary) 60%, transparent) 0, transparent 55%),
+            linear-gradient(120deg, var(--eacta-c-ink), var(--eacta-c-primary));
+
+        .o_field_image, .o_event_banner_img, img {
+            position: absolute;
+            inset: 0;
+            width: 100% !important;
+            height: 100% !important;
+            object-fit: cover;
+        }
+    }
+
+    .o_event_date {
+        position: absolute;
+        top: 10px;
+        left: 10px;
+        width: 46px;
+        padding: .25rem 0;
+        border-radius: 10px;
+        text-align: center;
+        line-height: 1.05;
+        color: var(--eacta-c-text);
+        background: #fff;
+        box-shadow: 0 4px 12px rgba(0, 0, 0, .18);
+
+        strong { display: block; font-size: 1.15rem; font-weight: 800; }
+        small { font-size: .62rem; font-weight: 700; text-transform: uppercase; color: var(--eacta-c-primary); }
+    }
+
+    .o_eacta_card { border-top: 0; }
+}

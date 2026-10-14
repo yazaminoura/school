@@ -10,7 +10,7 @@ HEX_RE = re.compile(r'^#[0-9A-Fa-f]{6}$')
 
 # primary, secondary, accent, ink
 PALETTES = {
-    'nr_school': ('#00285C', '#00B8C8', '#F5A524', '#001A3D'),
+    'nr_school': ('#8E1B3A', '#E0A630', '#F2784B', '#3B0A18'),
     'nr_marine': ('#00285C', '#00B8C8', '#F5A524', '#001A3D'),
     'indigo': ('#4F46E5', '#06B6D4', '#F59E0B', '#1E1B4B'),
     'emerald': ('#059669', '#10B981', '#F59E0B', '#064E3B'),
@@ -67,7 +67,7 @@ class EactaThemeConfig(models.Model):
     is_current = fields.Boolean(string="Style appliqué", readonly=True, copy=False)
 
     color_scheme = fields.Selection([
-        ('nr_school', 'NR School (bleu marine & turquoise)'),
+        ('nr_school', 'NR School (bordeaux & or)'),
         ('nr_marine', 'NR School Marine (bleu marine & turquoise)'),
         ('indigo', 'Indigo élégant'),
         ('emerald', 'Vert émeraude'),
@@ -131,7 +131,7 @@ class EactaThemeConfig(models.Model):
             for field in ('primary_color', 'secondary_color', 'accent_color', 'ink_color'):
                 if not HEX_RE.match(rec[field] or ''):
                     raise ValidationError(
-                        f"« {rec._fields[field].string} » doit être une couleur hexadécimale (ex : #00285C).")
+                        f"« {rec._fields[field].string} » doit être une couleur hexadécimale (ex : #8E1B3A).")
 
     @api.onchange('color_scheme')
     def _onchange_color_scheme(self):

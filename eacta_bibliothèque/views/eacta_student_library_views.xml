@@ -7,9 +7,35 @@
         <field name="arch" type="xml">
             <div name="button_box" position="inside">
                 <button name="action_view_borrowed_books" type="object" class="oe_stat_button" icon="fa-book">
-                    <field name="borrowed_book_count" widget="statinfo" string="Livres"/>
+                    <div class="o_field_widget o_stat_info">
+                        <span class="o_stat_value"><field name="borrowed_book_count"/></span>
+                        <span class="o_stat_text">
+                            Livres<span invisible="not library_overdue_count" class="text-danger"> · <field name="library_overdue_count"/> en retard</span>
+                        </span>
+                    </div>
                 </button>
             </div>
+            <notebook position="inside">
+                <page string="Bibliothèque" name="library" icon="fa-book">
+                    <div class="mb-2">
+                        <button name="action_new_library_loan" type="object" class="btn btn-primary btn-sm"
+                                icon="fa-plus" string="Nouvel emprunt"/>
+                    </div>
+                    <field name="library_loan_ids" readonly="1">
+                        <list decoration-danger="state == 'overdue'" decoration-muted="state == 'returned'">
+                            <field name="reference"/>
+                            <field name="book_id"/>
+                            <field name="checkout_date"/>
+                            <field name="due_date"/>
+                            <field name="return_date" optional="show"/>
+                            <field name="fine_amount" optional="show"/>
+                            <field name="state" widget="badge" decoration-info="state == 'ongoing'"
+                                   decoration-danger="state == 'overdue'" decoration-success="state == 'returned'"
+                                   decoration-muted="state == 'lost'"/>
+                        </list>
+                    </field>
+                </page>
+            </notebook>
         </field>
     </record>
 </odoo>

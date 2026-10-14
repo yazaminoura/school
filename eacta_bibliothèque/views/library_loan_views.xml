@@ -1,0 +1,240 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<odoo>
+
+    <record id="view_library_loan_form" model="ir.ui.view">
+        <field name="name">library.loan.form</field>
+        <field name="model">library.loan</field>
+        <field name="arch" type="xml">
+            <form string="Emprunt">
+                <header>
+                    <button name="action_return_book" string="Enregistrer le retour" type="object" class="btn-primary"
+                            icon="fa-check" invisible="not id or state not in ('ongoing', 'overdue')"/>
+                    <button name="action_renew" string="Prolonger" type="object" icon="fa-repeat"
+                            invisible="not id or state not in ('ongoing', 'overdue')"/>
+                    <button name="action_mark_fine_paid" string="Amende réglée" type="object" icon="fa-money"
+                            invisible="not fine_amount or fine_paid"/>
+                    <button name="action_print_receipt" string="Bon d'emprunt" type="object" icon="fa-print"
+                            invisible="not id"/>
+                    <button name="action_mark_lost" string="Déclarer perdu" type="object"
+                            invisible="not id or state not in ('ongoing', 'overdue')"
+                            confirm="Déclarer cet exemplaire perdu ? Il sera retiré du fonds disponible."/>
+                    <button name="action_reopen" string="Rouvrir" type="object" groups="eacta_bibliothèque.group_eacta_library_manager"
+                            invisible="state not in ('returned', 'lost')"/>
+                    <field name="state" widget="statusbar" statusbar_visible="ongoing,returned"/>
+                </header>
+                <sheet>
+                    <widget name="web_ribbon" title="En retard" bg_color="text-bg-danger" invisible="state != 'overdue'"/>
+                    <widget name="web_ribbon" title="Rendu" bg_color="text-bg-success" invisible="state != 'returned'"/>
+                    <widget name="web_ribbon" title="Perdu" bg_color="text-bg-secondary" invisible="state != 'lost'"/>
+                    <field name="returned" invisible="1"/>
+                    <field name="is_lost" invisible="1"/>
+                    <field name="book_image" widget="image" class="oe_avatar o_library_cover" invisible="not book_image"/>
+                    <div class="oe_title">
+                        <div class="o_eacta_code" invisible="not reference or reference == '/'"><field name="reference"/></div>
+                        <h1><field name="book_id" placeholder="Livre…" options="{'no_create': True}"/></h1>
+                    </div>
+                    <group>
+                        <group string="Emprunteur">
+                            <field name="borrower_type" widget="radio" options="{'horizontal': true}"
+                                   readonly="id"/>
+                            <field name="student_id" invisible="borrower_type != 'student'"
+                                   required="borrower_type == 'student'" readonly="id" options="{'no_create': True}"/>
+                            <field name="class_id" invisible="borrower_type != 'student' or not class_id"/>
+                            <field name="teacher_id" invisible="borrower_type != 'teacher'"
+                                   required="borrower_type == 'teacher'" readonly="id" options="{'no_create': True}"/>
+                            <field name="borrower_id" invisible="not borrower_id"/>
+                        </group>
+                        <group string="Prêt">
+                            <field name="barcode_id" options="{'no_create': True}" readonly="id"/>
+                            <field name="checkout_date" readonly="id"/>
+                            <field name="due_date"/>
+                            <field name="renew_count" invisible="not renew_count"/>
+                            <field name="return_date" invisible="not returned"/>
+                        </group>
+                    </group>
+                    <group invisible="not days_late and not fine_amount">
+                        <group string="Retard">
+                            <field name="days_late"/>
+                            <field name="fine_amount" widget="monetary"/>
+                            <field name="fine_paid"/>
+                            <field name="currency_id" invisible="1"/>
+                        </group>
+                    </group>
+                    <group string="Retour" invisible="not returned">
+                        <field name="return_responsible_id"/>
+                        <field name="return_notes" placeholder="État du livre au retour…"/>
+                    </group>
+                    <group string="Suivi" groups="base.group_no_one">
+                        <field name="responsible_id"/>
+                        <field name="processed_date"/>
+                    </group>
+                </sheet>
+                <chatter/>
+            </form>
+        </field>
+    </record>
+
+    <record id="library_loan_tree_view" model="ir.ui.view">
+        <field name="name">library.loan.list</field>
+        <field name="model">library.loan</field>
+        <field name="arch" type="xml">
+            <list string="Emprunts" sample="1" decoration-danger="state == 'overdue'"
+                  decoration-muted="state in ('returned', 'lost')">
+                <field name="reference"/>
+                <field name="book_id"/>
+                <field name="borrower_name"/>
+                <field name="class_id" optional="show"/>
+                <field name="barcode_id" optional="hide"/>
+                <field name="checkout_date"/>
+                <field name="due_date"/>
+                <field name="return_date" optional="show"/>
+                <field name="days_late" optional="hide"/>
+                <field name="fine_amount" optional="show" sum="Total"/>
+                <field name="state" widget="badge" decoration-info="state == 'ongoing'"
+                       decoration-danger="state == 'overdue'" decoration-success="state == 'returned'"/>
+                <button name="action_return_book" type="object" string="Retour" icon="fa-check" class="btn-link"
+                        invisible="state not in ('ongoing', 'overdue')"/>
+            </list>
+        </field>
+    </record>
+
+    <record id="view_library_loan_kanban" model="ir.ui.view">
+        <field name="name">library.loan.kanban</field>
+        <field name="model">library.loan</field>
+        <field name="arch" type="xml">
+            <kanban class="o_eacta_kanban" default_group_by="state" sample="1" quick_create="false"
+                    group_create="false" group_delete="false" group_edit="false">
+                <field name="state"/>
+                <field name="due_date"/>
+                <field name="days_late"/>
+                <field name="fine_amount"/>
+                <progressbar field="state" colors='{"ongoing": "info", "overdue": "danger", "returned": "success", "lost": "200"}'/>
+                <templates>
+                    <t t-name="card" class="p-0">
+                        <div t-attf-class="o_eacta_card o_library_loan_#{record.state.raw_value}">
+                            <div class="o_eacta_card_head">
+                                <div class="o_eacta_icon_tile"><i class="fa fa-book" title="Livre"/></div>
+                                <div class="flex-grow-1 min-w-0">
+                                    <field name="book_id" class="o_eacta_card_title d-block text-truncate"/>
+                                    <div class="o_eacta_card_meta text-truncate"><field name="reference"/></div>
+                                </div>
+                            </div>
+                            <div class="o_eacta_card_body">
+                                <div class="o_eacta_card_line">
+                                    <i class="fa fa-fw fa-user" title="Emprunteur"/><field name="borrower_name"/>
+                                    <span class="text-muted" t-if="record.class_id.raw_value">· <field name="class_id"/></span>
+                                </div>
+                                <div class="o_eacta_card_line">
+                                    <i class="fa fa-fw fa-calendar" title="Retour prévu"/>Retour prévu : <field name="due_date"/>
+                                </div>
+                            </div>
+                            <div class="o_eacta_card_foot">
+                                <span t-if="record.state.raw_value == 'overdue'" class="o_eacta_score o_eacta_score_low">
+                                    <t t-out="record.days_late.raw_value"/> j de retard
+                                </span>
+                                <span t-elif="record.fine_amount.raw_value" class="text-muted small">
+                                    Amende : <field name="fine_amount"/>
+                                </span>
+                                <span t-else=""/>
+                                <button t-if="['ongoing', 'overdue'].includes(record.state.raw_value)"
+                                        name="action_return_book" type="object" class="btn btn-sm btn-primary">Retour</button>
+                            </div>
+                        </div>
+                    </t>
+                </templates>
+            </kanban>
+        </field>
+    </record>
+
+    <record id="view_library_loan_calendar" model="ir.ui.view">
+        <field name="name">library.loan.calendar</field>
+        <field name="model">library.loan</field>
+        <field name="arch" type="xml">
+            <calendar string="Retours prévus" date_start="due_date" color="state" mode="month" quick_create="0">
+                <field name="book_id"/>
+                <field name="borrower_name"/>
+            </calendar>
+        </field>
+    </record>
+
+    <record id="view_library_loan_pivot" model="ir.ui.view">
+        <field name="name">library.loan.pivot</field>
+        <field name="model">library.loan</field>
+        <field name="arch" type="xml">
+            <pivot string="Analyse des emprunts" sample="1">
+                <field name="category_id" type="row"/>
+                <field name="checkout_date" interval="month" type="col"/>
+            </pivot>
+        </field>
+    </record>
+
+    <record id="view_library_loan_graph" model="ir.ui.view">
+        <field name="name">library.loan.graph</field>
+        <field name="model">library.loan</field>
+        <field name="arch" type="xml">
+            <graph string="Emprunts par mois" type="bar" sample="1">
+                <field name="checkout_date" interval="month"/>
+            </graph>
+        </field>
+    </record>
+
+    <record id="library_loan_search_view" model="ir.ui.view">
+        <field name="name">library.loan.search</field>
+        <field name="model">library.loan</field>
+        <field name="arch" type="xml">
+            <search string="Rechercher un emprunt">
+                <field name="reference"/>
+                <field name="book_id"/>
+                <field name="borrower_name"/>
+                <field name="student_id"/>
+                <field name="class_id"/>
+                <field name="barcode_id"/>
+                <filter string="En cours" name="active" domain="[('state', 'in', ('ongoing', 'overdue'))]"/>
+                <filter string="En retard" name="overdue" domain="[('state', '=', 'overdue')]"/>
+                <filter string="Rendus" name="returned" domain="[('state', '=', 'returned')]"/>
+                <filter string="Perdus" name="lost" domain="[('state', '=', 'lost')]"/>
+                <separator/>
+                <filter string="Amendes à régler" name="fines" domain="[('fine_amount', '>', 0), ('fine_paid', '=', False)]"/>
+                <filter string="Élèves" name="students" domain="[('borrower_type', '=', 'student')]"/>
+                <filter string="Enseignants" name="teachers" domain="[('borrower_type', '=', 'teacher')]"/>
+                <separator/>
+                <filter string="Date d'emprunt" name="filter_checkout" date="checkout_date"/>
+                <group expand="0" string="Regrouper par">
+                    <filter string="État" name="group_state" context="{'group_by': 'state'}"/>
+                    <filter string="Livre" name="group_book" context="{'group_by': 'book_id'}"/>
+                    <filter string="Classe" name="group_class" context="{'group_by': 'class_id'}"/>
+                    <filter string="Catégorie" name="group_category" context="{'group_by': 'category_id'}"/>
+                    <filter string="Mois" name="group_month" context="{'group_by': 'checkout_date:month'}"/>
+                </group>
+            </search>
+        </field>
+    </record>
+
+    <record id="action_library_loan" model="ir.actions.act_window">
+        <field name="name">Emprunts</field>
+        <field name="res_model">library.loan</field>
+        <field name="view_mode">list,kanban,calendar,pivot,graph,form</field>
+        <field name="search_view_id" ref="library_loan_search_view"/>
+        <field name="context">{'search_default_active': 1}</field>
+        <field name="help" type="html">
+            <p class="o_view_nocontent_smiling_face">Aucun emprunt en cours</p>
+            <p>Prêtez un livre depuis le catalogue ou la fiche d'un élève.</p>
+        </field>
+    </record>
+
+    <record id="action_overdue_loans" model="ir.actions.act_window">
+        <field name="name">Retards</field>
+        <field name="res_model">library.loan</field>
+        <field name="view_mode">list,form</field>
+        <field name="search_view_id" ref="library_loan_search_view"/>
+        <field name="context">{'search_default_overdue': 1}</field>
+    </record>
+
+    <record id="action_library_loan_analysis" model="ir.actions.act_window">
+        <field name="name">Analyse des emprunts</field>
+        <field name="res_model">library.loan</field>
+        <field name="view_mode">graph,pivot,list</field>
+        <field name="search_view_id" ref="library_loan_search_view"/>
+    </record>
+
+</odoo>

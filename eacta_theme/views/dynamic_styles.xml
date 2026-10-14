@@ -18,7 +18,7 @@
     <!-- Variables CSS et branding injectés dans le client web -->
     <template id="eacta_theme_dynamic_styles" name="NR School Theme Dynamic Styles" inherit_id="web.webclient_bootstrap">
         <xpath expr="//meta[@name='theme-color']" position="attributes">
-            <attribute name="content">#00285C</attribute>
+            <attribute name="content">#3B0A18</attribute>
         </xpath>
         <xpath expr="//link[@rel='apple-touch-icon']" position="attributes">
             <attribute name="href">/eacta_school/static/src/img/nr_school_icon.png</attribute>
