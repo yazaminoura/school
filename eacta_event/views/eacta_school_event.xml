@@ -169,8 +169,8 @@
                                 </t>
                                 <i t-else="" class="fa fa-calendar-check-o" title="Événement"/>
                                 <div class="o_event_date" t-if="record.date_start.raw_value">
-                                    <strong t-out="record.date_start.raw_value.toFormat('dd')"/>
-                                    <small t-out="record.date_start.raw_value.toFormat('LLL')"/>
+                                    <strong t-out="luxon.DateTime.fromISO(record.date_start.raw_value).toFormat('dd')"/>
+                                    <small t-out="luxon.DateTime.fromISO(record.date_start.raw_value).toFormat('LLL')"/>
                                 </div>
                             </div>
                             <div class="o_eacta_card">

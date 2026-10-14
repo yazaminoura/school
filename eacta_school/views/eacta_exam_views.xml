@@ -149,8 +149,8 @@
                         <div class="o_eacta_card o_eacta_exam_card">
                             <div class="o_eacta_card_head">
                                 <div class="o_eacta_date_tile" t-if="record.date.raw_value">
-                                    <t t-out="record.date.raw_value.toFormat('dd')"/>
-                                    <small t-out="record.date.raw_value.toFormat('LLL')"/>
+                                    <t t-out="luxon.DateTime.fromISO(record.date.raw_value).toFormat('dd')"/>
+                                    <small t-out="luxon.DateTime.fromISO(record.date.raw_value).toFormat('LLL')"/>
                                 </div>
                                 <div class="flex-grow-1 min-w-0">
                                     <field name="name" class="o_eacta_card_title d-block text-truncate"/>
