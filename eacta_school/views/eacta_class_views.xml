@@ -78,7 +78,8 @@
 
                     <group>
                         <group string="Organisation">
-                            <field name="year"/>
+                            <field name="academic_year_id" options="{'no_create': True}"/>
+                            <field name="year" invisible="1"/>
                             <field name="level"/>
                             <field name="level_id" options="{'no_create': True}"/>
                             <field name="teacher_id" options="{'no_create': True}"/>
@@ -129,7 +130,8 @@
         <field name="model">eacta.class</field>
         <field name="arch" type="xml">
             <list string="Classes" sample="1">
-                <field name="year"/>
+                <field name="academic_year_id"/>
+                <field name="year" column_invisible="1"/>
                 <field name="name"/>
                 <field name="level"/>
                 <field name="level_id" optional="hide"/>
@@ -148,6 +150,7 @@
         <field name="arch" type="xml">
             <search string="Rechercher des classes">
                 <field name="name"/>
+                <field name="academic_year_id"/>
                 <field name="year"/>
                 <field name="teacher_id"/>
                 <field name="student_ids"/>
@@ -160,6 +163,7 @@
                 <separator/>
                 <filter string="Archivées" name="inactive" domain="[('active', '=', False)]"/>
                 <group expand="0" string="Regrouper par">
+                    <filter string="Année académique" name="group_by_academic_year" context="{'group_by': 'academic_year_id'}"/>
                     <filter string="Année" name="group_by_year" context="{'group_by': 'year'}"/>
                     <filter string="Cycle" name="group_by_level" context="{'group_by': 'level'}"/>
                     <filter string="Niveau" name="group_by_level_id" context="{'group_by': 'level_id'}"/>
@@ -189,7 +193,7 @@
                                     <field name="name" class="o_eacta_card_title d-block text-truncate"/>
                                     <div class="o_eacta_card_meta"><field name="level"/></div>
                                 </div>
-                                <span class="o_eacta_badge o_eacta_badge_primary"><field name="year"/></span>
+                                <span class="o_eacta_badge o_eacta_badge_primary"><field name="academic_year_id"/></span>
                             </div>
                             <div class="o_eacta_card_body">
                                 <div class="o_eacta_card_line" t-if="record.teacher_id.raw_value">
@@ -239,7 +243,7 @@
         <field name="res_model">eacta.class</field>
         <field name="view_mode">kanban,list,form,calendar</field>
         <field name="search_view_id" ref="view_eacta_class_search"/>
-        <field name="context">{'search_default_group_by_year': 1}</field>
+        <field name="context">{'search_default_group_by_academic_year': 1}</field>
         <field name="help" type="html">
             <p class="o_view_nocontent_smiling_face">Créez votre première classe</p>
             <p>Organisez les élèves par année, cycle et niveau, et suivez le remplissage en temps réel.</p>

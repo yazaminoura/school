@@ -1,0 +1,133 @@
+# Translation of Odoo Server.
+# This file contains the translation of the following modules:
+# 	* eacta_school
+#
+msgid ""
+msgstr ""
+"Project-Id-Version: Odoo Server 18.0\n"
+"Report-Msgid-Bugs-To: \n"
+"POT-Creation-Date: 2026-10-15 13:00+0000\n"
+"PO-Revision-Date: 2026-10-15 13:00+0000\n"
+"Last-Translator: NR School\n"
+"Language-Team: English\n"
+"Language: en\n"
+"MIME-Version: 1.0\n"
+"Content-Type: text/plain; charset=UTF-8\n"
+"Content-Transfer-Encoding: 8bit\n"
+"Plural-Forms: nplurals=2; plural=(n != 1);\n"
+
+#. module: eacta_school
+msgid "Année académique"
+msgstr "Academic Year"
+
+#. module: eacta_school
+msgid "Trimestre"
+msgstr "Term"
+
+#. module: eacta_school
+msgid "Trimestres"
+msgstr "Terms"
+
+#. module: eacta_school
+msgid "Résultats scolaires"
+msgstr "Student Results"
+
+#. module: eacta_school
+msgid "Moyenne générale"
+msgstr "Overall Average"
+
+#. module: eacta_school
+msgid "Moyenne annuelle"
+msgstr "Yearly Average"
+
+#. module: eacta_school
+msgid "Moyenne trimestrielle"
+msgstr "Term Average"
+
+#. module: eacta_school
+msgid "Rang"
+msgstr "Rank"
+
+#. module: eacta_school
+msgid "Effectif"
+msgstr "Class Size"
+
+#. module: eacta_school
+msgid "Décision"
+msgstr "Decision"
+
+#. module: eacta_school
+msgid "Admis"
+msgstr "Passed"
+
+#. module: eacta_school
+msgid "Ajourné / Redoublement"
+msgstr "Repeat"
+
+#. module: eacta_school
+msgid "Diplômé"
+msgstr "Graduated"
+
+#. module: eacta_school
+msgid "Distinction du conseil"
+msgstr "Council Distinction"
+
+#. module: eacta_school
+msgid "Félicitations"
+msgstr "Highest Honors"
+
+#. module: eacta_school
+msgid "Tableau d'honneur"
+msgstr "Honor Roll"
+
+#. module: eacta_school
+msgid "Compliments"
+msgstr "Compliments"
+
+#. module: eacta_school
+msgid "Encouragements"
+msgstr "Encouragements"
+
+#. module: eacta_school
+msgid "Sans distinction"
+msgstr "None"
+
+#. module: eacta_school
+msgid "Assiduité & Absences"
+msgstr "Attendance & Absences"
+
+#. module: eacta_school
+msgid "Absence injustifiée"
+msgstr "Unjustified Absence"
+
+#. module: eacta_school
+msgid "Absence justifiée"
+msgstr "Justified Absence"
+
+#. module: eacta_school
+msgid "Retard"
+msgstr "Late"
+
+#. module: eacta_school
+msgid "Paiements & Reçus"
+msgstr "Payments & Receipts"
+
+#. module: eacta_school
+msgid "Remboursement"
+msgstr "Refund"
+
+#. module: eacta_school
+msgid "Remise fratrie"
+msgstr "Sibling Discount"
+
+#. module: eacta_school
+msgid "Assistant de promotion"
+msgstr "Promotion Wizard"
+
+#. module: eacta_school
+msgid "Promouvoir vers l'année suivante"
+msgstr "Promote to Next Year"
+
+#. module: eacta_school
+msgid "Pénalité de retard"
+msgstr "Late Penalty"

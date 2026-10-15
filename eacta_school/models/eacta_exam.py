@@ -35,10 +35,45 @@ class EactaExam(models.Model):
     duration = fields.Float(string='Durée (h)', default=1.0)
     room = fields.Char(string='Salle')
     description = fields.Text(string='Consignes')
+    term_id = fields.Many2one(
+        'eacta.term', string='Trimestre / Semestre', compute='_compute_term_id',
+        store=True, readonly=False, tracking=True, index=True)
+    academic_year_id = fields.Many2one(
+        'eacta.academic.year', string='Année académique', compute='_compute_academic_year_id',
+        store=True, readonly=False, index=True)
+    year_id = fields.Many2one(
+        'eacta.academic.year', related='academic_year_id', store=True, readonly=False)
     class_ids = fields.Many2many(
         'eacta.class', 'eacta_exam_class_rel', 'exam_id', 'class_ids', string="Classes",
         compute='_compute_class_ids', store=True, readonly=False)
     color = fields.Integer(string='Couleur')
+
+    @api.depends('date')
+    def _compute_term_id(self):
+        for exam in self:
+            if exam.date:
+                term = self.env['eacta.term'].search([
+                    ('date_start', '<=', exam.date),
+                    ('date_end', '>=', exam.date),
+                ], limit=1)
+                if term:
+                    exam.term_id = term
+            elif not exam.term_id:
+                exam.term_id = False
+
+    @api.depends('term_id', 'term_id.year_id', 'date')
+    def _compute_academic_year_id(self):
+        for exam in self:
+            if exam.term_id and exam.term_id.year_id:
+                exam.academic_year_id = exam.term_id.year_id
+            elif exam.date:
+                year = self.env['eacta.academic.year'].search([
+                    ('date_start', '<=', exam.date),
+                    ('date_end', '>=', exam.date),
+                ], limit=1)
+                exam.academic_year_id = year or False
+            elif not exam.academic_year_id:
+                exam.academic_year_id = False
 
     grade_ids = fields.One2many('eacta.course.grade', 'exam_id', string='Notes')
     grade_count = fields.Integer(string='Copies', compute='_compute_stats', store=True)
@@ -165,7 +200,11 @@ class EactaExam(models.Model):
         ])])
         today = fields.Date.context_today(self)
         for n, klass in enumerate(classes):
-            year = int(klass.year)
+            y_str = (klass.year or '').split('-')[0]
+            try:
+                year = int(y_str)
+            except Exception:
+                year = 2023
             klass.write({
                 'course_ids': [(6, 0, [courses[c].id for c in program.get(klass.level, []) if c in courses])],
                 'teacher_id': teachers[n % len(teachers)].id if teachers else False,

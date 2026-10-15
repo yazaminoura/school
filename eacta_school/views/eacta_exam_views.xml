@@ -56,6 +56,8 @@
                             <field name="class_ids" widget="many2many_tags" options="{'no_create': True}"/>
                         </group>
                         <group string="Organisation">
+                            <field name="academic_year_id" options="{'no_create': True}"/>
+                            <field name="term_id" options="{'no_create': True}" domain="[('year_id', '=', academic_year_id)]"/>
                             <field name="date"/>
                             <field name="duration" widget="float_time"/>
                             <field name="room"/>
@@ -94,6 +96,8 @@
         <field name="arch" type="xml">
             <list string="Examens" sample="1" decoration-info="state == 'draft'" decoration-muted="state == 'cancel'">
                 <field name="date"/>
+                <field name="academic_year_id" optional="show"/>
+                <field name="term_id" optional="show"/>
                 <field name="name"/>
                 <field name="course_id"/>
                 <field name="exam_type"/>
@@ -116,6 +120,8 @@
             <search string="Rechercher des examens">
                 <field name="name"/>
                 <field name="course_id"/>
+                <field name="academic_year_id"/>
+                <field name="term_id"/>
                 <field name="class_ids"/>
                 <field name="teacher_id"/>
                 <filter string="Mes examens" name="my_exams" domain="[('teacher_id', '=', uid)]"/>
@@ -126,6 +132,8 @@
                 <separator/>
                 <filter string="Date" name="filter_date" date="date"/>
                 <group expand="0" string="Regrouper par">
+                    <filter string="Année académique" name="group_by_year" context="{'group_by': 'academic_year_id'}"/>
+                    <filter string="Trimestre" name="group_by_term" context="{'group_by': 'term_id'}"/>
                     <filter string="Matière" name="group_by_course" context="{'group_by': 'course_id'}"/>
                     <filter string="Type" name="group_by_type" context="{'group_by': 'exam_type'}"/>
                     <filter string="État" name="group_by_state" context="{'group_by': 'state'}"/>

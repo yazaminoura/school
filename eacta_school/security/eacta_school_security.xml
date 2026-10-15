@@ -1,46 +1,46 @@
 <?xml version="1.0" encoding="utf-8"?>
 <odoo>
+    <data>
+        <record id="module_category_eacta_school" model="ir.module.category">
+            <field name="name">NR School</field>
+            <field name="description">Gestion des utilisateurs pour le module NR School</field>
+            <field name="sequence">20</field>
+        </record>
 
-   <data>
+        <!-- Groupe de base Utilisateur -->
+        <record id="group_eacta_school_user" model="res.groups">
+            <field name="name">Utilisateur</field>
+            <field name="category_id" ref="module_category_eacta_school"/>
+            <field name="implied_ids" eval="[(4, ref('base.group_user'))]"/>
+        </record>
 
-       <record id="module_category_eacta_school" model="ir.module.category">
+        <!-- Groupe Enseignant -->
+        <record id="group_eacta_school_teacher" model="res.groups">
+            <field name="name">Enseignant</field>
+            <field name="category_id" ref="module_category_eacta_school"/>
+            <field name="implied_ids" eval="[(4, ref('group_eacta_school_user'))]"/>
+        </record>
 
-           <field name="name">NR School</field>
+        <!-- Groupe Secrétariat / Accueil -->
+        <record id="group_eacta_school_secretary" model="res.groups">
+            <field name="name">Secrétariat / Accueil</field>
+            <field name="category_id" ref="module_category_eacta_school"/>
+            <field name="implied_ids" eval="[(4, ref('group_eacta_school_user'))]"/>
+        </record>
 
-           <field name="description">Gestion des utilisateurs pour le module NR School</field>
+        <!-- Groupe Comptabilité / Finances -->
+        <record id="group_eacta_school_finance" model="res.groups">
+            <field name="name">Comptabilité / Finances</field>
+            <field name="category_id" ref="module_category_eacta_school"/>
+            <field name="implied_ids" eval="[(4, ref('group_eacta_school_user'))]"/>
+        </record>
 
-           <field name="sequence">20</field>
-
-       </record>
-
-       <record id="group_eacta_school_user" model="res.groups">
-
-           <field name="name">Utilisateur</field>
-
-           <field name="category_id" ref="module_category_eacta_school"/>
-
-           <field name="implied_ids" eval="[(4, ref('base.group_user'))]"/>
-
-       </record>
-
-
-
-       <!-- Groupe Manager -->
-
-       <record id="group_eacta_school_manager" model="res.groups">
-
-           <field name="name">Manager</field>
-
-           <field name="category_id" ref="module_category_eacta_school"/>
-
-           <field name="implied_ids" eval="[(4, ref('group_eacta_school_user'))]"/>
-
-           <field name="users" eval="[(4, ref('base.user_root')), (4, ref('base.user_admin'))]"/>
-
-       </record>
-
-   </data>
-
-
-
+        <!-- Groupe Administration / Manager -->
+        <record id="group_eacta_school_manager" model="res.groups">
+            <field name="name">Administration (Manager)</field>
+            <field name="category_id" ref="module_category_eacta_school"/>
+            <field name="implied_ids" eval="[(4, ref('group_eacta_school_teacher')), (4, ref('group_eacta_school_secretary')), (4, ref('group_eacta_school_finance'))]"/>
+            <field name="users" eval="[(4, ref('base.user_root')), (4, ref('base.user_admin'))]"/>
+        </record>
+    </data>
 </odoo>

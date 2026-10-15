@@ -139,6 +139,148 @@
     </record>
 
     <!-- ================================================================
+         BULLETIN SCOLAIRE OFFICIEL (eacta.student.result)
+         ================================================================ -->
+    <template id="report_student_result_document">
+        <t t-call="web.external_layout">
+            <t t-call="eacta_school.eacta_school_report_assets"/>
+            <div class="page eacta_report">
+                <div class="eacta_report_title">
+                    <h2>Bulletin scolaire officiel</h2>
+                    <div class="eacta_report_sub">
+                        <t t-if="o.result_type == 'term'">
+                            <span t-out="o.term_id.name or 'Trimestre'"/> · 
+                        </t>
+                        <t t-else="">
+                            <span>Bilan Annuel</span> · 
+                        </t>
+                        Année académique <strong t-out="o.academic_year_id.name or '-'"/>
+                    </div>
+                </div>
+
+                <div class="eacta_identity">
+                    <div>
+                        <div class="eacta_label">Élève</div>
+                        <div class="eacta_value" t-out="o.student_id.name"/>
+                        <div t-if="o.student_id.code" class="text-muted">Matricule : <span t-out="o.student_id.code"/></div>
+                    </div>
+                    <div>
+                        <div class="eacta_label">Classe</div>
+                        <div class="eacta_value" t-out="o.class_id.display_name or '-'"/>
+                        <div t-if="o.class_size" class="text-muted">
+                            Effectif : <t t-out="o.class_size"/> élèves
+                        </div>
+                    </div>
+                    <div>
+                        <div class="eacta_label">Date de naissance</div>
+                        <div class="eacta_value"><span t-field="o.student_id.date_of_birth"/><t t-if="not o.student_id.date_of_birth">-</t></div>
+                    </div>
+                </div>
+
+                <table class="eacta_table">
+                    <thead>
+                        <tr>
+                            <th>Matière</th>
+                            <th class="text-center">Coeff.</th>
+                            <th class="text-end">Moyenne / 20</th>
+                            <th class="text-center">Validation</th>
+                            <th>Appréciation / Remarques</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        <tr t-foreach="o.line_ids" t-as="line">
+                            <td>
+                                <strong t-out="line.course_id.name"/>
+                                <div t-if="line.teacher_id" class="text-muted small" t-out="line.teacher_id.name"/>
+                            </td>
+                            <td class="text-center" t-out="'%g' % line.coefficient"/>
+                            <td t-attf-class="text-end #{'eacta_fail' if line.average &lt; 10 else 'eacta_pass'}">
+                                <strong><t t-out="'%.2f' % line.average"/></strong>
+                            </td>
+                            <td class="text-center">
+                                <span t-if="line.passed" class="badge text-bg-success">Validé</span>
+                                <span t-else="" class="badge text-bg-danger">Non validé</span>
+                            </td>
+                            <td>
+                                <div t-out="dict(line._fields['appreciation'].selection).get(line.appreciation) or ''"/>
+                                <div t-if="line.teacher_remarks" class="small fst-italic text-muted" t-out="line.teacher_remarks"/>
+                            </td>
+                        </tr>
+                        <tr t-if="not o.line_ids">
+                            <td colspan="5" class="text-center text-muted">Aucune note enregistrée pour cette période.</td>
+                        </tr>
+                    </tbody>
+                </table>
+
+                <div class="eacta_summary">
+                    <div>
+                        <div class="eacta_label">Moyenne générale</div>
+                        <div t-attf-class="eacta_big #{'eacta_fail' if o.average &lt; 10 else 'eacta_pass'}"
+                             t-out="'%.2f / 20' % o.average"/>
+                    </div>
+                    <div>
+                        <div class="eacta_label">Appréciation</div>
+                        <div class="eacta_big" t-out="dict(o._fields['appreciation'].selection).get(o.appreciation) or '-'"/>
+                    </div>
+                    <div t-if="o.honor_mention">
+                        <div class="eacta_label">Distinction</div>
+                        <div class="eacta_big text-warning" t-out="dict(o._fields['honor_mention'].selection).get(o.honor_mention)"/>
+                    </div>
+                    <div t-if="o.rank">
+                        <div class="eacta_label">Rang</div>
+                        <div class="eacta_big"><t t-out="o.rank"/><small> / <t t-out="o.class_size"/></small></div>
+                    </div>
+                    <div t-if="o.class_average">
+                        <div class="eacta_label">Moyenne classe</div>
+                        <div class="eacta_big" t-out="'%.2f' % o.class_average"/>
+                    </div>
+                    <div>
+                        <div class="eacta_label">Assiduité</div>
+                        <div style="font-size: 12px; font-weight: 600; padding-top: 4px;">
+                            <span t-out="o.absence_count"/> abs. (<span class="text-danger" t-out="o.unjustified_absence_count"/> nj)
+                            <t t-if="o.late_count"> · <span class="text-warning" t-out="o.late_count"/> ret.</t>
+                        </div>
+                    </div>
+                    <div>
+                        <div class="eacta_label">Décision</div>
+                        <div t-attf-class="eacta_big #{'eacta_pass' if o.passed else 'eacta_fail'}"
+                             t-out="'Admis' if o.passed else 'Non admis'"/>
+                    </div>
+                </div>
+
+                <div class="mt-3 p-3 bg-light rounded border" t-if="o.teacher_remarks">
+                    <div class="eacta_label">Observations du conseil de classe</div>
+                    <p class="mb-0" t-out="o.teacher_remarks"/>
+                </div>
+
+                <div class="eacta_signatures">
+                    <div>Le professeur principal<br/><t t-out="o.class_id.teacher_id.name if o.class_id else ''"/></div>
+                    <div>La direction</div>
+                </div>
+            </div>
+        </t>
+    </template>
+
+    <template id="report_student_result">
+        <t t-call="web.html_container">
+            <t t-foreach="docs" t-as="o">
+                <t t-call="eacta_school.report_student_result_document"/>
+            </t>
+        </t>
+    </template>
+
+    <record id="action_report_student_result" model="ir.actions.report">
+        <field name="name">Bulletin scolaire officiel</field>
+        <field name="model">eacta.student.result</field>
+        <field name="report_type">qweb-pdf</field>
+        <field name="report_name">eacta_school.report_student_result</field>
+        <field name="report_file">eacta_school.report_student_result</field>
+        <field name="print_report_name">'Bulletin - %s' % (object.display_name)</field>
+        <field name="binding_model_id" ref="model_eacta_student_result"/>
+        <field name="binding_type">report</field>
+    </record>
+
+    <!-- ================================================================
          RELEVÉ DES RÉSULTATS DE LA CLASSE
          ================================================================ -->
     <template id="report_class_results">

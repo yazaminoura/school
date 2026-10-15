@@ -42,5 +42,15 @@
             <field name="default_amount">800</field>
         </record>
 
+        <record id="ir_cron_check_overdue_fees" model="ir.cron">
+            <field name="name">NR School : Contrôle des frais en retard et pénalités</field>
+            <field name="model_id" ref="model_eacta_student_fee"/>
+            <field name="state">code</field>
+            <field name="code">model._cron_check_overdue_fees()</field>
+            <field name="interval_number">1</field>
+            <field name="interval_type">days</field>
+            <field name="active" eval="True"/>
+        </record>
+
     </data>
 </odoo>

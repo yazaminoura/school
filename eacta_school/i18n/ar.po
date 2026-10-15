@@ -1,0 +1,133 @@
+# Translation of Odoo Server.
+# This file contains the translation of the following modules:
+# 	* eacta_school
+#
+msgid ""
+msgstr ""
+"Project-Id-Version: Odoo Server 18.0\n"
+"Report-Msgid-Bugs-To: \n"
+"POT-Creation-Date: 2026-10-15 13:00+0000\n"
+"PO-Revision-Date: 2026-10-15 13:00+0000\n"
+"Last-Translator: NR School\n"
+"Language-Team: Arabic\n"
+"Language: ar\n"
+"MIME-Version: 1.0\n"
+"Content-Type: text/plain; charset=UTF-8\n"
+"Content-Transfer-Encoding: 8bit\n"
+"Plural-Forms: nplurals=6; plural=n==0 ? 0 : n==1 ? 1 : n==2 ? 2 : n%100>=3 && n%100<=10 ? 3 : n%100>=11 && n%100<=99 ? 4 : 5;\n"
+
+#. module: eacta_school
+msgid "Année académique"
+msgstr "السنة الدراسية"
+
+#. module: eacta_school
+msgid "Trimestre"
+msgstr "الدورة / الأسدوس"
+
+#. module: eacta_school
+msgid "Trimestres"
+msgstr "الدورات الدراسية"
+
+#. module: eacta_school
+msgid "Résultats scolaires"
+msgstr "النتائج المدرسية"
+
+#. module: eacta_school
+msgid "Moyenne générale"
+msgstr "المعدل العام"
+
+#. module: eacta_school
+msgid "Moyenne annuelle"
+msgstr "المعدل السنوي"
+
+#. module: eacta_school
+msgid "Moyenne trimestrielle"
+msgstr "المعدل الدوري"
+
+#. module: eacta_school
+msgid "Rang"
+msgstr "الرتبة"
+
+#. module: eacta_school
+msgid "Effectif"
+msgstr "عدد التلاميذ"
+
+#. module: eacta_school
+msgid "Décision"
+msgstr "قرار المجلس"
+
+#. module: eacta_school
+msgid "Admis"
+msgstr "ينتقل"
+
+#. module: eacta_school
+msgid "Ajourné / Redoublement"
+msgstr "يكرر"
+
+#. module: eacta_school
+msgid "Diplômé"
+msgstr "متخرج"
+
+#. module: eacta_school
+msgid "Distinction du conseil"
+msgstr "ملاحظة المجلس"
+
+#. module: eacta_school
+msgid "Félicitations"
+msgstr "تهنئة"
+
+#. module: eacta_school
+msgid "Tableau d'honneur"
+msgstr "لوحة الشرف"
+
+#. module: eacta_school
+msgid "Compliments"
+msgstr "تشجيع"
+
+#. module: eacta_school
+msgid "Encouragements"
+msgstr "تنويه"
+
+#. module: eacta_school
+msgid "Sans distinction"
+msgstr "بدون ميزة"
+
+#. module: eacta_school
+msgid "Assiduité & Absences"
+msgstr "المواظبة والغياب"
+
+#. module: eacta_school
+msgid "Absence injustifiée"
+msgstr "غياب غير مبرر"
+
+#. module: eacta_school
+msgid "Absence justifiée"
+msgstr "غياب مبرر"
+
+#. module: eacta_school
+msgid "Retard"
+msgstr "تأخر"
+
+#. module: eacta_school
+msgid "Paiements & Reçus"
+msgstr "الأداءات والوصولات"
+
+#. module: eacta_school
+msgid "Remboursement"
+msgstr "استرجاع"
+
+#. module: eacta_school
+msgid "Remise fratrie"
+msgstr "تخفيض الإخوة"
+
+#. module: eacta_school
+msgid "Assistant de promotion"
+msgstr "معالج الترقية وإعادة التسجيل"
+
+#. module: eacta_school
+msgid "Promouvoir vers l'année suivante"
+msgstr "ترقية إلى السنة الموالية"
+
+#. module: eacta_school
+msgid "Pénalité de retard"
+msgstr "غرامة التأخير"

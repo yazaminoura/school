@@ -12,12 +12,18 @@ class EactaClass(models.Model):
     _name = 'eacta.class'
     _description = 'Classe'
     _inherit = ['mail.thread']
-    _order = 'year desc, name'
+    _order = 'academic_year_id desc, name'
 
     name = fields.Char(string='Nom', required=True, tracking=True)
+    academic_year_id = fields.Many2one(
+        'eacta.academic.year', string='Année académique', required=True, tracking=True,
+        default=lambda self: self.env['eacta.academic.year'].get_current_year(), index=True)
+    year_id = fields.Many2one(
+        'eacta.academic.year', string='Année académique (alias)',
+        related='academic_year_id', readonly=False, store=True)
     year = fields.Char(
-        string='Année académique', required=True, tracking=True,
-        default=lambda self: str(fields.Date.today().year))
+        string='Année', compute='_compute_year_text', inverse='_inverse_year_text',
+        store=True, tracking=True)
     level = fields.Selection(LEVELS, string='Cycle', required=True, default='primary', tracking=True)
     level_id = fields.Many2one('eacta.school.level', string='Niveau scolaire')
     start_date = fields.Date("Date de début")
@@ -44,9 +50,45 @@ class EactaClass(models.Model):
     has_draft_students = fields.Boolean(string='Inscriptions en attente', compute='_compute_has_draft_students')
 
     _sql_constraints = [
-        ('name_year_unique', 'unique(name, year)', 'Une classe avec le même nom existe déjà pour cette année !'),
+        ('name_academic_year_unique', 'unique(name, academic_year_id)', 'Une classe avec le même nom existe déjà pour cette année académique !'),
         ('capacity_positive', 'CHECK(capacity >= 0)', 'La capacité doit être positive.'),
     ]
+
+    @api.depends('academic_year_id.name')
+    def _compute_year_text(self):
+        for class_ in self:
+            class_.year = class_.academic_year_id.name or ''
+
+    def _inverse_year_text(self):
+        for class_ in self:
+            if class_.year:
+                y_str = class_.year.split('-')[0] if '-' in class_.year else class_.year
+                name = class_.year
+                try:
+                    y_int = int(y_str)
+                    start_d = f"{y_int}-09-01"
+                    end_d = f"{y_int + 1}-06-30"
+                    name = f"{y_int}-{y_int + 1}"
+                except Exception:
+                    start_d = fields.Date.today()
+                    end_d = fields.Date.today()
+
+                # Search both original and normalized name
+                year_rec = self.env['eacta.academic.year'].sudo().search([
+                    '|', ('name', '=', class_.year), ('name', '=', name)
+                ], limit=1)
+                if not year_rec:
+                    has_open = self.env['eacta.academic.year'].sudo().search_count([('state', '=', 'open')])
+                    today = fields.Date.today()
+                    is_past = fields.Date.from_string(end_d) < today if end_d else False
+                    initial_state = 'closed' if is_past else ('draft' if has_open else 'open')
+                    year_rec = self.env['eacta.academic.year'].sudo().create({
+                        'name': name,
+                        'date_start': start_d,
+                        'date_end': end_d,
+                        'state': initial_state,
+                    })
+                class_.academic_year_id = year_rec
 
     @api.depends('student_ids', 'course_ids', 'capacity')
     def _compute_counts(self):
@@ -74,16 +116,17 @@ class EactaClass(models.Model):
         for class_ in self:
             class_.exam_count = counts.get(class_.id, 0)
 
-    @api.depends('name', 'year')
+    @api.depends('name', 'academic_year_id.name', 'year')
     def _compute_display_name(self):
         for class_ in self:
-            class_.display_name = f"{class_.name} ({class_.year})" if class_.year else class_.name
+            y_name = class_.academic_year_id.name or class_.year
+            class_.display_name = f"{class_.name} ({y_name})" if y_name else class_.name
 
     @api.model
     def _name_search(self, name, domain=None, operator='ilike', limit=None, order=None):
         domain = domain or []
         if name:
-            domain = ['|', '|', ('name', operator, name), ('year', operator, name), ('level', operator, name)] + list(domain)
+            domain = ['|', '|', ('name', operator, name), ('academic_year_id.name', operator, name), ('level', operator, name)] + list(domain)
         return self._search(domain, limit=limit, order=order)
 
     @api.constrains('start_date', 'end_date')
@@ -100,22 +143,34 @@ class EactaClass(models.Model):
                     f"La classe {class_.display_name} est complète : "
                     f"{len(class_.student_ids)} élèves pour une capacité de {class_.capacity}.")
 
-    @api.constrains('student_ids', 'year')
+    @api.constrains('student_ids', 'academic_year_id')
     def _check_student_year_uniqueness(self):
-        """Un élève ne peut appartenir qu'à une seule classe par année."""
-        for class_ in self:
-            if not class_.student_ids:
-                continue
-            duplicate = self.search([
-                ('id', '!=', class_.id),
-                ('year', '=', class_.year),
-                ('student_ids', 'in', class_.student_ids.ids),
-            ], limit=1)
-            if duplicate:
-                student = (class_.student_ids & duplicate.student_ids)[:1]
-                raise ValidationError(
-                    f"L'élève {student.name} est déjà dans la classe {duplicate.name} pour l'année "
-                    f"{class_.year}. Un élève ne peut être que dans une classe par année.")
+        """Un élève ne peut appartenir qu'à une seule classe par année académique (requête groupée unique)."""
+        if not self:
+            return
+        self.flush_model(['student_ids', 'academic_year_id'])
+        self.env.cr.execute("""
+            SELECT rel.eacta_student_id, c.academic_year_id, count(DISTINCT c.id)
+            FROM eacta_class_eacta_student_rel rel
+            JOIN eacta_class c ON c.id = rel.eacta_class_id
+            WHERE c.active = true
+              AND rel.eacta_student_id IN (
+                  SELECT rel2.eacta_student_id
+                  FROM eacta_class_eacta_student_rel rel2
+                  WHERE rel2.eacta_class_id IN %s
+              )
+            GROUP BY rel.eacta_student_id, c.academic_year_id
+            HAVING count(DISTINCT c.id) > 1
+            LIMIT 1
+        """, (tuple(self.ids),))
+        row = self.env.cr.fetchone()
+        if row:
+            student = self.env['eacta.student'].browse(row[0])
+            year = self.env['eacta.academic.year'].browse(row[1])
+            raise ValidationError(
+                f"L'élève {student.name} est inscrit dans plus d'une classe pour l'année académique "
+                f"{year.name}. Un élève ne peut être que dans une classe par année."
+            )
 
     def write(self, vals):
         res = super().write(vals)
@@ -125,7 +180,7 @@ class EactaClass(models.Model):
                     for student in class_.student_ids:
                         missing = class_.course_ids - student.course_ids
                         if missing:
-                            super(models.Model, student).write({'course_ids': [(4, c.id) for c in missing]})
+                            student.write({'course_ids': [(4, c.id) for c in missing]})
         return res
 
     def _action_open(self, name, model, domain, context=None, view_mode='list,form'):

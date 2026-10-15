@@ -25,7 +25,11 @@ class EactaTimetableSlot(models.Model):
     _order = 'class_id, weekday, hour_from'
 
     class_id = fields.Many2one('eacta.class', string='Classe', required=True, ondelete='cascade', index=True)
-    year = fields.Char(related='class_id.year', store=True, string='Année')
+    academic_year_id = fields.Many2one(
+        'eacta.academic.year', string='Année académique',
+        related='class_id.academic_year_id', store=True, index=True)
+    year_id = fields.Many2one('eacta.academic.year', related='academic_year_id', store=True)
+    year = fields.Char(related='academic_year_id.name', store=True, string='Année')
     course_id = fields.Many2one('eacta.course', string='Matière', required=True, ondelete='cascade',
                                 domain="[('id', 'in', allowed_course_ids)]")
     allowed_course_ids = fields.Many2many('eacta.course', compute='_compute_allowed_course_ids')
@@ -39,6 +43,16 @@ class EactaTimetableSlot(models.Model):
     color = fields.Integer(related='course_id.color', string='Couleur')
     note = fields.Char(string='Remarque')
     active = fields.Boolean(default=True)
+
+    @api.constrains('teacher_id', 'course_id')
+    def _check_teacher_teaches_course(self):
+        for slot in self:
+            if slot.teacher_id and slot.course_id and slot.course_id.teacher_id:
+                if slot.teacher_id != slot.course_id.teacher_id:
+                    raise ValidationError(
+                        f"L'enseignant « {slot.teacher_id.name} » n'est pas l'enseignant assigné "
+                        f"au cours « {slot.course_id.name} » ({slot.course_id.teacher_id.name})."
+                    )
 
     @api.depends('class_id.course_ids')
     def _compute_allowed_course_ids(self):
@@ -73,8 +87,14 @@ class EactaTimetableSlot(models.Model):
     @api.constrains('class_id', 'teacher_id', 'room', 'weekday', 'hour_from', 'hour_to', 'active')
     def _check_conflicts(self):
         for slot in self.filtered('active'):
-            base = [('id', '!=', slot.id), ('weekday', '=', slot.weekday), ('year', '=', slot.year),
-                    ('hour_from', '<', slot.hour_to), ('hour_to', '>', slot.hour_from)]
+            base = [
+                ('id', '!=', slot.id),
+                ('active', '=', True),
+                ('weekday', '=', slot.weekday),
+                ('academic_year_id', '=', slot.academic_year_id.id),
+                ('hour_from', '<', slot.hour_to),
+                ('hour_to', '>', slot.hour_from),
+            ]
             checks = [
                 ([('class_id', '=', slot.class_id.id)], f"la classe {slot.class_id.display_name}"),
             ]
@@ -83,11 +103,20 @@ class EactaTimetableSlot(models.Model):
             if slot.room:
                 checks.append(([('room', '=ilike', slot.room)], f"la salle {slot.room}"))
             for extra, label in checks:
-                other = self.search(base + extra, limit=1)
-                if other:
+                others = self.search(base + extra)
+                for other in others:
+                    # Respect class start/end dates: if class date ranges do not overlap, no conflict!
+                    c1_start = slot.class_id.start_date
+                    c1_end = slot.class_id.end_date
+                    c2_start = other.class_id.start_date
+                    c2_end = other.class_id.end_date
+                    if c1_start and c1_end and c2_start and c2_end:
+                        if c1_end < c2_start or c1_start > c2_end:
+                            continue
                     raise ValidationError(
                         f"Conflit d'emploi du temps pour {label} : « {other.display_name} » "
-                        f"({other.class_id.display_name}) chevauche ce créneau.")
+                        f"({other.class_id.display_name}) chevauche ce créneau."
+                    )
 
     @api.model
     def get_timetable_data(self, mode, record_id):

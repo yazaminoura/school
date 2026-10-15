@@ -1,3 +1,6 @@
+from . import eacta_academic_year
+from . import res_config_settings
+from . import eacta_student_result
 from . import eacta_student
 from . import eacta_class
 from . import eacta_course

@@ -1,62 +1,116 @@
 <?xml version="1.0" encoding="utf-8"?>
 <odoo>
     <data noupdate="1">
-        <!-- Classes for 2023 -->
+        <!-- Academic Years -->
+        <record id="academic_year_2023_2024" model="eacta.academic.year">
+            <field name="name">2023-2024</field>
+            <field name="date_start">2023-09-01</field>
+            <field name="date_end">2024-06-30</field>
+            <field name="state">closed</field>
+        </record>
+        <record id="academic_year_2024_2025" model="eacta.academic.year">
+            <field name="name">2024-2025</field>
+            <field name="date_start">2024-09-01</field>
+            <field name="date_end">2025-06-30</field>
+            <field name="state">closed</field>
+        </record>
+        <record id="academic_year_2026_2027" model="eacta.academic.year">
+            <field name="name">2026-2027</field>
+            <field name="date_start">2026-09-01</field>
+            <field name="date_end">2027-06-30</field>
+            <field name="state">open</field>
+        </record>
+
+        <!-- Terms for 2026-2027 -->
+        <record id="term_1_2026" model="eacta.term">
+            <field name="name">1er Trimestre</field>
+            <field name="sequence">1</field>
+            <field name="year_id" ref="academic_year_2026_2027"/>
+            <field name="date_start">2026-09-01</field>
+            <field name="date_end">2026-11-30</field>
+            <field name="weight">1.0</field>
+        </record>
+        <record id="term_2_2026" model="eacta.term">
+            <field name="name">2ème Trimestre</field>
+            <field name="sequence">2</field>
+            <field name="year_id" ref="academic_year_2026_2027"/>
+            <field name="date_start">2026-12-01</field>
+            <field name="date_end">2027-02-28</field>
+            <field name="weight">1.0</field>
+        </record>
+        <record id="term_3_2026" model="eacta.term">
+            <field name="name">3ème Trimestre</field>
+            <field name="sequence">3</field>
+            <field name="year_id" ref="academic_year_2026_2027"/>
+            <field name="date_start">2027-03-01</field>
+            <field name="date_end">2027-06-30</field>
+            <field name="weight">1.0</field>
+        </record>
+
+        <!-- Classes for 2023-2024 -->
         <record id="eacta_school.class_1a_2023" model="eacta.class">
             <field name="name">Classe 1A</field>
             <field name="level">primary</field>
             <field name="capacity">25</field>
-            <field name="year">2023</field>
+            <field name="academic_year_id" ref="academic_year_2023_2024"/>
+            <field name="year">2023-2024</field>
         </record>
 
         <record id="eacta_school.class_1b_2023" model="eacta.class">
             <field name="name">Classe 1B</field>
             <field name="level">primary</field>
             <field name="capacity">25</field>
-            <field name="year">2023</field>
+            <field name="academic_year_id" ref="academic_year_2023_2024"/>
+            <field name="year">2023-2024</field>
         </record>
 
         <record id="eacta_school.class_2a_2023" model="eacta.class">
             <field name="name">Classe 2A</field>
             <field name="level">primary</field>
             <field name="capacity">25</field>
-            <field name="year">2023</field>
+            <field name="academic_year_id" ref="academic_year_2023_2024"/>
+            <field name="year">2023-2024</field>
         </record>
 
         <record id="eacta_school.class_2b_2023" model="eacta.class">
             <field name="name">Classe 2B</field>
             <field name="level">primary</field>
             <field name="capacity">25</field>
-            <field name="year">2023</field>
+            <field name="academic_year_id" ref="academic_year_2023_2024"/>
+            <field name="year">2023-2024</field>
         </record>
 
-        <!-- Classes for 2024 -->
+        <!-- Classes for 2024-2025 -->
         <record id="eacta_school.class_3a_2024" model="eacta.class">
             <field name="name">Classe 3A</field>
             <field name="level">secondary</field>
             <field name="capacity">20</field>
-            <field name="year">2024</field>
+            <field name="academic_year_id" ref="academic_year_2024_2025"/>
+            <field name="year">2024-2025</field>
         </record>
 
         <record id="eacta_school.class_3b_2024" model="eacta.class">
             <field name="name">Classe 3B</field>
             <field name="level">secondary</field>
             <field name="capacity">20</field>
-            <field name="year">2024</field>
+            <field name="academic_year_id" ref="academic_year_2024_2025"/>
+            <field name="year">2024-2025</field>
         </record>
 
         <record id="eacta_school.class_4a_2024" model="eacta.class">
             <field name="name">Classe 4A</field>
             <field name="level">secondary</field>
             <field name="capacity">20</field>
-            <field name="year">2024</field>
+            <field name="academic_year_id" ref="academic_year_2024_2025"/>
+            <field name="year">2024-2025</field>
         </record>
 
         <record id="eacta_school.class_4b_2024" model="eacta.class">
             <field name="name">Classe 4B</field>
             <field name="level">secondary</field>
             <field name="capacity">20</field>
-            <field name="year">2024</field>
+            <field name="academic_year_id" ref="academic_year_2024_2025"/>
+            <field name="year">2024-2025</field>
         </record>
     </data>
 </odoo>

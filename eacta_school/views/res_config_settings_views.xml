@@ -1,0 +1,119 @@
+<?xml version="1.0" encoding="utf-8"?>
+<odoo>
+
+    <record id="res_config_settings_view_form" model="ir.ui.view">
+        <field name="name">res.config.settings.view.form.inherit.school</field>
+        <field name="model">res.config.settings</field>
+        <field name="priority" eval="70"/>
+        <field name="inherit_id" ref="base.res_config_settings_view_form"/>
+        <field name="arch" type="xml">
+            <xpath expr="//form" position="inside">
+                <app data-string="NR School" string="NR School" name="eacta_school">
+                    <block title="Pondération des types d'examens" id="school_exam_weights">
+                        <div class="row mt16 o_settings_container">
+                            <setting id="weights_setting" string="Poids par type d'évaluation dans la moyenne de la matière"
+                                     help="Définissez les coefficients appliqués pour calculer la moyenne par matière d'un trimestre">
+                                <div class="content-group">
+                                    <div class="row mt8">
+                                        <label for="weight_quiz" class="col-lg-4 o_light_label" string="Contrôle continu :"/>
+                                        <field name="weight_quiz" class="col-lg-2"/>
+                                        <label for="weight_homework" class="col-lg-4 o_light_label" string="Devoir surveillé :"/>
+                                        <field name="weight_homework" class="col-lg-2"/>
+                                    </div>
+                                    <div class="row mt8">
+                                        <label for="weight_oral" class="col-lg-4 o_light_label" string="Épreuve orale :"/>
+                                        <field name="weight_oral" class="col-lg-2"/>
+                                        <label for="weight_practical" class="col-lg-4 o_light_label" string="Travaux pratiques :"/>
+                                        <field name="weight_practical" class="col-lg-2"/>
+                                    </div>
+                                    <div class="row mt8">
+                                        <label for="weight_midterm" class="col-lg-4 o_light_label" string="Examen partiel :"/>
+                                        <field name="weight_midterm" class="col-lg-2"/>
+                                        <label for="weight_final" class="col-lg-4 o_light_label" string="Examen final :"/>
+                                        <field name="weight_final" class="col-lg-2"/>
+                                    </div>
+                                </div>
+                            </setting>
+                        </div>
+                    </block>
+
+                    <block title="Politique des absences aux examens &amp; Seuils" id="school_absent_policy">
+                        <div class="row mt16 o_settings_container">
+                            <setting id="absent_policy_setting" string="Traitement des absences aux examens"
+                                     help="Règle de calcul pour les élèves absents à un examen">
+                                <div class="content-group">
+                                    <field name="absent_policy" widget="radio"/>
+                                    <div class="mt8">
+                                        <field name="unjustified_absence_zero"/>
+                                        <label for="unjustified_absence_zero" class="o_light_label"/>
+                                    </div>
+                                </div>
+                            </setting>
+                            <setting id="pass_mark_setting" string="Seuil d'admission / Réussite"
+                                     help="Note minimale requise sur 20 pour valider une matière ou être admis(e) en classe supérieure">
+                                <field name="pass_mark"/>
+                            </setting>
+                        </div>
+                    </block>
+
+                    <block title="Alertes d'assiduité" id="school_attendance_alerts">
+                        <div class="row mt16 o_settings_container">
+                            <setting id="attendance_threshold_setting" string="Alerte absences non justifiées"
+                                     help="Nombre d'absences injustifiées déclenchant une activité pour le professeur principal et une note sur le profil de l'élève">
+                                <div class="content-group">
+                                    <div class="row mt8">
+                                        <label for="unjustified_absence_threshold" class="col-lg-6 o_light_label" string="Seuil mensuel :"/>
+                                        <field name="unjustified_absence_threshold" class="col-lg-3"/>
+                                    </div>
+                                    <div class="mt8">
+                                        <field name="send_absence_parent_email"/>
+                                        <label for="send_absence_parent_email" class="o_light_label"/>
+                                    </div>
+                                </div>
+                            </setting>
+                        </div>
+                    </block>
+
+                    <block title="Frais de scolarité &amp; Remises" id="school_fees_settings">
+                        <div class="row mt16 o_settings_container">
+                            <setting id="late_fee_setting" string="Pénalité pour paiement en retard"
+                                     help="Applique automatiquement des frais de retard lors de l'exécution de l'action planifiée">
+                                <field name="enable_late_fee"/>
+                                <div class="content-group" invisible="not enable_late_fee">
+                                    <div class="row mt8">
+                                        <label for="late_fee_type" class="col-lg-4 o_light_label" string="Mode de calcul :"/>
+                                        <field name="late_fee_type" class="col-lg-4"/>
+                                    </div>
+                                    <div class="row mt8">
+                                        <label for="late_fee_amount" class="col-lg-4 o_light_label" string="Valeur :"/>
+                                        <field name="late_fee_amount" class="col-lg-4"/>
+                                    </div>
+                                </div>
+                            </setting>
+
+                            <setting id="sibling_discount_setting" string="Remise fratrie"
+                                     help="Applique automatiquement un pourcentage de réduction sur les frais de scolarité pour les familles avec plusieurs enfants scolarisés">
+                                <field name="enable_sibling_discount"/>
+                                <div class="content-group" invisible="not enable_sibling_discount">
+                                    <div class="row mt8">
+                                        <label for="sibling_discount_rate" class="col-lg-6 o_light_label" string="Pourcentage de remise (%) :"/>
+                                        <field name="sibling_discount_rate" class="col-lg-3"/>
+                                    </div>
+                                </div>
+                            </setting>
+                        </div>
+                    </block>
+                </app>
+            </xpath>
+        </field>
+    </record>
+
+    <record id="action_school_config_settings" model="ir.actions.act_window">
+        <field name="name">Configuration NR School</field>
+        <field name="res_model">res.config.settings</field>
+        <field name="view_mode">form</field>
+        <field name="target">inline</field>
+        <field name="context">{'module': 'eacta_school'}</field>
+    </record>
+
+</odoo>

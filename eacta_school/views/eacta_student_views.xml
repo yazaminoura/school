@@ -38,6 +38,7 @@
             <search string="Rechercher des élèves">
                 <field name="name" filter_domain="['|', ('name', 'ilike', self), ('code', 'ilike', self)]"/>
                 <field name="current_class_id"/>
+                <field name="academic_year_id"/>
                 <field name="class_ids"/>
                 <field name="course_ids"/>
                 <field name="parent_ids"/>
@@ -56,6 +57,7 @@
                 <filter string="Archivés" name="inactive" domain="[('active', '=', False)]"/>
                 <group expand="0" string="Regrouper par">
                     <filter string="Classe actuelle" name="group_by_class" context="{'group_by': 'current_class_id'}"/>
+                    <filter string="Année académique" name="group_by_academic_year" context="{'group_by': 'academic_year_id'}"/>
                     <filter string="Année" name="group_by_year" context="{'group_by': 'current_year'}"/>
                     <filter string="Genre" name="group_by_gender" context="{'group_by': 'gender'}"/>
                     <filter string="État" name="group_by_state" context="{'group_by': 'state'}"/>
@@ -246,7 +248,8 @@
                         <group string="Scolarité">
                             <field name="current_class_id" options="{'no_create_edit': True}"
                                    placeholder="Sélectionner la classe..."/>
-                            <field name="current_year" readonly="1" invisible="not current_class_id"/>
+                            <field name="academic_year_id" readonly="1" invisible="not current_class_id"/>
+                            <field name="current_year" invisible="1"/>
                             <field name="enrollment_date"/>
                             <field name="canteen" widget="boolean_toggle"/>
                             <field name="transport_mode"/>
@@ -293,6 +296,21 @@
                                     <field name="comment" optional="hide"/>
                                 </list>
                             </field>
+                            <separator string="Bulletins &amp; Bilans périodiques" class="mt-4"/>
+                            <field name="result_ids" readonly="1">
+                                <list>
+                                    <field name="academic_year_id"/>
+                                    <field name="result_type"/>
+                                    <field name="term_id" invisible="result_type == 'year'"/>
+                                    <field name="average" widget="float" digits="[4, 2]"/>
+                                    <field name="class_average" widget="float" digits="[4, 2]"/>
+                                    <field name="rank"/>
+                                    <field name="class_size"/>
+                                    <field name="appreciation" widget="badge"/>
+                                    <field name="honor_mention" widget="badge" optional="show"/>
+                                    <field name="passed" widget="boolean_toggle"/>
+                                </list>
+                            </field>
                         </page>
                         <page string="Cours" name="courses" icon="fa-book">
                             <div class="d-flex align-items-center gap-3 mb-3 p-2 bg-light rounded border">
@@ -321,7 +339,8 @@
                         <page string="Parcours" name="classes" icon="fa-history">
                             <field name="class_ids">
                                 <list>
-                                    <field name="year"/>
+                                    <field name="academic_year_id"/>
+                                    <field name="year" column_invisible="1"/>
                                     <field name="name"/>
                                     <field name="level"/>
                                     <field name="teacher_id"/>

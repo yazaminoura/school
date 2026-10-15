@@ -1,0 +1,146 @@
+<?xml version="1.0" encoding="utf-8"?>
+<odoo>
+
+    <!-- ============================================================ -->
+    <!-- RÉSULTATS / BULLETINS SCOLAIRES                              -->
+    <!-- ============================================================ -->
+    <record id="view_student_result_tree" model="ir.ui.view">
+        <field name="name">eacta.student.result.list</field>
+        <field name="model">eacta.student.result</field>
+        <field name="arch" type="xml">
+            <list string="Bulletins &amp; Résultats" create="false">
+                <field name="student_id"/>
+                <field name="class_id"/>
+                <field name="academic_year_id"/>
+                <field name="result_type"/>
+                <field name="term_id" invisible="result_type == 'year'"/>
+                <field name="average" string="Moyenne" widget="float" digits="[4, 2]"/>
+                <field name="class_average" string="Moy. classe" widget="float" digits="[4, 2]"/>
+                <field name="rank" string="Rang"/>
+                <field name="class_size" string="Effectif"/>
+                <field name="appreciation" widget="badge"
+                       decoration-danger="appreciation == 'insufficient'"
+                       decoration-warning="appreciation == 'fair'"
+                       decoration-info="appreciation in ('quite_good', 'good')"
+                       decoration-success="appreciation in ('very_good', 'excellent')"/>
+                <field name="honor_mention" widget="badge" optional="show"
+                       decoration-success="honor_mention in ('felicitations', 'compliments')"
+                       decoration-info="honor_mention in ('encouragements', 'honneur')"/>
+                <field name="passed" widget="boolean_toggle"/>
+            </list>
+        </field>
+    </record>
+
+    <record id="view_student_result_form" model="ir.ui.view">
+        <field name="name">eacta.student.result.form</field>
+        <field name="model">eacta.student.result</field>
+        <field name="arch" type="xml">
+            <form string="Bulletin / Résultat scolaire" create="false">
+                <header>
+                    <button name="action_print_bulletin" string="Imprimer le bulletin" type="object"
+                            class="oe_highlight" icon="fa-print"/>
+                </header>
+                <sheet>
+                    <div class="oe_title">
+                        <label for="student_id" string="Élève"/>
+                        <h1>
+                            <field name="student_id" readonly="1"/>
+                        </h1>
+                        <h3>
+                            <field name="display_name" readonly="1"/>
+                        </h3>
+                    </div>
+                    <group>
+                        <group string="Contexte">
+                            <field name="academic_year_id" readonly="1"/>
+                            <field name="class_id" readonly="1"/>
+                            <field name="result_type" readonly="1"/>
+                            <field name="term_id" readonly="1" invisible="result_type == 'year'"/>
+                        </group>
+                        <group string="Bilan de la période">
+                            <field name="average" widget="float" digits="[4, 2]" readonly="1"/>
+                            <field name="class_average" widget="float" digits="[4, 2]" readonly="1"/>
+                            <field name="rank" readonly="1"/>
+                            <field name="class_size" readonly="1"/>
+                            <field name="appreciation" readonly="1"/>
+                            <field name="honor_mention"/>
+                            <field name="passed"/>
+                        </group>
+                    </group>
+
+                    <group string="Assiduité de la période">
+                        <group>
+                            <field name="absence_count" readonly="1"/>
+                        </group>
+                        <group>
+                            <field name="unjustified_absence_count" readonly="1"/>
+                            <field name="late_count" readonly="1"/>
+                        </group>
+                    </group>
+
+                    <notebook>
+                        <page string="Détail des notes par matière" invisible="result_type == 'year'">
+                            <field name="line_ids">
+                                <list editable="bottom" create="false" delete="false">
+                                    <field name="course_id" readonly="1"/>
+                                    <field name="coefficient" readonly="1"/>
+                                    <field name="average" widget="float" digits="[4, 2]" readonly="1"/>
+                                    <field name="appreciation" readonly="1"/>
+                                    <field name="passed" readonly="1"/>
+                                    <field name="teacher_id" readonly="1"/>
+                                    <field name="teacher_remarks"/>
+                                </list>
+                            </field>
+                        </page>
+                        <page string="Appréciation globale du conseil">
+                            <field name="teacher_remarks" placeholder="Observations et appréciations de l'équipe pédagogique..."/>
+                        </page>
+                    </notebook>
+                </sheet>
+            </form>
+        </field>
+    </record>
+
+    <record id="view_student_result_search" model="ir.ui.view">
+        <field name="name">eacta.student.result.search</field>
+        <field name="model">eacta.student.result</field>
+        <field name="arch" type="xml">
+            <search string="Rechercher un résultat">
+                <field name="student_id"/>
+                <field name="class_id"/>
+                <field name="academic_year_id"/>
+                <filter name="term_results" string="Bulletins trimestriels" domain="[('result_type', '=', 'term')]"/>
+                <filter name="year_results" string="Bilans annuels" domain="[('result_type', '=', 'year')]"/>
+                <separator/>
+                <filter name="passed" string="Admis / Validé" domain="[('passed', '=', True)]"/>
+                <filter name="failed" string="Non validé" domain="[('passed', '=', False)]"/>
+                <group expand="0" string="Regrouper par">
+                    <filter name="group_by_year" string="Année académique" context="{'group_by': 'academic_year_id'}"/>
+                    <filter name="group_by_class" string="Classe" context="{'group_by': 'class_id'}"/>
+                    <filter name="group_by_term" string="Trimestre" context="{'group_by': 'term_id'}"/>
+                    <filter name="group_by_student" string="Élève" context="{'group_by': 'student_id'}"/>
+                </group>
+            </search>
+        </field>
+    </record>
+
+    <record id="action_student_result" model="ir.actions.act_window">
+        <field name="name">Bulletins &amp; Résultats</field>
+        <field name="res_model">eacta.student.result</field>
+        <field name="view_mode">list,form</field>
+        <field name="context">{'search_default_group_by_class': 1}</field>
+    </record>
+
+    <!-- Action serveur pour recalculer en masse tous les résultats -->
+    <record id="action_server_recompute_results" model="ir.actions.server">
+        <field name="name">Recalculer les moyennes et rangs</field>
+        <field name="model_id" ref="model_eacta_student_result"/>
+        <field name="binding_model_id" ref="model_eacta_class"/>
+        <field name="binding_view_types">list,form</field>
+        <field name="state">code</field>
+        <field name="code">
+records.env['eacta.student.result'].compute_all_results(classes=records)
+        </field>
+    </record>
+
+</odoo>

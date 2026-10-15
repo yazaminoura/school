@@ -2,42 +2,215 @@
 <odoo>
     <data noupdate="0">
 
-        <!-- Enseignant : lit tous les élèves, ne modifie que ceux qu'il a créés / modifiés -->
-        <record id="eacta_student_user_rule" model="ir.rule">
-            <field name="name">NR School (enseignant) : modifier ses élèves</field>
+        <!-- ============================================================ -->
+        <!-- RÈGLES GESTIONNAIRES / ADMINISTRATION                        -->
+        <!-- ============================================================ -->
+        <record id="rule_school_manager_student" model="ir.rule">
+            <field name="name">NR School (Manager) : tous les élèves</field>
             <field name="model_id" ref="model_eacta_student"/>
-            <field name="domain_force">['|', ('create_uid', '=', user.id), ('write_uid', '=', user.id)]</field>
-            <field name="perm_read" eval="False"/>
+            <field name="domain_force">[(1, '=', 1)]</field>
+            <field name="groups" eval="[(4, ref('eacta_school.group_eacta_school_manager'))]"/>
+        </record>
+
+        <record id="rule_school_manager_class" model="ir.rule">
+            <field name="name">NR School (Manager) : toutes les classes</field>
+            <field name="model_id" ref="model_eacta_class"/>
+            <field name="domain_force">[(1, '=', 1)]</field>
+            <field name="groups" eval="[(4, ref('eacta_school.group_eacta_school_manager'))]"/>
+        </record>
+
+        <record id="rule_school_manager_course" model="ir.rule">
+            <field name="name">NR School (Manager) : tous les cours</field>
+            <field name="model_id" ref="model_eacta_course"/>
+            <field name="domain_force">[(1, '=', 1)]</field>
+            <field name="groups" eval="[(4, ref('eacta_school.group_eacta_school_manager'))]"/>
+        </record>
+
+        <record id="rule_school_manager_grade" model="ir.rule">
+            <field name="name">NR School (Manager) : toutes les notes</field>
+            <field name="model_id" ref="model_eacta_course_grade"/>
+            <field name="domain_force">[(1, '=', 1)]</field>
+            <field name="groups" eval="[(4, ref('eacta_school.group_eacta_school_manager'))]"/>
+        </record>
+
+        <record id="rule_school_manager_exam" model="ir.rule">
+            <field name="name">NR School (Manager) : tous les examens</field>
+            <field name="model_id" ref="model_eacta_exam"/>
+            <field name="domain_force">[(1, '=', 1)]</field>
+            <field name="groups" eval="[(4, ref('eacta_school.group_eacta_school_manager'))]"/>
+        </record>
+
+        <record id="rule_school_manager_fee" model="ir.rule">
+            <field name="name">NR School (Manager) : tous les frais</field>
+            <field name="model_id" ref="model_eacta_student_fee"/>
+            <field name="domain_force">[(1, '=', 1)]</field>
+            <field name="groups" eval="[(4, ref('eacta_school.group_eacta_school_manager'))]"/>
+        </record>
+
+        <record id="rule_school_manager_payment" model="ir.rule">
+            <field name="name">NR School (Manager) : tous les paiements</field>
+            <field name="model_id" ref="model_eacta_fee_payment"/>
+            <field name="domain_force">[(1, '=', 1)]</field>
+            <field name="groups" eval="[(4, ref('eacta_school.group_eacta_school_manager'))]"/>
+        </record>
+
+        <record id="rule_school_manager_result" model="ir.rule">
+            <field name="name">NR School (Manager) : tous les résultats</field>
+            <field name="model_id" ref="model_eacta_student_result"/>
+            <field name="domain_force">[(1, '=', 1)]</field>
+            <field name="groups" eval="[(4, ref('eacta_school.group_eacta_school_manager'))]"/>
+        </record>
+
+        <!-- ============================================================ -->
+        <!-- RÈGLES ENSEIGNANTS                                           -->
+        <!-- ============================================================ -->
+        <record id="rule_school_teacher_student" model="ir.rule">
+            <field name="name">NR School (Enseignant) : élèves de ses classes ou cours</field>
+            <field name="model_id" ref="model_eacta_student"/>
+            <field name="domain_force">['|', ('class_ids.teacher_id', '=', user.id), ('class_ids.course_ids.teacher_id', '=', user.id)]</field>
+            <field name="perm_read" eval="True"/>
+            <field name="perm_write" eval="True"/>
+            <field name="perm_create" eval="False"/>
+            <field name="perm_unlink" eval="False"/>
+            <field name="groups" eval="[(4, ref('eacta_school.group_eacta_school_teacher'))]"/>
+        </record>
+
+        <record id="rule_school_teacher_class" model="ir.rule">
+            <field name="name">NR School (Enseignant) : classes enseignées</field>
+            <field name="model_id" ref="model_eacta_class"/>
+            <field name="domain_force">['|', ('teacher_id', '=', user.id), ('course_ids.teacher_id', '=', user.id)]</field>
+            <field name="perm_read" eval="True"/>
+            <field name="perm_write" eval="False"/>
+            <field name="perm_create" eval="False"/>
+            <field name="perm_unlink" eval="False"/>
+            <field name="groups" eval="[(4, ref('eacta_school.group_eacta_school_teacher'))]"/>
+        </record>
+
+        <record id="rule_school_teacher_course" model="ir.rule">
+            <field name="name">NR School (Enseignant) : cours enseignés</field>
+            <field name="model_id" ref="model_eacta_course"/>
+            <field name="domain_force">[('teacher_id', '=', user.id)]</field>
+            <field name="perm_read" eval="True"/>
+            <field name="perm_write" eval="False"/>
+            <field name="perm_create" eval="False"/>
+            <field name="perm_unlink" eval="False"/>
+            <field name="groups" eval="[(4, ref('eacta_school.group_eacta_school_teacher'))]"/>
+        </record>
+
+        <record id="rule_school_teacher_grade" model="ir.rule">
+            <field name="name">NR School (Enseignant) : notes de ses propres matières</field>
+            <field name="model_id" ref="model_eacta_course_grade"/>
+            <field name="domain_force">[('exam_id.course_id.teacher_id', '=', user.id)]</field>
+            <field name="perm_read" eval="True"/>
             <field name="perm_write" eval="True"/>
             <field name="perm_create" eval="True"/>
             <field name="perm_unlink" eval="False"/>
-            <field name="groups" eval="[(4, ref('eacta_school.group_eacta_school_user'))]"/>
+            <field name="groups" eval="[(4, ref('eacta_school.group_eacta_school_teacher'))]"/>
         </record>
 
-        <record id="eacta_student_manager_rule" model="ir.rule">
-            <field name="name">NR School (manager) : accès complet aux élèves</field>
-            <field name="model_id" ref="model_eacta_student"/>
-            <field name="domain_force">[(1, '=', 1)]</field>
-            <field name="groups" eval="[(4, ref('eacta_school.group_eacta_school_manager'))]"/>
-        </record>
-
-        <!-- Enseignant : saisit uniquement les notes de ses propres matières -->
-        <record id="eacta_grade_teacher_rule" model="ir.rule">
-            <field name="name">NR School (enseignant) : notes de ses matières</field>
-            <field name="model_id" ref="model_eacta_course_grade"/>
-            <field name="domain_force">['|', ('exam_id.course_id.teacher_id', '=', user.id), ('create_uid', '=', user.id)]</field>
-            <field name="perm_read" eval="False"/>
+        <record id="rule_school_teacher_exam" model="ir.rule">
+            <field name="name">NR School (Enseignant) : examens de ses matières</field>
+            <field name="model_id" ref="model_eacta_exam"/>
+            <field name="domain_force">[('course_id.teacher_id', '=', user.id)]</field>
+            <field name="perm_read" eval="True"/>
             <field name="perm_write" eval="True"/>
             <field name="perm_create" eval="True"/>
-            <field name="perm_unlink" eval="True"/>
-            <field name="groups" eval="[(4, ref('eacta_school.group_eacta_school_user'))]"/>
+            <field name="perm_unlink" eval="False"/>
+            <field name="groups" eval="[(4, ref('eacta_school.group_eacta_school_teacher'))]"/>
         </record>
 
-        <record id="eacta_grade_manager_rule" model="ir.rule">
-            <field name="name">NR School (manager) : toutes les notes</field>
-            <field name="model_id" ref="model_eacta_course_grade"/>
+        <!-- ============================================================ -->
+        <!-- RÈGLES SECRÉTARIAT                                           -->
+        <!-- ============================================================ -->
+        <record id="rule_school_secretary_student" model="ir.rule">
+            <field name="name">NR School (Secrétariat) : tous les élèves</field>
+            <field name="model_id" ref="model_eacta_student"/>
             <field name="domain_force">[(1, '=', 1)]</field>
-            <field name="groups" eval="[(4, ref('eacta_school.group_eacta_school_manager'))]"/>
+            <field name="perm_read" eval="True"/>
+            <field name="perm_write" eval="True"/>
+            <field name="perm_create" eval="True"/>
+            <field name="perm_unlink" eval="False"/>
+            <field name="groups" eval="[(4, ref('eacta_school.group_eacta_school_secretary'))]"/>
+        </record>
+
+        <!-- ============================================================ -->
+        <!-- RÈGLES PORTAIL (PARENTS & ÉLÈVES)                            -->
+        <!-- ============================================================ -->
+        <record id="rule_school_portal_student" model="ir.rule">
+            <field name="name">NR School (Portail) : ses propres enfants</field>
+            <field name="model_id" ref="model_eacta_student"/>
+            <field name="domain_force">['|', ('parent_ids', 'in', [user.partner_id.id]), ('parent_ids.child_ids', 'in', [user.partner_id.id])]</field>
+            <field name="perm_read" eval="True"/>
+            <field name="perm_write" eval="False"/>
+            <field name="perm_create" eval="False"/>
+            <field name="perm_unlink" eval="False"/>
+            <field name="groups" eval="[(4, ref('base.group_portal'))]"/>
+        </record>
+
+        <record id="rule_school_portal_grade" model="ir.rule">
+            <field name="name">NR School (Portail) : notes de ses enfants</field>
+            <field name="model_id" ref="model_eacta_course_grade"/>
+            <field name="domain_force">[('student_id.parent_ids', 'in', [user.partner_id.id])]</field>
+            <field name="perm_read" eval="True"/>
+            <field name="perm_write" eval="False"/>
+            <field name="perm_create" eval="False"/>
+            <field name="perm_unlink" eval="False"/>
+            <field name="groups" eval="[(4, ref('base.group_portal'))]"/>
+        </record>
+
+        <record id="rule_school_portal_result" model="ir.rule">
+            <field name="name">NR School (Portail) : bulletins de ses enfants</field>
+            <field name="model_id" ref="model_eacta_student_result"/>
+            <field name="domain_force">[('student_id.parent_ids', 'in', [user.partner_id.id])]</field>
+            <field name="perm_read" eval="True"/>
+            <field name="perm_write" eval="False"/>
+            <field name="perm_create" eval="False"/>
+            <field name="perm_unlink" eval="False"/>
+            <field name="groups" eval="[(4, ref('base.group_portal'))]"/>
+        </record>
+
+        <record id="rule_school_portal_attendance" model="ir.rule">
+            <field name="name">NR School (Portail) : assiduité de ses enfants</field>
+            <field name="model_id" ref="model_eacta_attendance"/>
+            <field name="domain_force">[('student_id.parent_ids', 'in', [user.partner_id.id])]</field>
+            <field name="perm_read" eval="True"/>
+            <field name="perm_write" eval="False"/>
+            <field name="perm_create" eval="False"/>
+            <field name="perm_unlink" eval="False"/>
+            <field name="groups" eval="[(4, ref('base.group_portal'))]"/>
+        </record>
+
+        <record id="rule_school_portal_fee" model="ir.rule">
+            <field name="name">NR School (Portail) : frais de scolarité de ses enfants</field>
+            <field name="model_id" ref="model_eacta_student_fee"/>
+            <field name="domain_force">['|', ('student_id.parent_ids', 'in', [user.partner_id.id]), ('parent_id', '=', user.partner_id.id)]</field>
+            <field name="perm_read" eval="True"/>
+            <field name="perm_write" eval="False"/>
+            <field name="perm_create" eval="False"/>
+            <field name="perm_unlink" eval="False"/>
+            <field name="groups" eval="[(4, ref('base.group_portal'))]"/>
+        </record>
+
+        <record id="rule_school_portal_payment" model="ir.rule">
+            <field name="name">NR School (Portail) : reçus de paiement de ses enfants</field>
+            <field name="model_id" ref="model_eacta_fee_payment"/>
+            <field name="domain_force">['|', ('fee_id.student_id.parent_ids', 'in', [user.partner_id.id]), ('fee_id.parent_id', '=', user.partner_id.id)]</field>
+            <field name="perm_read" eval="True"/>
+            <field name="perm_write" eval="False"/>
+            <field name="perm_create" eval="False"/>
+            <field name="perm_unlink" eval="False"/>
+            <field name="groups" eval="[(4, ref('base.group_portal'))]"/>
+        </record>
+
+        <record id="rule_school_portal_timetable" model="ir.rule">
+            <field name="name">NR School (Portail) : créneaux de cours de ses enfants</field>
+            <field name="model_id" ref="model_eacta_timetable_slot"/>
+            <field name="domain_force">[('class_id.student_ids.parent_ids', 'in', [user.partner_id.id])]</field>
+            <field name="perm_read" eval="True"/>
+            <field name="perm_write" eval="False"/>
+            <field name="perm_create" eval="False"/>
+            <field name="perm_unlink" eval="False"/>
+            <field name="groups" eval="[(4, ref('base.group_portal'))]"/>
         </record>
 
     </data>

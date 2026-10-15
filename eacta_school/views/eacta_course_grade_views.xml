@@ -10,6 +10,8 @@
                   decoration-success="status == 'graded' and grade &gt;= 14"
                   decoration-muted="status in ('absent', 'exempt')">
                 <field name="date"/>
+                <field name="academic_year_id" optional="show"/>
+                <field name="term_id" optional="show"/>
                 <field name="student_id"/>
                 <field name="class_id" optional="show"/>
                 <field name="course_id"/>
@@ -60,6 +62,9 @@
                     </div>
                     <group>
                         <group string="Évaluation">
+                            <field name="academic_year_id" options="{'no_create': True}"/>
+                            <field name="term_id" options="{'no_create': True}"/>
+                            <field name="year" invisible="1"/>
                             <field name="exam_id" options="{'no_create': True}"/>
                             <field name="course_id"/>
                             <field name="class_id" options="{'no_create': True}"/>
@@ -77,6 +82,7 @@
                         </group>
                     </group>
                 </sheet>
+                <chatter/>
             </form>
         </field>
     </record>
@@ -90,6 +96,8 @@
                 <field name="course_id"/>
                 <field name="exam_id"/>
                 <field name="class_id"/>
+                <field name="academic_year_id"/>
+                <field name="term_id"/>
                 <field name="year"/>
                 <filter string="Mes matières" name="my_courses" domain="[('teacher_id', '=', uid)]"/>
                 <separator/>
@@ -100,6 +108,8 @@
                 <filter string="Sous la moyenne" name="failed" domain="[('status', '=', 'graded'), ('grade', '&lt;', 10)]"/>
                 <filter string="Date" name="filter_date" date="date"/>
                 <group expand="0" string="Regrouper par">
+                    <filter string="Année académique" name="group_by_academic_year" context="{'group_by': 'academic_year_id'}"/>
+                    <filter string="Trimestre" name="group_by_term" context="{'group_by': 'term_id'}"/>
                     <filter string="Élève" name="group_by_student" context="{'group_by': 'student_id'}"/>
                     <filter string="Classe" name="group_by_class" context="{'group_by': 'class_id'}"/>
                     <filter string="Matière" name="group_by_course" context="{'group_by': 'course_id'}"/>

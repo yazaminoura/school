@@ -54,6 +54,8 @@ class EactaStudent(models.Model):
                                        store=True, readonly=False, tracking=True,
                                        domain="[('active', '=', True)]",
                                        help="Classe principale de l'élève pour l'année scolaire en cours. Affecte automatiquement tous les cours de la classe.")
+    academic_year_id = fields.Many2one('eacta.academic.year', string='Année académique actuelle',
+                                       compute='_compute_current_class', store=True)
     current_year = fields.Char(string='Année en cours', compute='_compute_current_class', store=True)
     course_ids = fields.Many2many('eacta.course', string='Cours suivis', tracking=True)
     course_count = fields.Integer(string='Nombre de cours', compute='_compute_course_count')
@@ -64,14 +66,15 @@ class EactaStudent(models.Model):
     # Résultats
     # ------------------------------------------------------------------
     course_grade_ids = fields.One2many('eacta.course.grade', 'student_id', string='Notes')
-    average = fields.Float(string='Moyenne générale', compute='_compute_results', store=True, digits=(4, 2),
-                           aggregator='avg', help="Moyenne pondérée par les coefficients des matières")
+    result_ids = fields.One2many('eacta.student.result', 'student_id', string='Bulletins et résultats')
+    average = fields.Float(string='Moyenne générale (année en cours)', compute='_compute_results', store=True, digits=(4, 2),
+                           aggregator='avg', help="Moyenne pondérée par les coefficients des matières pour l'année en cours")
     gpa = fields.Float(string='GPA', compute='_compute_results', store=True, digits=(4, 2), aggregator='avg',
                        help="Moyenne pondérée par les crédits des matières")
     appreciation = fields.Selection(APPRECIATIONS, string='Appréciation', compute='_compute_results', store=True)
     grade_count = fields.Integer(string='Nombre de notes', compute='_compute_results', store=True)
-    class_rank = fields.Integer(string='Rang dans la classe', compute='_compute_class_rank')
-    class_size = fields.Integer(string='Effectif de la classe', compute='_compute_class_rank')
+    class_rank = fields.Integer(string='Rang dans la classe', compute='_compute_class_rank', store=True)
+    class_size = fields.Integer(string='Effectif de la classe', compute='_compute_class_rank', store=True)
 
     # Filtre par année dans la fiche
     selected_year = fields.Selection(selection='_get_selection_year', string='Année affichée',
@@ -105,9 +108,9 @@ class EactaStudent(models.Model):
         ('B+', 'B+'), ('B-', 'B-'),
         ('AB+', 'AB+'), ('AB-', 'AB-'),
         ('O+', 'O+'), ('O-', 'O-'),
-    ], string='Groupe sanguin')
-    allergies = fields.Text(string='Allergies & Intolérances')
-    medical_notes = fields.Text(string='Suivi médical / PAI')
+    ], string='Groupe sanguin', groups="eacta_school.group_eacta_school_manager,eacta_school.group_eacta_school_secretary")
+    allergies = fields.Text(string='Allergies & Intolérances', groups="eacta_school.group_eacta_school_manager,eacta_school.group_eacta_school_secretary")
+    medical_notes = fields.Text(string='Suivi médical / PAI', groups="eacta_school.group_eacta_school_manager,eacta_school.group_eacta_school_secretary")
     transport_mode = fields.Selection([
         ('bus', 'Transport scolaire (Bus)'),
         ('parents', 'Déposé par les parents'),
@@ -155,38 +158,45 @@ class EactaStudent(models.Model):
         for student in self:
             student.is_graduated = student.state in ('graduated', 'alumni')
 
-    @api.depends('class_ids', 'class_ids.year')
+    @api.depends('class_ids', 'class_ids.academic_year_id', 'class_ids.year')
     def _compute_current_class(self):
         for student in self:
             if student.class_ids:
-                latest = student.class_ids.sorted(lambda c: (c.year or '', c.id), reverse=True)[:1]
+                latest = student.class_ids.sorted(
+                    lambda c: (c.academic_year_id.date_start if c.academic_year_id else False, c.year or '', c.id),
+                    reverse=True)[:1]
                 student.current_class_id = latest
+                student.academic_year_id = latest.academic_year_id if latest else False
                 student.current_year = latest.year if latest else False
             elif not student.current_class_id:
                 student.current_class_id = False
+                student.academic_year_id = False
                 student.current_year = False
 
     def _inverse_current_class(self):
         for student in self:
             if student.current_class_id:
                 same_year = student.class_ids.filtered(
-                    lambda c: c.id != student.current_class_id.id and c.year == student.current_class_id.year
+                    lambda c: c.id != student.current_class_id.id and c.academic_year_id == student.current_class_id.academic_year_id
                 )
                 commands = [(3, c.id) for c in same_year]
                 if student.current_class_id not in student.class_ids:
                     commands.append((4, student.current_class_id.id))
                 if commands:
                     student.class_ids = commands
+                student.academic_year_id = student.current_class_id.academic_year_id
                 student.current_year = student.current_class_id.year or str(fields.Date.today().year)
             elif student.class_ids:
-                curr_classes = student.class_ids.filtered(lambda c: c.year == student.current_year)
+                curr_classes = student.class_ids.filtered(lambda c: c.academic_year_id == student.academic_year_id)
                 if curr_classes:
                     student.class_ids = [(3, c.id) for c in curr_classes]
+                student.academic_year_id = False
                 student.current_year = False
 
     @api.onchange('current_class_id')
     def _onchange_current_class_id(self):
         if self.current_class_id:
+            self.academic_year_id = self.current_class_id.academic_year_id
             self.current_year = self.current_class_id.year or str(fields.Date.today().year)
             prev_class = self._origin.current_class_id if (self._origin and self._origin.current_class_id) else False
             if prev_class:
@@ -200,6 +210,7 @@ class EactaStudent(models.Model):
         elif not self.current_class_id:
             if self._origin and self._origin.current_class_id:
                 self.course_ids = self.course_ids - self._origin.current_class_id.course_ids
+            self.academic_year_id = False
             self.current_year = False
 
     @api.depends('course_ids', 'current_class_id.course_ids')
@@ -222,10 +233,14 @@ class EactaStudent(models.Model):
         return round(total / weights, 2) if weights else None
 
     @api.depends('course_grade_ids.grade', 'course_grade_ids.status', 'course_grade_ids.coefficient',
-                 'course_grade_ids.course_id.credits')
+                 'course_grade_ids.course_id.credits', 'current_class_id', 'current_class_id.academic_year_id')
     def _compute_results(self):
         for student in self:
-            grades = student.course_grade_ids
+            curr_year = student.current_class_id.academic_year_id if student.current_class_id else False
+            if curr_year:
+                grades = student.course_grade_ids.filtered(lambda g: g.academic_year_id == curr_year)
+            else:
+                grades = student.course_grade_ids
             average = self._get_weighted_average(grades)
             gpa = self._get_weighted_average(grades, weight='credits')
             student.average = average or 0.0

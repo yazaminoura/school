@@ -1,6 +1,6 @@
 {
     'name': 'NR School',
-    'version': '18.0.2.2',
+    'version': '18.0.3.0',
     'summary': 'Gestion scolaire : élèves, classes, cours, examens, notes, assiduité et attestations',
     'description': """
 NR School - Gestion scolaire
@@ -29,6 +29,9 @@ NR School - Gestion scolaire
         'reports/student_report.xml',
         'reports/student_certificate_report.xml',
         'reports/school_admin_reports.xml',
+        'views/eacta_academic_year_views.xml',
+        'views/eacta_student_result_views.xml',
+        'views/res_config_settings_views.xml',
         'views/eacta_student_views.xml',
         'views/eacta_attendance_views.xml',
         'views/eacta_class_views.xml',

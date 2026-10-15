@@ -14,16 +14,24 @@ patch(NavBar.prototype, {
     setup() {
         super.setup(...arguments);
         this.nrApps = useState({ search: "" });
-        const stored = typeof window !== "undefined" ? localStorage.getItem("eacta_sidebar_collapsed") : null;
+        let stored = null;
+        try {
+            stored = typeof window !== "undefined" ? localStorage.getItem("eacta_sidebar_collapsed") : null;
+        } catch {
+            stored = null;
+        }
         this.nrSidebar = useState({ collapsed: stored === "true" });
         if (typeof window !== "undefined" && window.innerWidth >= 768 && this.nrSidebar.collapsed) {
             document.body.classList.add("o_sidebar_collapsed");
         }
+        this.nrToggleSidebar = this.nrToggleSidebar.bind(this);
+        this.nrOnAppsMenuStateChanged = this.nrOnAppsMenuStateChanged.bind(this);
+        this.onNavBarDropdownItemSelection = this.onNavBarDropdownItemSelection.bind(this);
     },
 
-    adapt() {
+    async adapt() {
         if (typeof window !== "undefined" && window.innerWidth >= 768) {
-            const sectionsMenu = this.appSubMenus.el;
+            const sectionsMenu = this.appSubMenus?.el;
             if (sectionsMenu) {
                 const sections = sectionsMenu.querySelectorAll(":scope > *:not(.o_menu_sections_more)");
                 for (const section of sections) {
@@ -39,27 +47,38 @@ patch(NavBar.prototype, {
     nrToggleSidebar() {
         this.nrSidebar.collapsed = !this.nrSidebar.collapsed;
         if (typeof window !== "undefined") {
-            localStorage.setItem("eacta_sidebar_collapsed", this.nrSidebar.collapsed ? "true" : "false");
+            try {
+                localStorage.setItem("eacta_sidebar_collapsed", this.nrSidebar.collapsed ? "true" : "false");
+            } catch {}
             document.body.classList.toggle("o_sidebar_collapsed", this.nrSidebar.collapsed);
         }
     },
 
+    get apps() {
+        return (this.menuService ? this.menuService.getApps() : this._apps) || [];
+    },
+
+    set apps(value) {
+        this._apps = value;
+    },
+
     get nrFilteredApps() {
-        const query = normalize(this.nrApps.search).trim();
+        const apps = this.apps || [];
+        const query = normalize(this.nrApps?.search).trim();
         if (!query) {
-            return this.apps;
+            return apps;
         }
-        return this.apps.filter((app) => normalize(app.name).includes(query));
+        return apps.filter((app) => normalize(app.name).includes(query));
     },
 
     nrAppInitial(app) {
-        return (app.name || "?").trim().charAt(0).toUpperCase();
+        return (app?.name || "?").trim().charAt(0).toUpperCase();
     },
 
     nrOnAppsMenuStateChanged(isOpen) {
         if (isOpen) {
             setTimeout(() => document.querySelector(".o_nr_apps_search input")?.focus(), 50);
-        } else {
+        } else if (this.nrApps) {
             this.nrApps.search = "";
         }
     },

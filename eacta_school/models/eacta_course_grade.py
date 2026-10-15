@@ -1,5 +1,5 @@
 from odoo import api, fields, models
-from odoo.exceptions import ValidationError
+from odoo.exceptions import UserError, ValidationError
 
 MAX_GRADE = 20.0
 
@@ -33,6 +33,7 @@ def appreciation_for(grade):
 class CourseGrade(models.Model):
     _name = 'eacta.course.grade'
     _description = 'Note'
+    _inherit = ['mail.thread']
     _order = 'date desc, student_id'
     _rec_name = 'student_id'
 
@@ -41,7 +42,13 @@ class CourseGrade(models.Model):
     course_id = fields.Many2one(related='exam_id.course_id', store=True, string='Matière', index=True)
     class_id = fields.Many2one('eacta.class', string='Classe', compute='_compute_class_id', store=True,
                                readonly=False, index=True)
-    year = fields.Char(related='class_id.year', store=True, string='Année')
+    academic_year_id = fields.Many2one(
+        'eacta.academic.year', string='Année académique', compute='_compute_academic_year_id',
+        store=True, readonly=False, index=True)
+    year_id = fields.Many2one(
+        'eacta.academic.year', related='academic_year_id', store=True, readonly=False)
+    term_id = fields.Many2one('eacta.term', string='Trimestre', related='exam_id.term_id', store=True, index=True)
+    year = fields.Char(related='academic_year_id.name', store=True, string='Année')
     date = fields.Date(related='exam_id.date', store=True, string='Date')
     exam_type = fields.Selection(related='exam_id.exam_type', store=True)
     teacher_id = fields.Many2one(related='exam_id.teacher_id', store=True, string='Enseignant')
@@ -51,12 +58,18 @@ class CourseGrade(models.Model):
         ('graded', 'Noté'),
         ('absent', 'Absent'),
         ('exempt', 'Dispensé'),
-    ], string='Statut', default='graded', required=True)
-    grade = fields.Float(string="Note", digits=(4, 2), aggregator='avg')
+    ], string='Statut', default='graded', required=True, tracking=True)
+    grade = fields.Float(string="Note", digits=(4, 2), aggregator='avg', tracking=True)
+    is_justified = fields.Boolean(string="Absence justifiée", default=False, tracking=True)
     appreciation = fields.Selection(APPRECIATIONS, string='Appréciation', compute='_compute_appreciation',
                                     store=True)
     is_passed = fields.Boolean(string='Validé', compute='_compute_appreciation', store=True)
-    comment = fields.Char(string='Observation')
+    comment = fields.Char(string='Observation', tracking=True)
+
+    @api.depends('exam_id.academic_year_id', 'class_id.academic_year_id')
+    def _compute_academic_year_id(self):
+        for record in self:
+            record.academic_year_id = record.exam_id.academic_year_id or record.class_id.academic_year_id or False
 
     _sql_constraints = [
         ('student_exam_unique', 'UNIQUE(student_id, exam_id)', "Cet élève a déjà une note pour cet examen."),
@@ -130,6 +143,13 @@ class CourseGrade(models.Model):
         return super().create(vals_list)
 
     def write(self, vals):
+        # Restriction: impossible de modifier les notes si l'examen ou l'année est clôturé(e)
+        if not self.env.user.has_group('eacta_school.group_eacta_school_manager'):
+            for record in self:
+                if record.exam_id and record.exam_id.state == 'done':
+                    raise UserError(f"L'examen « {record.exam_id.name} » est clôturé. Seul un administrateur peut modifier les notes.")
+                if record.academic_year_id and record.academic_year_id.state == 'closed':
+                    raise UserError(f"L'année académique « {record.academic_year_id.name} » est clôturée. Les notes sont verrouillées.")
         if 'grade' in vals and 'status' not in vals:
             pending = self.filtered(lambda g: g.status == 'pending')
             if pending:

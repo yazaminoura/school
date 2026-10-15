@@ -37,21 +37,33 @@
               action="action_eacta_exam" sequence="20"/>
     <menuitem id="menu_eacta_course_grade" name="Notes" parent="menu_eacta_school_pedagogie"
               action="action_eacta_course_grade" sequence="30"/>
+    <menuitem id="menu_eacta_student_result" name="Bulletins &amp; Résultats" parent="menu_eacta_school_pedagogie"
+              action="action_student_result" sequence="40"/>
 
     <!-- Analyse -->
     <menuitem id="menu_eacta_school_reporting" name="Analyse" parent="menu_eacta_school_root" sequence="80"/>
     <menuitem id="menu_eacta_grade_analysis" name="Analyse des notes" parent="menu_eacta_school_reporting"
               action="action_eacta_grade_analysis" sequence="10"/>
+    <menuitem id="menu_eacta_attendance_analysis" name="Analyse de l'assiduité" parent="menu_eacta_school_reporting"
+              action="action_eacta_attendance_analysis" sequence="20"/>
 
     <!-- Configuration -->
     <menuitem id="menu_eacta_school_config" name="Configuration" parent="menu_eacta_school_root" sequence="100"
               groups="eacta_school.group_eacta_school_manager"/>
+    <menuitem id="menu_eacta_academic_year" name="Années académiques" parent="menu_eacta_school_config"
+              action="action_academic_year" sequence="5"/>
+    <menuitem id="menu_eacta_term" name="Trimestres / Périodes" parent="menu_eacta_school_config"
+              action="action_term" sequence="6"/>
     <menuitem id="menu_eacta_school_level" name="Niveaux scolaires" parent="menu_eacta_school_config"
               action="action_eacta_school_level" sequence="10"/>
     <menuitem id="menu_eacta_course_category" name="Catégories de cours" parent="menu_eacta_school_config"
               action="action_eacta_course_category" sequence="20"/>
     <menuitem id="menu_eacta_teachers" name="Enseignants" parent="menu_eacta_school_config"
               action="action_eacta_teachers" sequence="30"/>
+    <menuitem id="menu_eacta_fee_type" name="Types de frais" parent="menu_eacta_school_config"
+              action="action_eacta_fee_type" sequence="40"/>
+    <menuitem id="menu_eacta_school_settings" name="Paramètres" parent="menu_eacta_school_config"
+              action="action_school_config_settings" sequence="100"/>
 
     <!-- Emploi du temps -->
     <menuitem id="menu_eacta_timetable" name="Emploi du temps" parent="menu_eacta_school_pedagogie"
@@ -61,7 +73,7 @@
 
     <!-- Finances -->
     <menuitem id="menu_eacta_school_finance" name="Finances" parent="menu_eacta_school_root" sequence="40"
-              groups="eacta_school.group_eacta_school_manager"/>
+              groups="eacta_school.group_eacta_school_manager,eacta_school.group_eacta_school_finance"/>
     <menuitem id="menu_eacta_student_fee" name="Frais de scolarité" parent="menu_eacta_school_finance"
               action="action_eacta_student_fee" sequence="10"/>
     <menuitem id="menu_eacta_fee_payment" name="Paiements" parent="menu_eacta_school_finance"
@@ -70,8 +82,6 @@
               action="action_eacta_fee_generate_wizard" sequence="30"/>
     <menuitem id="menu_eacta_promotion" name="Passage de fin d'année" parent="menu_eacta_school_scolarite"
               action="action_eacta_promotion_wizard" sequence="90" groups="eacta_school.group_eacta_school_manager"/>
-    <menuitem id="menu_eacta_fee_type" name="Types de frais" parent="menu_eacta_school_config"
-              action="action_eacta_fee_type" sequence="40"/>
 
     <!-- Actions de masse pour les élèves -->
     <record id="action_server_enroll_students" model="ir.actions.server">

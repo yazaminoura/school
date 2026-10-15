@@ -141,7 +141,7 @@
         <field name="print_report_name">'Relevé - %s' % (object.name)</field>
         <field name="binding_model_id" ref="model_eacta_student"/>
         <field name="binding_type">report</field>
-        <field name="groups_id" eval="[(4, ref('eacta_school.group_eacta_school_manager'))]"/>
+        <field name="groups_id" eval="[(4, ref('eacta_school.group_eacta_school_manager')), (4, ref('eacta_school.group_eacta_school_finance'))]"/>
     </record>
 
     <!-- ============================ EMPLOI DU TEMPS ============================ -->

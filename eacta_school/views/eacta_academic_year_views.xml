@@ -1,0 +1,162 @@
+<?xml version="1.0" encoding="utf-8"?>
+<odoo>
+
+    <!-- ============================================================ -->
+    <!-- ANNÉE ACADÉMIQUE                                              -->
+    <!-- ============================================================ -->
+    <record id="view_academic_year_tree" model="ir.ui.view">
+        <field name="name">eacta.academic.year.list</field>
+        <field name="model">eacta.academic.year</field>
+        <field name="arch" type="xml">
+            <list string="Années académiques">
+                <field name="name"/>
+                <field name="date_start"/>
+                <field name="date_end"/>
+                <field name="term_count" string="Périodes"/>
+                <field name="class_count" string="Classes"/>
+                <field name="state" widget="badge"
+                       decoration-info="state == 'draft'"
+                       decoration-success="state == 'open'"
+                       decoration-muted="state == 'closed'"/>
+            </list>
+        </field>
+    </record>
+
+    <record id="view_academic_year_form" model="ir.ui.view">
+        <field name="name">eacta.academic.year.form</field>
+        <field name="model">eacta.academic.year</field>
+        <field name="arch" type="xml">
+            <form string="Année académique">
+                <header>
+                    <button name="action_open" string="Ouvrir l'année" type="object"
+                            class="oe_highlight" invisible="state != 'draft'"/>
+                    <button name="action_close" string="Clôturer l'année" type="object"
+                            confirm="Êtes-vous sûr de vouloir clôturer cette année académique ? Les notes seront verrouillées."
+                            invisible="state != 'open'"/>
+                    <button name="action_draft" string="Remettre en brouillon" type="object"
+                            invisible="state == 'draft'"/>
+                    <field name="state" widget="statusbar" statusbar_visible="draft,open,closed"/>
+                </header>
+                <sheet>
+                    <div class="oe_title">
+                        <label for="name" string="Année scolaire"/>
+                        <h1>
+                            <field name="name" placeholder="ex: 2026-2027"/>
+                        </h1>
+                    </div>
+                    <group>
+                        <group>
+                            <field name="date_start"/>
+                            <field name="date_end"/>
+                        </group>
+                        <group>
+                            <field name="company_id" groups="base.group_multi_company"/>
+                            <field name="active" invisible="1"/>
+                        </group>
+                    </group>
+                    <notebook>
+                        <page string="Trimestres / Semestres">
+                            <field name="term_ids">
+                                <list editable="bottom">
+                                    <field name="sequence" widget="handle"/>
+                                    <field name="name"/>
+                                    <field name="date_start"/>
+                                    <field name="date_end"/>
+                                    <field name="weight"/>
+                                </list>
+                            </field>
+                        </page>
+                        <page string="Classes">
+                            <field name="class_ids" readonly="1">
+                                <list>
+                                    <field name="name"/>
+                                    <field name="level"/>
+                                    <field name="student_count"/>
+                                    <field name="teacher_id"/>
+                                </list>
+                            </field>
+                        </page>
+                    </notebook>
+                </sheet>
+                <chatter/>
+            </form>
+        </field>
+    </record>
+
+    <record id="view_academic_year_search" model="ir.ui.view">
+        <field name="name">eacta.academic.year.search</field>
+        <field name="model">eacta.academic.year</field>
+        <field name="arch" type="xml">
+            <search string="Rechercher une année">
+                <field name="name"/>
+                <filter name="open" string="En cours" domain="[('state', '=', 'open')]"/>
+                <filter name="draft" string="Brouillon" domain="[('state', '=', 'draft')]"/>
+                <filter name="closed" string="Clôturée" domain="[('state', '=', 'closed')]"/>
+            </search>
+        </field>
+    </record>
+
+    <record id="action_academic_year" model="ir.actions.act_window">
+        <field name="name">Années académiques</field>
+        <field name="res_model">eacta.academic.year</field>
+        <field name="view_mode">list,form</field>
+        <field name="help" type="html">
+            <p class="o_view_nocontent_smiling_face">
+                Créez votre première année académique (ex: 2026-2027)
+            </p>
+        </field>
+    </record>
+
+    <!-- ============================================================ -->
+    <!-- TRIMESTRES / PÉRIODES                                        -->
+    <!-- ============================================================ -->
+    <record id="view_term_tree" model="ir.ui.view">
+        <field name="name">eacta.term.list</field>
+        <field name="model">eacta.term</field>
+        <field name="arch" type="xml">
+            <list string="Trimestres / Semestres">
+                <field name="sequence" widget="handle"/>
+                <field name="name"/>
+                <field name="year_id"/>
+                <field name="date_start"/>
+                <field name="date_end"/>
+                <field name="weight"/>
+            </list>
+        </field>
+    </record>
+
+    <record id="view_term_form" model="ir.ui.view">
+        <field name="name">eacta.term.form</field>
+        <field name="model">eacta.term</field>
+        <field name="arch" type="xml">
+            <form string="Trimestre / Semestre">
+                <sheet>
+                    <div class="oe_title">
+                        <label for="name" string="Nom du trimestre"/>
+                        <h1>
+                            <field name="name" placeholder="ex: 1er Trimestre"/>
+                        </h1>
+                    </div>
+                    <group>
+                        <group>
+                            <field name="year_id"/>
+                            <field name="sequence"/>
+                        </group>
+                        <group>
+                            <field name="date_start"/>
+                            <field name="date_end"/>
+                            <field name="weight"/>
+                        </group>
+                    </group>
+                </sheet>
+            </form>
+        </field>
+    </record>
+
+    <record id="action_term" model="ir.actions.act_window">
+        <field name="name">Trimestres / Semestres</field>
+        <field name="res_model">eacta.term</field>
+        <field name="view_mode">list,form</field>
+    </record>
+
+</odoo>
