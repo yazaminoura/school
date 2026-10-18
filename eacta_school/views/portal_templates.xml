@@ -1,0 +1,481 @@
+<?xml version="1.0" encoding="utf-8"?>
+<odoo>
+
+    <!-- 1. Entrée dans l'accueil du portail (/my) -->
+    <template id="portal_my_home_school" name="Entrée Espace Scolaire Portail" inherit_id="portal.portal_my_home" priority="30">
+        <xpath expr="//div[hasclass('o_portal_docs')]" position="inside">
+            <t t-call="portal.portal_docs_entry">
+                <t t-set="title">Espace Scolaire / الفضاء المدرسي</t>
+                <t t-set="url" t-value="'/my/school'"/>
+                <t t-set="placeholder_count" t-value="'school_student_count'"/>
+            </t>
+        </xpath>
+    </template>
+
+    <!-- 2. Fil d'Ariane (Breadcrumbs) -->
+    <template id="portal_breadcrumbs_school" name="Fil d'ariane Scolaire" inherit_id="portal.portal_breadcrumbs" priority="30">
+        <xpath expr="//ol[hasclass('o_portal_submenu')]" position="inside">
+            <li t-if="page_name in ('school_dashboard', 'student_detail', 'student_timetable', 'student_attendance', 'student_grades', 'student_fees')"
+                t-attf-class="breadcrumb-item #{'active' if page_name == 'school_dashboard' else ''}">
+                <a t-if="page_name != 'school_dashboard'" href="/my/school">Espace Scolaire</a>
+                <t t-else="">Espace Scolaire</t>
+            </li>
+            <li t-if="student and page_name in ('student_detail', 'student_timetable', 'student_attendance', 'student_grades', 'student_fees')"
+                t-attf-class="breadcrumb-item #{'active' if page_name == 'student_detail' else ''}">
+                <a t-if="page_name != 'student_detail'" t-attf-href="/my/school/student/#{student.id}"><t t-out="student.name"/></a>
+                <t t-else=""><t t-out="student.name"/></t>
+            </li>
+            <li t-if="page_name == 'student_timetable'" class="breadcrumb-item active">Emploi du temps</li>
+            <li t-if="page_name == 'student_attendance'" class="breadcrumb-item active">Assiduité &amp; Absences</li>
+            <li t-if="page_name == 'student_grades'" class="breadcrumb-item active">Notes &amp; Bulletins</li>
+            <li t-if="page_name == 'student_fees'" class="breadcrumb-item active">Frais &amp; Règlements</li>
+        </xpath>
+    </template>
+
+    <!-- 3. Page principale /my/school (Liste des enfants / Profil) -->
+    <template id="portal_my_school" name="Espace Scolaire - Enfants">
+        <t t-call="portal.portal_layout">
+            <div class="container py-4">
+                <div class="d-flex justify-content-between align-items-center mb-4">
+                    <div>
+                        <h2 class="mb-1 text-primary">Espace Scolaire / الفضاء المدرسي</h2>
+                        <p class="text-muted mb-0">Suivi pédagogique, assiduité, notes et facturation des élèves.</p>
+                    </div>
+                </div>
+
+                <t t-if="not students">
+                    <div class="alert alert-info py-4 text-center">
+                        <i class="fa fa-info-circle fa-2x mb-2 text-info"></i>
+                        <h5>Aucun dossier élève associé à ce compte.</h5>
+                        <p class="mb-0 text-muted">Si vous êtes parent d'élève, veuillez contacter l'administration de l'établissement pour associer votre adresse email à la fiche de votre enfant.</p>
+                    </div>
+                </t>
+
+                <div t-if="students" class="row g-4">
+                    <t t-foreach="students" t-as="std">
+                        <div class="col-md-6 col-lg-4">
+                            <div class="card h-100 shadow-sm border-0 border-top border-4 border-primary">
+                                <div class="card-body text-center p-4">
+                                    <div class="mb-3">
+                                        <img t-if="std.image_128" t-att-src="image_data_uri(std.image_128)" class="rounded-circle shadow-sm" style="width: 96px; height: 96px; object-fit: cover;" alt="Photo"/>
+                                        <div t-else="" class="rounded-circle bg-light text-primary d-inline-flex align-items-center justify-content-center shadow-sm" style="width: 96px; height: 96px;">
+                                            <i class="fa fa-user fa-3x"></i>
+                                        </div>
+                                    </div>
+                                    <h4 class="card-title mb-1 text-dark"><t t-out="std.name"/></h4>
+                                    <p class="badge bg-primary-subtle text-primary mb-2">
+                                        <t t-out="std.current_class_id.name or 'Sans classe'"/>
+                                        <t t-if="std.code"> - Matricule: <t t-out="std.code"/></t>
+                                    </p>
+                                    <div class="text-muted small mb-3">
+                                        <span>Année académique : <strong><t t-out="std.academic_year_id.name or 'En cours'"/></strong></span>
+                                    </div>
+                                    <div class="d-grid gap-2">
+                                        <a t-attf-href="/my/school/student/#{std.id}" class="btn btn-outline-primary btn-sm">
+                                            <i class="fa fa-dashboard me-1"></i> Tableau de bord de l'élève
+                                        </a>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    </t>
+                </div>
+            </div>
+        </t>
+    </template>
+
+    <!-- 4. Tableau de bord détaillé de l'élève -->
+    <template id="portal_student_detail" name="Tableau de bord de l'élève">
+        <t t-call="portal.portal_layout">
+            <div class="container py-4">
+                <!-- En-tête de l'élève -->
+                <div class="card shadow-sm border-0 mb-4">
+                    <div class="card-body p-4">
+                        <div class="d-flex flex-wrap align-items-center gap-3">
+                            <img t-if="student.image_128" t-att-src="image_data_uri(student.image_128)" class="rounded-circle shadow-sm" style="width: 80px; height: 80px; object-fit: cover;"/>
+                            <div t-else="" class="rounded-circle bg-light text-primary d-inline-flex align-items-center justify-content-center shadow-sm" style="width: 80px; height: 80px;">
+                                <i class="fa fa-user fa-2x"></i>
+                            </div>
+                            <div class="flex-grow-1">
+                                <h3 class="mb-1 text-dark"><t t-out="student.name"/></h3>
+                                <p class="text-muted mb-0">
+                                    Classe : <strong class="text-primary"><t t-out="student.current_class_id.name or 'N/A'"/></strong>
+                                    <t t-if="student.code"> | Matricule : <strong><t t-out="student.code"/></strong></t>
+                                    | Année : <strong><t t-out="student.academic_year_id.name or 'N/A'"/></strong>
+                                </p>
+                            </div>
+                            <div>
+                                <span t-attf-class="badge #{'bg-success' if student.state == 'enrolled' else 'bg-secondary'} fs-6 px-3 py-2">
+                                    <t t-out="dict(student._fields['state'].selection).get(student.state)"/>
+                                </span>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- 4 Cartes d'accès rapide -->
+                <div class="row g-3 mb-4">
+                    <!-- Emploi du temps -->
+                    <div class="col-sm-6 col-lg-3">
+                        <a t-attf-href="/my/school/student/#{student.id}/timetable" class="text-decoration-none">
+                            <div class="card h-100 shadow-sm border-0 hover-shadow transition p-3 text-center">
+                                <i class="fa fa-calendar fa-2x text-primary mb-2"></i>
+                                <h5 class="card-title text-dark mb-1">Emploi du temps</h5>
+                                <p class="text-muted small mb-0">Planning hebdomadaire</p>
+                            </div>
+                        </a>
+                    </div>
+                    <!-- Assiduité -->
+                    <div class="col-sm-6 col-lg-3">
+                        <a t-attf-href="/my/school/student/#{student.id}/attendance" class="text-decoration-none">
+                            <div class="card h-100 shadow-sm border-0 hover-shadow transition p-3 text-center">
+                                <i class="fa fa-check-square-o fa-2x text-warning mb-2"></i>
+                                <h5 class="card-title text-dark mb-1">Assiduité</h5>
+                                <span class="badge bg-warning-subtle text-warning mb-0"><t t-out="absences_count"/> Absences</span>
+                            </div>
+                        </a>
+                    </div>
+                    <!-- Notes & Bulletins -->
+                    <div class="col-sm-6 col-lg-3">
+                        <a t-attf-href="/my/school/student/#{student.id}/grades" class="text-decoration-none">
+                            <div class="card h-100 shadow-sm border-0 hover-shadow transition p-3 text-center">
+                                <i class="fa fa-graduation-cap fa-2x text-success mb-2"></i>
+                                <h5 class="card-title text-dark mb-1">Notes &amp; Bulletins</h5>
+                                <span class="badge bg-success-subtle text-success mb-0"><t t-out="grades_count"/> Notes publiées</span>
+                            </div>
+                        </a>
+                    </div>
+                    <!-- Frais de scolarité -->
+                    <div class="col-sm-6 col-lg-3">
+                        <a t-attf-href="/my/school/student/#{student.id}/fees" class="text-decoration-none">
+                            <div class="card h-100 shadow-sm border-0 hover-shadow transition p-3 text-center">
+                                <i class="fa fa-credit-card fa-2x text-danger mb-2"></i>
+                                <h5 class="card-title text-dark mb-1">Frais &amp; Solde</h5>
+                                <span t-attf-class="badge #{'bg-danger-subtle text-danger' if balance_due > 0 else 'bg-success-subtle text-success'} mb-0">
+                                    Reste dû : <t t-out="'%.2f' % balance_due"/> DH
+                                </span>
+                            </div>
+                        </a>
+                    </div>
+                </div>
+            </div>
+        </t>
+    </template>
+
+    <!-- 5. Vue Emploi du Temps -->
+    <template id="portal_student_timetable" name="Emploi du temps de l'élève">
+        <t t-call="portal.portal_layout">
+            <div class="container py-4">
+                <div class="d-flex justify-content-between align-items-center mb-3">
+                    <h3 class="text-primary mb-0"><i class="fa fa-calendar me-2"></i>Emploi du temps : <t t-out="student.name"/></h3>
+                    <a t-attf-href="/my/school/student/#{student.id}" class="btn btn-outline-secondary btn-sm">Retour</a>
+                </div>
+
+                <div t-if="not slots" class="alert alert-info text-center py-4">
+                    Aucun créneau d'emploi du temps n'a été publié pour la classe <strong t-out="student.current_class_id.name"/>.
+                </div>
+
+                <div t-if="slots" class="table-responsive bg-white rounded shadow-sm">
+                    <table class="table table-hover align-middle mb-0">
+                        <thead class="table-light">
+                            <tr>
+                                <th>Jour</th>
+                                <th>Horaires</th>
+                                <th>Matière</th>
+                                <th>Enseignant</th>
+                                <th>Salle</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            <t t-foreach="slots" t-as="slot">
+                                <tr>
+                                    <td><span class="badge bg-light text-dark border"><t t-out="dict(slot._fields['day_of_week'].selection).get(slot.day_of_week)"/></span></td>
+                                    <td><strong><t t-out="'%.2f' % slot.time_start"/>h - <t t-out="'%.2f' % slot.time_end"/>h</strong></td>
+                                    <td><strong class="text-primary"><t t-out="slot.course_id.name"/></strong></td>
+                                    <td><t t-out="slot.teacher_id.name or 'Non assigné'"/></td>
+                                    <td><t t-out="slot.room or '-'"/></td>
+                                </tr>
+                            </t>
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+        </t>
+    </template>
+
+    <!-- 6. Vue Assiduité (Absences & Retards) -->
+    <template id="portal_student_attendance" name="Assiduité de l'élève">
+        <t t-call="portal.portal_layout">
+            <div class="container py-4">
+                <div class="d-flex justify-content-between align-items-center mb-3">
+                    <h3 class="text-primary mb-0"><i class="fa fa-check-square-o me-2"></i>Assiduité : <t t-out="student.name"/></h3>
+                    <a t-attf-href="/my/school/student/#{student.id}" class="btn btn-outline-secondary btn-sm">Retour</a>
+                </div>
+
+                <!-- Synthèse -->
+                <div class="row g-3 mb-4">
+                    <div class="col-md-4">
+                        <div class="card bg-danger-subtle border-0 text-center p-3">
+                            <h3 class="mb-0 text-danger font-weight-bold"><t t-out="absent_count"/></h3>
+                            <small class="text-danger">Total Absences</small>
+                        </div>
+                    </div>
+                    <div class="col-md-4">
+                        <div class="card bg-warning-subtle border-0 text-center p-3">
+                            <h3 class="mb-0 text-warning font-weight-bold"><t t-out="late_count"/></h3>
+                            <small class="text-warning">Total Retards</small>
+                        </div>
+                    </div>
+                    <div class="col-md-4">
+                        <div class="card bg-success-subtle border-0 text-center p-3">
+                            <h3 class="mb-0 text-success font-weight-bold"><t t-out="justified_count"/></h3>
+                            <small class="text-success">Événements Justifiés</small>
+                        </div>
+                    </div>
+                </div>
+
+                <div t-if="not attendances" class="alert alert-success text-center py-4">
+                    ✓ Aucune absence ni retard enregistré pour cet élève. Assiduité exemplaire !
+                </div>
+
+                <div t-if="attendances" class="table-responsive bg-white rounded shadow-sm">
+                    <table class="table table-hover align-middle mb-0">
+                        <thead class="table-light">
+                            <tr>
+                                <th>Date</th>
+                                <th>Type</th>
+                                <th>Créneau</th>
+                                <th>Matière</th>
+                                <th>Statut</th>
+                                <th>Motif</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            <t t-foreach="attendances" t-as="att">
+                                <tr>
+                                    <td><strong><t t-out="att.date"/></strong></td>
+                                    <td>
+                                        <span t-attf-class="badge #{'bg-danger' if att.attendance_type == 'absent' else 'bg-warning'}">
+                                            <t t-out="dict(att._fields['attendance_type'].selection).get(att.attendance_type)"/>
+                                        </span>
+                                    </td>
+                                    <td><t t-out="dict(att._fields['session'].selection).get(att.session)"/></td>
+                                    <td><t t-out="att.course_id.name or '-'"/></td>
+                                    <td>
+                                        <span t-attf-class="badge #{'bg-success' if att.justified else 'bg-danger'}">
+                                            <t t-if="att.justified">Justifié</t>
+                                            <t t-else="">Non justifié</t>
+                                        </span>
+                                    </td>
+                                    <td class="text-muted small"><t t-out="dict(att._fields['reason'].selection).get(att.reason) or '-'"/></td>
+                                </tr>
+                            </t>
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+        </t>
+    </template>
+
+    <!-- 7. Vue Notes & Bulletins -->
+    <template id="portal_student_grades" name="Notes et Bulletins de l'élève">
+        <t t-call="portal.portal_layout">
+            <div class="container py-4">
+                <div class="d-flex justify-content-between align-items-center mb-4">
+                    <h3 class="text-primary mb-0"><i class="fa fa-graduation-cap me-2"></i>Notes &amp; Bulletins : <t t-out="student.name"/></h3>
+                    <a t-attf-href="/my/school/student/#{student.id}" class="btn btn-outline-secondary btn-sm">Retour</a>
+                </div>
+
+                <!-- Section Bulletins Scolaires PDF -->
+                <div class="card shadow-sm border-0 mb-4">
+                    <div class="card-header bg-primary text-white py-2">
+                        <h5 class="mb-0"><i class="fa fa-file-pdf-o me-2"></i>Bulletins de Délibération Officiels</h5>
+                    </div>
+                    <div class="card-body p-0">
+                        <t t-if="not results">
+                            <div class="p-3 text-muted text-center">Aucun bulletin scolaire validé pour l'instant.</div>
+                        </t>
+                        <div t-if="results" class="table-responsive">
+                            <table class="table table-hover align-middle mb-0">
+                                <thead class="table-light">
+                                    <tr>
+                                        <th>Année</th>
+                                        <th>Période / Trimestre</th>
+                                        <th>Moyenne générale</th>
+                                        <th>Mention</th>
+                                        <th>Rang</th>
+                                        <th class="text-end">Téléchargement</th>
+                                    </tr>
+                                </thead>
+                                <tbody>
+                                    <t t-foreach="results" t-as="res">
+                                        <tr>
+                                            <td><strong><t t-out="res.academic_year_id.name"/></strong></td>
+                                            <td><t t-out="res.term_id.name or res.term_key"/></td>
+                                            <td><strong class="text-primary"><t t-out="'%.2f' % res.average"/> / 20</strong></td>
+                                            <td>
+                                                <span t-attf-class="badge #{'bg-success' if res.mention in ('felicitations', 'encouragements') else 'bg-secondary'}">
+                                                    <t t-out="dict(res._fields['mention'].selection).get(res.mention)"/>
+                                                </span>
+                                            </td>
+                                            <td><strong><t t-out="res.rank"/></strong> / <t t-out="res.class_size"/></td>
+                                            <td class="text-end">
+                                                <a t-attf-href="/my/school/student/#{student.id}/bulletin/#{res.id}" class="btn btn-primary btn-sm">
+                                                    <i class="fa fa-download me-1"></i> Bulletin PDF
+                                                </a>
+                                            </td>
+                                        </tr>
+                                    </t>
+                                </tbody>
+                            </table>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Section Notes par Examen (Publiées uniquement) -->
+                <div class="card shadow-sm border-0">
+                    <div class="card-header bg-light py-2">
+                        <h5 class="mb-0 text-dark"><i class="fa fa-list-alt me-2"></i>Notes individuelles d'examens (Publiées)</h5>
+                    </div>
+                    <div class="card-body p-0">
+                        <t t-if="not grades">
+                            <div class="p-3 text-muted text-center">Aucune note individuelle publiée pour le moment.</div>
+                        </t>
+                        <div t-if="grades" class="table-responsive">
+                            <table class="table table-hover align-middle mb-0">
+                                <thead class="table-light">
+                                    <tr>
+                                        <th>Date</th>
+                                        <th>Matière</th>
+                                        <th>Examen</th>
+                                        <th>Type</th>
+                                        <th>Coefficient</th>
+                                        <th class="text-end">Note obtenue</th>
+                                    </tr>
+                                </thead>
+                                <tbody>
+                                    <t t-foreach="grades" t-as="grd">
+                                        <tr>
+                                            <td><t t-out="grd.exam_id.date or '-'"/></td>
+                                            <td><strong><t t-out="grd.course_id.name"/></strong></td>
+                                            <td><t t-out="grd.exam_id.name"/></td>
+                                            <td><span class="badge bg-light text-dark border"><t t-out="dict(grd.exam_id._fields['exam_type'].selection).get(grd.exam_id.exam_type)"/></span></td>
+                                            <td><t t-out="grd.exam_weight or grd.course_id.coefficient or 1.0"/></td>
+                                            <td class="text-end">
+                                                <t t-if="grd.status == 'graded'">
+                                                    <span t-attf-class="badge #{'bg-success' if grd.grade &gt;= 10.0 else 'bg-danger'} fs-6 px-2 py-1">
+                                                        <t t-out="'%.2f' % grd.grade"/> / 20
+                                                    </span>
+                                                </t>
+                                                <t t-elif="grd.status == 'absent'">
+                                                    <span class="badge bg-warning text-dark">Absent</span>
+                                                </t>
+                                                <t t-else="">
+                                                    <span class="badge bg-secondary">Dispensé</span>
+                                                </t>
+                                            </td>
+                                        </tr>
+                                    </t>
+                                </tbody>
+                            </table>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </t>
+    </template>
+
+    <!-- 8. Vue Frais, Solde & Facturation -->
+    <template id="portal_student_fees" name="Frais scolaires de l'élève">
+        <t t-call="portal.portal_layout">
+            <div class="container py-4">
+                <div class="d-flex justify-content-between align-items-center mb-4">
+                    <h3 class="text-primary mb-0"><i class="fa fa-credit-card me-2"></i>Frais &amp; Solde : <t t-out="student.name"/></h3>
+                    <a t-attf-href="/my/school/student/#{student.id}" class="btn btn-outline-secondary btn-sm">Retour</a>
+                </div>
+
+                <!-- Synthèse Financière -->
+                <div class="row g-3 mb-4">
+                    <div class="col-md-4">
+                        <div class="card bg-light border-0 text-center p-3">
+                            <h4 class="mb-0 text-dark"><t t-out="'%.2f' % total_invoiced"/> <t t-out="currency.symbol or 'DH'"/></h4>
+                            <small class="text-muted">Total facturé</small>
+                        </div>
+                    </div>
+                    <div class="col-md-4">
+                        <div class="card bg-success-subtle border-0 text-center p-3">
+                            <h4 class="mb-0 text-success"><t t-out="'%.2f' % total_paid"/> <t t-out="currency.symbol or 'DH'"/></h4>
+                            <small class="text-success">Total réglé</small>
+                        </div>
+                    </div>
+                    <div class="col-md-4">
+                        <div t-attf-class="card #{'bg-danger-subtle' if total_due &gt; 0 else 'bg-success-subtle'} border-0 text-center p-3">
+                            <h4 t-attf-class="mb-0 #{'text-danger' if total_due &gt; 0 else 'text-success'}">
+                                <t t-out="'%.2f' % total_due"/> <t t-out="currency.symbol or 'DH'"/>
+                            </h4>
+                            <small t-attf-class="#{'text-danger' if total_due &gt; 0 else 'text-success'}">Reste à payer</small>
+                        </div>
+                    </div>
+                </div>
+
+                <div t-if="not fees" class="alert alert-info text-center py-4">
+                    Aucun frais de scolarité enregistré pour cet élève.
+                </div>
+
+                <div t-if="fees" class="table-responsive bg-white rounded shadow-sm">
+                    <table class="table table-hover align-middle mb-0">
+                        <thead class="table-light">
+                            <tr>
+                                <th>Réf / Description</th>
+                                <th>Échéance</th>
+                                <th>Montant</th>
+                                <th>Remise</th>
+                                <th>Net à payer</th>
+                                <th>Payé</th>
+                                <th>Reste dû</th>
+                                <th>État</th>
+                                <th class="text-end">Facture</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            <t t-foreach="fees" t-as="fee">
+                                <tr>
+                                    <td>
+                                        <strong><t t-out="fee.description or fee.fee_type_id.name"/></strong>
+                                        <t t-if="fee.name != '/'"><small class="text-muted d-block"><t t-out="fee.name"/></small></t>
+                                    </td>
+                                    <td>
+                                        <span t-attf-class="#{'text-danger fw-bold' if fee.is_overdue else ''}">
+                                            <t t-out="fee.due_date or '-'"/>
+                                        </span>
+                                    </td>
+                                    <td><t t-out="'%.2f' % fee.amount"/></td>
+                                    <td><t t-if="fee.discount &gt; 0"><t t-out="'%.2f' % fee.discount"/></t><t t-else="">-</t></td>
+                                    <td><strong><t t-out="'%.2f' % fee.amount_total"/></strong></td>
+                                    <td class="text-success"><t t-out="'%.2f' % fee.amount_paid"/></td>
+                                    <td t-attf-class="#{fee.amount_due &gt; 0 and 'text-danger fw-bold' or ''}">
+                                        <t t-out="'%.2f' % fee.amount_due"/>
+                                    </td>
+                                    <td>
+                                        <span t-attf-class="badge #{fee.state == 'paid' and 'bg-success' or (fee.state == 'partial' and 'bg-warning text-dark' or 'bg-danger')}">
+                                            <t t-out="dict(fee._fields['state'].selection).get(fee.state)"/>
+                                        </span>
+                                    </td>
+                                    <td class="text-end">
+                                        <t t-if="fee.move_id">
+                                            <a t-attf-href="/my/school/student/#{student.id}/fee/#{fee.id}/invoice" class="btn btn-outline-primary btn-sm" title="Télécharger la facture officielle">
+                                                <i class="fa fa-file-pdf-o me-1"></i> Facture PDF
+                                            </a>
+                                        </t>
+                                        <t t-else="">-</t>
+                                    </td>
+                                </tr>
+                            </t>
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+        </t>
+    </template>
+
+</odoo>

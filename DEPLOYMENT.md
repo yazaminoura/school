@@ -11,6 +11,7 @@ Ce document décrit la procédure recommandée pour déployer la suite logiciell
 - **Base de données** : PostgreSQL 14 ou supérieur
 - **Python** : Python 3.10, 3.11 ou 3.12
 - **Moteur PDF** : Wkhtmltopdf 0.12.6 avec support QT patché (requis pour les bulletins et reçus)
+- **Comptabilité marocaine (exigence recommandée / soft requirement)** : Module officiel `l10n_ma` pour initialiser le plan comptable marocain et le journal des ventes nécessaire à la facturation des frais scolaires (`account.move`).
 
 ---
 
@@ -18,10 +19,11 @@ Ce document décrit la procédure recommandée pour déployer la suite logiciell
 
 | Module | Version | Rôle |
 |---|---|---|
-| `eacta_school` | 18.0.3.0 | Module cœur : élèves, années académiques, trimestres, notes, assiduité, finances, emplois du temps |
+| `eacta_school` | 18.0.5.0 | Module cœur : élèves, années académiques, trimestres, notes, assiduité, finances, facturation, portail parents/élèves |
 | `eacta_bibliotheque` | 18.0.2.0 | Catalogue, gestion des prêts/retours, retards et amendes |
 | `eacta_event` | 18.0.2.0 | Sorties scolaires, événements, autorisations parentales |
 | `eacta_theme` | 18.0.2.4 | Charte graphique backend et page de connexion institutionnelle |
+| `l10n_ma` *(officiel)* | 18.0 | *(Optionnel recommandé)* Plan comptable général marocain et taxes |
 
 ---
 

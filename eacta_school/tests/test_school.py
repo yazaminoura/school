@@ -77,6 +77,13 @@ class TestSchoolManagement(TransactionCase):
             'email': 'parent.bennani@example.com',
             'is_school_parent': True,
         })
+        cls.user_parent_2 = cls.env['res.users'].create({
+            'name': 'Parent Bennani User',
+            'login': 'parent_bennani',
+            'email': 'parent.bennani@example.com',
+            'partner_id': cls.partner_parent_2.id,
+            'groups_id': [(6, 0, [cls.group_portal.id])],
+        })
 
         # Academic Years
         cls.year_curr = cls.env['eacta.academic.year'].search([('name', '=', '2026-2027')], limit=1)
@@ -999,5 +1006,163 @@ class TestSchoolManagement(TransactionCase):
             self.assertEqual(move.currency_id, mad)
             self.assertEqual(move.amount_total, 800.0)
             self.assertTrue(fee.action_view_invoice())
+
+    # =========================================================================
+    # 16. PHASE 3: AÎNÉ DÉTERMINÉ PAR LA DATE DE NAISSANCE
+    # =========================================================================
+    def test_17_eldest_sibling_by_birthdate(self):
+        """L'aîné est déterminé par la date de naissance (et non par l'ordre d'ID en base)."""
+        parent = self.env['res.partner'].create({
+            'name': 'Parent Test Naissance',
+            'email': 'parent.naissance@example.com',
+        })
+        # 1. On crée d'abord le cadet (né en 2017) -> aura un ID plus petit
+        cadet = self.env['eacta.student'].create({
+            'name': 'Cadet Test',
+            'gender': 'male',
+            'date_of_birth': date(2017, 3, 10),
+            'parent_ids': [(6, 0, [parent.id])],
+            'state': 'enrolled',
+        })
+        # 2. On crée ensuite l'aîné (né en 2012) -> aura un ID plus grand
+        aine = self.env['eacta.student'].create({
+            'name': 'Aîné Test',
+            'gender': 'female',
+            'date_of_birth': date(2012, 1, 15),
+            'parent_ids': [(6, 0, [parent.id])],
+            'state': 'enrolled',
+        })
+        self.assertGreater(aine.id, cadet.id, "L'aîné a été créé après le cadet")
+
+        # Vérification de _is_eldest_sibling
+        self.assertTrue(aine._is_eldest_sibling(), "L'élève né en 2012 doit être reconnu comme l'aîné")
+        self.assertFalse(cadet._is_eldest_sibling(), "L'élève né en 2017 ne doit pas être l'aîné")
+
+        # Test de la remise : l'aîné paye plein tarif, le cadet bénéficie de la remise
+        ICP = self.env['ir.config_parameter'].sudo()
+        ICP.set_param('eacta_school.enable_sibling_discount', 'True')
+        ICP.set_param('eacta_school.sibling_discount_rate', '10.0')
+
+        wizard = self.env['eacta.fee.generate.wizard'].create({
+            'fee_type_id': self.env.ref('eacta_school.fee_type_tuition').id,
+            'academic_year_id': self.year_curr.id,
+            'student_ids': [(6, 0, [cadet.id, aine.id])],
+            'amount': 5000.0,
+            'installments': 1,
+            'first_due_date': fields.Date.today(),
+            'apply_sibling_discount': True,
+        })
+        wizard.action_generate()
+
+        fee_aine = self.env['eacta.student.fee'].search([('student_id', '=', aine.id)], limit=1)
+        fee_cadet = self.env['eacta.student.fee'].search([('student_id', '=', cadet.id)], limit=1)
+
+        self.assertEqual(fee_aine.discount, 0.0, "L'aîné ne doit avoir aucune remise")
+        self.assertEqual(fee_aine.amount_total, 5000.0)
+        self.assertEqual(fee_cadet.discount, 500.0, "Le cadet doit bénéficier de 10% de remise fratrie (500 DH)")
+        self.assertEqual(fee_cadet.amount_total, 4500.0)
+
+    # =========================================================================
+    # 17. PHASE 3: NOTIFICATION D'ASSIDUITÉ & OPT-OUT PARENT
+    # =========================================================================
+    def test_18_attendance_notification_and_opt_out(self):
+        """Notification automatique d'absence/retard aux parents avec respect de l'opt-out et anti-doublon."""
+        parent_active = self.env['res.partner'].create({
+            'name': 'Parent Notif Active',
+            'email': 'notif.active@example.com',
+            'notify_attendance_email': True,
+        })
+        parent_optout = self.env['res.partner'].create({
+            'name': 'Parent Opt Out',
+            'email': 'notif.optout@example.com',
+            'notify_attendance_email': False,  # Opt-out explicite
+        })
+        student = self.env['eacta.student'].create({
+            'name': 'Enfant Notif',
+            'gender': 'male',
+            'date_of_birth': date(2014, 5, 1),
+            'parent_ids': [(6, 0, [parent_active.id, parent_optout.id])],
+            'current_class_id': self.class_6a.id,
+            'state': 'enrolled',
+        })
+
+        # Création d'une absence
+        attendance = self.env['eacta.attendance'].create({
+            'student_id': student.id,
+            'class_id': self.class_6a.id,
+            'date': fields.Date.today(),
+            'session': 'morning',
+            'attendance_type': 'absent',
+            'justified': False,
+        })
+
+        self.assertTrue(attendance.notification_sent, "L'enregistrement d'assiduité doit être marqué comme notifié")
+        self.assertIn(parent_active, attendance.notified_parent_ids, "Le parent ayant accepté les notifications doit être notifié")
+        self.assertNotIn(parent_optout, attendance.notified_parent_ids, "Le parent ayant refusé (opt-out) ne doit pas être notifié")
+
+        # Vérification qu'une modification ne renvoie pas de doublon
+        notified_ids_before = attendance.notified_parent_ids.ids
+        attendance.write({'justification_note': 'Appel téléphonique des parents'})
+        self.assertEqual(attendance.notified_parent_ids.ids, notified_ids_before)
+
+    # =========================================================================
+    # 18. PHASE 3: CONTRÔLE D'ACCÈS PORTAIL (PARENTS & ÉLÈVES) SANS SUDO
+    # =========================================================================
+    def test_19_portal_security_and_access_restrictions(self):
+        """Vérification stricte de la sécurité du portail : un parent ne peut pas voir un enfant tiers."""
+        # 1. En tant que Parent Alami (user_parent_1)
+        # Il ne doit voir QUE ses propres enfants (Karim et Salma), pas Youssef Bennani
+        students_alami = self.env['eacta.student'].with_user(self.user_parent_1).search([])
+        self.assertIn(self.student_1, students_alami)
+        self.assertIn(self.student_2, students_alami)
+        self.assertNotIn(self.student_3, students_alami, "Parent Alami ne doit jamais voir l'élève Bennani")
+
+        # 2. Test d'accès à son propre enfant
+        env_parent = self.env(user=self.user_parent_1)
+        student_accessible = env_parent['eacta.student'].browse(self.student_1.id)
+        student_accessible.check_access('read')
+        self.assertEqual(student_accessible.name, 'Karim Alami')
+
+        # 3. Tentative d'usurpation : Parent Alami essaie d'ouvrir l'élève Bennani (student_3)
+        with self.assertRaises(AccessError):
+            student_foreign = env_parent['eacta.student'].browse(self.student_3.id)
+            student_foreign.check_access('read')
+            _ = student_foreign.name
+
+        # 4. En tant qu'élève Karim (user_student_1) : il ne doit voir que son propre profil
+        students_karim = self.env['eacta.student'].with_user(self.user_student_1).search([])
+        self.assertEqual(len(students_karim), 1)
+        self.assertEqual(students_karim[0], self.student_1)
+
+        # Tentative d'accès à Salma ou Youssef par Karim
+        env_student = self.env(user=self.user_student_1)
+        with self.assertRaises(AccessError):
+            other_student = env_student['eacta.student'].browse(self.student_2.id)
+            other_student.check_access('read')
+            _ = other_student.name
+
+        # 5. Seules les notes publiées sont visibles dans le portail
+        exam = self.env['eacta.exam'].create({
+            'name': 'Examen Math Secret',
+            'course_id': self.course_math.id,
+            'date': fields.Date.today(),
+            'exam_type': 'quiz',
+            'state': 'grading',
+        })
+        grade_draft = self.env['eacta.course.grade'].create({
+            'exam_id': exam.id,
+            'student_id': self.student_1.id,
+            'class_id': self.class_6a.id,
+            'grade': 18.0,
+            'status': 'graded',
+            'state': 'draft',  # Pas encore publié !
+        })
+
+        portal_grades = self.env['eacta.course.grade'].with_user(self.user_parent_1).search([
+            ('student_id', '=', self.student_1.id),
+            ('state', '=', 'published'),
+        ])
+        self.assertNotIn(grade_draft, portal_grades, "Une note à l'état draft ne doit pas être visible sur le portail")
+
 
 

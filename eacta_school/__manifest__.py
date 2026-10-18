@@ -1,6 +1,6 @@
 {
     'name': 'NR School',
-    'version': '18.0.4.0',
+    'version': '18.0.5.0',
     'summary': 'Gestion scolaire : élèves, classes, cours, examens, notes, assiduité et attestations',
     'description': """
 NR School - Gestion scolaire
@@ -12,6 +12,7 @@ NR School - Gestion scolaire
 - Cours & examens : coefficients, crédits, types d'examen, feuille de notes générée en un clic
 - Notes : statuts (à noter, noté, absent, dispensé), analyse pivot / graphique
 - Rapports officiels : bulletin scolaire et attestation de scolarité en un clic
+- Portail Parents & Élèves : notes publiées, bulletins, assiduité, planning et facturation
     """,
     'category': 'Education',
     'author': 'NR School',
@@ -25,6 +26,7 @@ NR School - Gestion scolaire
         'security/eacta_school_rules.xml',
         'data/eacta_school_config_data.xml',
         'data/eacta_school_finance_data.xml',
+        'data/eacta_school_attendance_data.xml',
         'reports/report_assets.xml',
         'reports/student_report.xml',
         'reports/student_certificate_report.xml',
@@ -48,6 +50,7 @@ NR School - Gestion scolaire
         'wizard/eacta_promotion_wizard_views.xml',
         'wizard/eacta_attendance_wizard_views.xml',
         'wizard/eacta_class_deliberation_wizard_views.xml',
+        'views/portal_templates.xml',
         'views/eacta_menu.xml',
     ],
     'demo': [

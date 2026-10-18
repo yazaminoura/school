@@ -217,6 +217,28 @@ class EactaStudent(models.Model):
             self.academic_year_id = False
             self.current_year = False
 
+    def _is_eldest_sibling(self):
+        """
+        Détermine si l'élève est l'aîné parmi ses frères et sœurs inscrits (même parent).
+        L'aîné est identifié par sa date de naissance la plus ancienne (date_of_birth asc).
+        En cas d'absence de date ou d'égalité, l'ordre de création (id asc) sert de départage.
+        """
+        self.ensure_one()
+        if not self.parent_ids:
+            return True
+        siblings = self.search([
+            ('parent_ids', 'in', self.parent_ids.ids),
+            ('state', 'in', ('draft', 'enrolled')),
+        ])
+        if len(siblings) <= 1:
+            return True
+        far_future = fields.Date.to_date('9999-12-31')
+        sorted_siblings = sorted(
+            siblings,
+            key=lambda s: (s.date_of_birth or far_future, s.id)
+        )
+        return self.id == sorted_siblings[0].id
+
     @api.depends('course_ids', 'current_class_id.course_ids')
     def _compute_course_count(self):
         for student in self:
@@ -660,3 +682,21 @@ class EactaStudent(models.Model):
             'worst_courses': [{'id': c.id, 'name': c.name, 'average': c.grade, 'success': c.success_rate}
                               for c in courses.sorted('grade')[:5]],
         }
+
+
+class ResPartner(models.Model):
+    _inherit = 'res.partner'
+
+    notify_attendance_email = fields.Boolean(
+        string="Alertes d'assiduité par email", default=True,
+        help="Recevoir une notification automatique par email en cas d'absence ou retard d'un enfant."
+    )
+    notify_attendance_sms = fields.Boolean(
+        string="Alertes d'assiduité par SMS", default=False,
+        help="Recevoir une notification automatique par SMS (extension multicanale)."
+    )
+    notify_attendance_whatsapp = fields.Boolean(
+        string="Alertes d'assiduité par WhatsApp", default=False,
+        help="Recevoir une notification automatique par WhatsApp (extension multicanale)."
+    )
+

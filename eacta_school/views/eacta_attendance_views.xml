@@ -22,6 +22,7 @@
                 <field name="justified" widget="boolean_toggle"/>
                 <field name="reason" optional="show"/>
                 <field name="justification_note" optional="hide"/>
+                <field name="notification_sent" string="Alerte envoyée" optional="show"/>
             </list>
         </field>
     </record>
@@ -59,6 +60,8 @@
                             <field name="duration_hours" invisible="attendance_type == 'present'"/>
                             <field name="justified" widget="boolean_toggle"/>
                             <field name="reason" invisible="attendance_type == 'present'"/>
+                            <field name="notification_sent" readonly="1" widget="boolean_toggle"/>
+                            <field name="notified_parent_ids" widget="many2many_tags" readonly="1" invisible="not notification_sent"/>
                         </group>
                     </group>
                     <group string="Justificatif &amp; Observations" invisible="attendance_type == 'present'">

@@ -1,0 +1,73 @@
+<?xml version="1.0" encoding="utf-8"?>
+<odoo>
+    <data noupdate="1">
+
+        <!-- Modèle d'email : Alerte d'assiduité (Absence / Retard) -->
+        <record id="email_template_attendance_alert" model="mail.template">
+            <field name="name">Assiduité : Notification aux parents (Absence / Retard)</field>
+            <field name="model_id" ref="eacta_school.model_eacta_attendance"/>
+            <field name="subject">Alerte assiduité : {{ object.student_id.name }} - {{ object.date }} ({{ dict(object._fields['attendance_type'].selection).get(object.attendance_type) }})</field>
+            <field name="email_from">{{ (object.company_id.email_formatted or user.email_formatted) }}</field>
+            <field name="body_html" type="html">
+<div style="font-family: 'Segoe UI', Helvetica, Arial, sans-serif; font-size: 14px; color: #2C3E50; max-width: 600px; margin: 0 auto; border: 1px solid #E2E8F0; border-radius: 8px; overflow: hidden;">
+    <div style="background-color: #1E3A8A; color: #FFFFFF; padding: 20px; text-align: center;">
+        <h2 style="margin: 0; font-size: 20px;">Notification d'Assiduité Scolaire / إشعار الغياب والتأخر</h2>
+        <p style="margin: 5px 0 0 0; font-size: 13px; opacity: 0.9;"><t t-out="object.company_id.name or 'NR School'"/></p>
+    </div>
+
+    <div style="padding: 24px;">
+        <p>Madame, Monsieur,</p>
+
+        <p>Nous vous informons par la présente que l'élève <strong><t t-out="object.student_id.name"/></strong> (Classe : <strong><t t-out="object.class_id.name or 'Non assignée'"/></strong>) a été enregistré(e) :</p>
+
+        <div style="background-color: #FEF2F2; border-left: 4px solid #EF4444; padding: 12px 16px; margin: 16px 0; border-radius: 4px;">
+            <p style="margin: 0; font-size: 15px; font-weight: bold; color: #991B1B;">
+                Statut : <t t-out="dict(object._fields['attendance_type'].selection).get(object.attendance_type)"/>
+            </p>
+            <p style="margin: 4px 0 0 0; color: #7F1D1D; font-size: 13px;">
+                Date : <strong><t t-out="object.date"/></strong> |
+                Créneau : <strong><t t-out="dict(object._fields['session'].selection).get(object.session)"/></strong>
+                <t t-if="object.course_id">
+                    | Matière : <strong><t t-out="object.course_id.name"/></strong>
+                </t>
+            </p>
+        </div>
+
+        <t t-if="not object.justified">
+            <p style="color: #D97706; font-size: 13px;">
+                ⚠️ <em>Cet événement n'est pas encore justifié. Nous vous prions de bien vouloir fournir un justificatif auprès du secrétariat ou via votre espace parent sous 48 heures.</em>
+            </p>
+        </t>
+        <t t-else="">
+            <p style="color: #059669; font-size: 13px;">
+                ✓ <em>Cet événement a été enregistré comme justifié (Motif : <t t-out="dict(object._fields['reason'].selection).get(object.reason) or 'Renseigné'"/>).</em>
+            </p>
+        </t>
+
+        <!-- Version Arabe -->
+        <div style="direction: rtl; text-align: right; margin-top: 24px; padding-top: 16px; border-top: 1px dashed #E2E8F0; color: #4B5563;">
+            <p style="margin: 0 0 8px 0; font-weight: bold; color: #1E3A8A;">ولي أمر التلميذ(ة) المحترم،</p>
+            <p style="margin: 0;">
+                نحيطكم علماً بأن التلميذ(ة) <strong><t t-out="object.student_id.name"/></strong> تم تسجيل حالة
+                <strong style="color: #DC2626;"><t t-out="dict(object._fields['attendance_type'].selection).get(object.attendance_type)"/></strong>
+                بتاريخ <strong><t t-out="object.date"/></strong>. يرجى التواصل مع إدارة المؤسسة أو تبرير الغياب عبر فضاء الأولياء.
+            </p>
+        </div>
+
+        <div style="margin-top: 24px; text-align: center;">
+            <a t-attf-href="/my/school" style="background-color: #1E3A8A; color: #FFFFFF; padding: 10px 20px; text-decoration: none; border-radius: 6px; font-weight: bold; font-size: 13px; display: inline-block;">
+                Consulter l'Espace Scolaire / الدخول إلى الفضاء المدرسي
+            </a>
+        </div>
+    </div>
+
+    <div style="background-color: #F8FAFC; padding: 12px; text-align: center; font-size: 12px; color: #94A3B8; border-top: 1px solid #E2E8F0;">
+        Message automatique envoyé par <t t-out="object.company_id.name or 'NR School'"/>. Pour modifier vos préférences de notification, rendez-vous sur votre profil parent.
+    </div>
+</div>
+            </field>
+            <field name="auto_delete" eval="True"/>
+        </record>
+
+    </data>
+</odoo>

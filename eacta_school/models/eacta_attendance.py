@@ -58,6 +58,11 @@ class EactaAttendance(models.Model):
     justification_attachment_ids = fields.Many2many('ir.attachment', string='Pièces justificatives')
     justification_date = fields.Date(string='Date de justification', tracking=True)
     company_id = fields.Many2one('res.company', string='Établissement', default=lambda self: self.env.company)
+    notification_sent = fields.Boolean(string="Notification envoyée", default=False, readonly=True, copy=False)
+    notified_parent_ids = fields.Many2many(
+        'res.partner', 'eacta_attendance_parent_notified_rel', 'attendance_id', 'partner_id',
+        string="Parents notifiés", readonly=True, copy=False
+    )
 
     _sql_constraints = [
         ('student_date_session_type_unique', 'UNIQUE(student_id, date, session, attendance_type)',
@@ -133,6 +138,7 @@ class EactaAttendance(models.Model):
                         "Un enregistrement d'assiduité existe déjà pour cet élève à cette date, ce créneau et ce type !"
                     )
         records = super().create(vals_list)
+        records._send_parent_attendance_notifications()
         records._check_and_create_absence_alert()
         return records
 
@@ -140,9 +146,40 @@ class EactaAttendance(models.Model):
         if 'type' in vals and 'attendance_type' not in vals:
             vals['attendance_type'] = vals.pop('type')
         res = super().write(vals)
+        if 'attendance_type' in vals:
+            self._send_parent_attendance_notifications()
         if any(k in vals for k in ('attendance_type', 'justified', 'student_id', 'date')):
             self._check_and_create_absence_alert()
         return res
+
+    def _send_parent_attendance_notifications(self):
+        """Envoi automatique d'une alerte email aux parents lors d'une absence ou d'un retard (avec opt-out et sans doublon)."""
+        Channel = self.env['eacta.notification.channel']
+        for att in self:
+            if att.notification_sent or att.attendance_type not in ('absent', 'late'):
+                continue
+            student = att.student_id
+            if not student or not student.parent_ids:
+                continue
+
+            notified = self.env['res.partner']
+            for parent in student.parent_ids:
+                if parent.notify_attendance_email and parent.email:
+                    sent = Channel.send_notification(
+                        'email', parent,
+                        'eacta_school.email_template_attendance_alert',
+                        'eacta.attendance', att.id,
+                        force_send=True
+                    )
+                    if sent:
+                        notified |= parent
+
+            if notified:
+                att.notification_sent = True
+                att.notified_parent_ids = [(6, 0, notified.ids)]
+                att.message_post(
+                    body=f"Notification d'assiduité ({dict(att._fields['attendance_type'].selection).get(att.attendance_type)}) envoyée aux parents : {', '.join(notified.mapped('name'))}."
+                )
 
     def _check_and_create_absence_alert(self):
         ICP = self.env['ir.config_parameter'].sudo()

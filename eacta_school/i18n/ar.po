@@ -280,5 +280,22 @@ msgstr "عدد الأقساط"
 msgid "Appliquer la remise fratrie configurée"
 msgstr "تطبيق تخفيض الأخوة المعتمد"
 
+#. module: eacta_school
+msgid "Notification envoyée"
+msgstr "تم إرسال الإشعار"
+
+#. module: eacta_school
+msgid "Parents notifiés"
+msgstr "الأولياء المشعرون"
+
+#. module: eacta_school
+msgid "Alertes d'assiduité par email"
+msgstr "تنبيهات الغياب والتأخر عبر البريد"
+
+#. module: eacta_school
+msgid "Espace Scolaire / الفضاء المدرسي"
+msgstr "الفضاء المدرسي"
+
+
 
 

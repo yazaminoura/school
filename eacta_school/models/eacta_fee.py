@@ -158,11 +158,7 @@ class EactaStudentFee(models.Model):
         ICP = self.env['ir.config_parameter'].sudo()
         enable_discount = ICP.get_param('eacta_school.enable_sibling_discount', 'False') in ('True', '1', True)
         if enable_discount and self.student_id and self.student_id.parent_ids and self.amount:
-            siblings = self.env['eacta.student'].search([
-                ('parent_ids', 'in', self.student_id.parent_ids.ids),
-                ('state', 'in', ('draft', 'enrolled')),
-            ], order='date_of_birth asc, id asc')
-            if len(siblings) > 1 and self.student_id.id != siblings[0].id:
+            if not self.student_id._is_eldest_sibling():
                 rate = float(ICP.get_param('eacta_school.sibling_discount_rate', 10.0))
                 self.discount = round(self.amount * (rate / 100.0), 2)
 
@@ -245,8 +241,23 @@ class EactaStudentFee(models.Model):
         }
 
     def action_create_invoice(self):
+        Journal = self.env['account.journal']
         for fee in self:
             if not fee.move_id and not fee.is_cancelled:
+                sale_journal = Journal.search([
+                    ('type', '=', 'sale'),
+                    ('company_id', '=', fee.company_id.id),
+                ], limit=1)
+                if not sale_journal:
+                    raise UserError(
+                        f"Aucun journal des ventes n'est configuré pour l'établissement « {fee.company_id.name} ». "
+                        f"Veuillez configurer un plan comptable (ex. module l10n_ma pour le Maroc) ou créer un journal des ventes avant de générer des factures."
+                    )
+                partner = fee.parent_id or (fee.student_id.parent_ids[:1] if fee.student_id else False) or (fee.student_id.partner_id if fee.student_id else False)
+                if not partner:
+                    raise UserError(
+                        f"Impossible de créer la facture pour le frais « {fee.name} » : aucun parent ou contact n'est associé à l'élève {fee.student_id.name}."
+                    )
                 fee._sync_account_invoice()
         return True
 
@@ -307,6 +318,7 @@ class EactaStudentFee(models.Model):
         late_fee_type = ICP.get_param('eacta_school.late_fee_type', 'fixed')
         late_fee_val = float(ICP.get_param('eacta_school.late_fee_amount', 50.0))
         send_reminder = ICP.get_param('eacta_school.send_fee_reminder_email', 'True') in ('True', '1', True)
+        min_interval_days = int(ICP.get_param('eacta_school.fee_reminder_interval_days', 7))
 
         overdue_fees = self.search([
             ('state', 'in', ('unpaid', 'partial')),
@@ -317,7 +329,7 @@ class EactaStudentFee(models.Model):
         template = self.env.ref('eacta_school.email_template_fee_reminder', raise_if_not_found=False)
 
         for fee in overdue_fees:
-            # 1. Pénalité de retard si activée et non encore appliquée
+            # 1. Pénalité de retard si activée (opt-in) et non encore appliquée
             if enable_late_fee and not fee.late_fee_applied and late_fee_val > 0:
                 if late_fee_type == 'fixed':
                     penalty = late_fee_val
@@ -331,12 +343,12 @@ class EactaStudentFee(models.Model):
                     body=f"Pénalité de retard appliquée : +{penalty:.2f} {fee.currency_id.symbol or ''} (Échéance dépassée le {fee.due_date})."
                 )
 
-            # 2. Relance email au parent si configurée
+            # 2. Relance email au parent si configurée (avec intervalle minimum pour éviter les doublons)
             parent = fee.parent_id or (fee.student_id.parent_ids[:1] if fee.student_id else False)
             parent_email = parent.email if parent else False
-            days_since_last = (today - fee.last_reminder_date).days if fee.last_reminder_date else 999
+            days_since_last = (today - fee.last_reminder_date).days if fee.last_reminder_date else 9999
 
-            if send_reminder and parent_email and days_since_last >= 7:
+            if send_reminder and parent_email and days_since_last >= min_interval_days:
                 if template:
                     try:
                         template.send_mail(fee.id, force_send=True)
@@ -568,11 +580,7 @@ class EactaFeeGenerateWizard(models.TransientModel):
             total_discount = 0.0
             discount_per_installment = 0.0
             if self.apply_sibling_discount and student.parent_ids:
-                siblings = self.env['eacta.student'].search([
-                    ('parent_ids', 'in', student.parent_ids.ids),
-                    ('state', 'in', ('draft', 'enrolled')),
-                ], order='date_of_birth asc, id asc')
-                if len(siblings) > 1 and student.id != siblings[0].id:
+                if not student._is_eldest_sibling():
                     total_discount = round(self.amount * (sibling_rate / 100.0), 2)
                     discount_per_installment = round(total_discount / self.installments, 2)
 
