@@ -77,6 +77,8 @@
     <!-- Finances -->
     <menuitem id="menu_eacta_school_finance" name="Finances" parent="menu_eacta_school_root" sequence="40"
               groups="eacta_school.group_eacta_school_manager,eacta_school.group_eacta_school_finance"/>
+    <menuitem id="menu_eacta_fee_dashboard" name="Tableau de bord financier" parent="menu_eacta_school_finance"
+              action="action_eacta_fee_dashboard" sequence="1"/>
     <menuitem id="menu_eacta_student_fee" name="Frais de scolarité" parent="menu_eacta_school_finance"
               action="action_eacta_student_fee" sequence="10"/>
     <menuitem id="menu_eacta_fee_payment" name="Paiements" parent="menu_eacta_school_finance"

@@ -1,6 +1,6 @@
 {
     'name': 'NR School',
-    'version': '18.0.3.0',
+    'version': '18.0.4.0',
     'summary': 'Gestion scolaire : élèves, classes, cours, examens, notes, assiduité et attestations',
     'description': """
 NR School - Gestion scolaire
@@ -18,7 +18,7 @@ NR School - Gestion scolaire
     'website': 'https://www.e-acta.com',
     'license': 'LGPL-3',
     'icon': '/eacta_school/static/src/img/nr_school_icon.png',
-    'depends': ['base', 'mail', 'web', 'portal'],
+    'depends': ['base', 'mail', 'web', 'portal', 'account'],
     'data': [
         'security/eacta_school_security.xml',
         'security/ir.model.access.csv',

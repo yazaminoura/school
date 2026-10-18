@@ -207,6 +207,10 @@
                         <button name="action_view_attendances" type="object" class="oe_stat_button" icon="fa-clock-o">
                             <field name="absence_count" widget="statinfo" string="Absences"/>
                         </button>
+                        <button name="action_view_fees" type="object" class="oe_stat_button" icon="fa-money"
+                                groups="eacta_school.group_eacta_school_manager,eacta_school.group_eacta_school_finance">
+                            <field name="fee_count" widget="statinfo" string="Frais"/>
+                        </button>
                     </div>
                     <widget name="web_ribbon" title="Diplômé" bg_color="text-bg-info" invisible="state != 'graduated'"/>
                     <widget name="web_ribbon" title="Archivé" bg_color="text-bg-danger" invisible="active"/>

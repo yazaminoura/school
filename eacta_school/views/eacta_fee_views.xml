@@ -58,6 +58,9 @@
                     <button name="action_register_payment" string="Enregistrer un paiement" type="object"
                             class="btn-primary" icon="fa-money" invisible="not id or state not in ('unpaid', 'partial')"
                             groups="eacta_school.group_eacta_school_manager,eacta_school.group_eacta_school_finance"/>
+                    <button name="action_create_invoice" string="Créer facture client" type="object"
+                            class="btn-secondary" icon="fa-file-text-o" invisible="move_id or not id or is_cancelled"
+                            groups="eacta_school.group_eacta_school_manager,eacta_school.group_eacta_school_finance"/>
                     <button name="action_cancel" string="Annuler" type="object"
                             invisible="not id or state in ('paid', 'cancelled') or amount_paid"
                             groups="eacta_school.group_eacta_school_manager,eacta_school.group_eacta_school_finance"/>
@@ -66,6 +69,14 @@
                     <field name="state" widget="statusbar" statusbar_visible="unpaid,partial,paid"/>
                 </header>
                 <sheet>
+                    <div class="oe_button_box" name="button_box">
+                        <button name="action_view_invoice" type="object" class="oe_stat_button" icon="fa-pencil-square-o" invisible="not move_id">
+                            <div class="o_field_widget o_stat_info">
+                                <span class="o_stat_value"><field name="move_state" widget="badge"/></span>
+                                <span class="o_stat_text">Facture client</span>
+                            </div>
+                        </button>
+                    </div>
                     <widget name="web_ribbon" title="Payé" bg_color="text-bg-success" invisible="state != 'paid'"/>
                     <widget name="web_ribbon" title="En retard" bg_color="text-bg-danger" invisible="not is_overdue"/>
                     <field name="is_overdue" invisible="1"/>
@@ -119,6 +130,21 @@
                                             class="btn-link"/>
                                 </list>
                             </field>
+                        </page>
+                        <page string="Comptabilité &amp; Relances" name="accounting" icon="fa-university">
+                            <group>
+                                <group string="Facture comptable">
+                                    <field name="move_id" readonly="1"/>
+                                    <field name="move_state"/>
+                                    <field name="payment_state"/>
+                                </group>
+                                <group string="Suivi des relances">
+                                    <field name="reminder_count"/>
+                                    <field name="last_reminder_date"/>
+                                    <field name="late_fee_applied"/>
+                                    <field name="late_fee_amount" invisible="not late_fee_applied"/>
+                                </group>
+                            </group>
                         </page>
                     </notebook>
                 </sheet>
@@ -190,6 +216,14 @@
             <p class="o_view_nocontent_smiling_face">Aucun frais à encaisser</p>
             <p>Utilisez « Générer des frais » pour facturer des classes entières, en une ou plusieurs échéances.</p>
         </field>
+    </record>
+
+    <record id="action_eacta_fee_dashboard" model="ir.actions.act_window">
+        <field name="name">Tableau de bord financier</field>
+        <field name="res_model">eacta.student.fee</field>
+        <field name="view_mode">graph,pivot,list</field>
+        <field name="search_view_id" ref="view_eacta_student_fee_search"/>
+        <field name="context">{'search_default_group_class': 1, 'search_default_group_month': 1}</field>
     </record>
 
     <!-- ============================== PAIEMENTS ============================== -->
@@ -305,8 +339,12 @@
                         <field name="apply_sibling_discount"/>
                     </group>
                 </group>
-                <field name="class_ids" widget="many2many_tags" options="{'no_create': True}"
-                       placeholder="Classes à facturer…"/>
+                <group string="Cible de facturation">
+                    <field name="class_ids" widget="many2many_tags" options="{'no_create': True}"
+                           placeholder="Classes entières à facturer…"/>
+                    <field name="student_ids" widget="many2many_tags" options="{'no_create': True}"
+                           placeholder="Ou élèves spécifiques…"/>
+                </group>
                 <div class="alert alert-info mt-3" role="status" invisible="not student_count">
                     <field name="student_count" class="oe_inline"/> élève(s) concerné(s)
                     <span invisible="installments &lt;= 1"> · <field name="installments" class="oe_inline" readonly="1"/> échéances mensuelles</span>

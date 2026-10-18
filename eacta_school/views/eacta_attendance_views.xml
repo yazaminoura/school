@@ -123,6 +123,7 @@
         <field name="model">eacta.attendance</field>
         <field name="arch" type="xml">
             <search string="Rechercher dans l'assiduité">
+                <field name="academic_year_id"/>
                 <field name="student_id"/>
                 <field name="student_code"/>
                 <field name="class_id"/>
@@ -137,6 +138,7 @@
                 <filter string="Non justifiées" name="unjustified" domain="[('justified', '=', False), ('attendance_type', '!=', 'present')]"/>
                 <filter string="Justifiées" name="justified" domain="[('justified', '=', True)]"/>
                 <group expand="0" string="Regrouper par">
+                    <filter string="Année académique" name="group_by_academic_year" context="{'group_by': 'academic_year_id'}"/>
                     <filter string="Élève" name="group_by_student" context="{'group_by': 'student_id'}"/>
                     <filter string="Classe" name="group_by_class" context="{'group_by': 'class_id'}"/>
                     <filter string="Date" name="group_by_date" context="{'group_by': 'date:day'}"/>

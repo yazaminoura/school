@@ -248,4 +248,37 @@ msgstr "قبول التبرير"
 msgid "Marquer non justifié"
 msgstr "تحديد كغير مبرر"
 
+#. module: eacta_school
+msgid "Facture client"
+msgstr "فاتورة الزبون"
+
+#. module: eacta_school
+msgid "Créer facture client"
+msgstr "إنشاء فاتورة الزبون"
+
+#. module: eacta_school
+msgid "Tableau de bord financier"
+msgstr "لوحة القيادة المالية"
+
+#. module: eacta_school
+msgid "Nombre de relances"
+msgstr "عدد التذكيرات"
+
+#. module: eacta_school
+msgid "Dernière relance"
+msgstr "تاريخ آخر تذكير"
+
+#. module: eacta_school
+msgid "Générer des frais"
+msgstr "توليد الرسوم"
+
+#. module: eacta_school
+msgid "Nombre d'échéances"
+msgstr "عدد الأقساط"
+
+#. module: eacta_school
+msgid "Appliquer la remise fratrie configurée"
+msgstr "تطبيق تخفيض الأخوة المعتمد"
+
+
 

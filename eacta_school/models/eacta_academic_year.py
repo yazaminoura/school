@@ -16,7 +16,7 @@ class EactaAcademicYear(models.Model):
         ('open', 'En cours'),
         ('closed', 'Clôturée'),
     ], string='État', default='draft', required=True, tracking=True)
-    term_ids = fields.One2many('eacta.term', 'year_id', string='Trimestres / Semestres')
+    term_ids = fields.One2many('eacta.term', 'academic_year_id', string='Trimestres / Semestres')
     class_ids = fields.One2many('eacta.class', 'academic_year_id', string='Classes')
     class_count = fields.Integer(string='Nombre de classes', compute='_compute_counts')
     term_count = fields.Integer(string='Nombre de trimestres', compute='_compute_counts')
@@ -78,10 +78,10 @@ class EactaAcademicYear(models.Model):
 class EactaTerm(models.Model):
     _name = 'eacta.term'
     _description = 'Trimestre / Semestre'
-    _order = 'year_id desc, sequence, date_start'
+    _order = 'academic_year_id desc, sequence, date_start'
 
     name = fields.Char(string='Nom', required=True, help="Ex: 1er Trimestre")
-    year_id = fields.Many2one(
+    academic_year_id = fields.Many2one(
         'eacta.academic.year', string='Année académique',
         required=True, ondelete='cascade', index=True
     )
@@ -92,19 +92,19 @@ class EactaTerm(models.Model):
     active = fields.Boolean(default=True)
 
     @property
-    def academic_year_id(self):
-        return self.year_id
+    def year_id(self):
+        return self.academic_year_id
 
     @api.model_create_multi
     def create(self, vals_list):
         for vals in vals_list:
-            if 'academic_year_id' in vals and 'year_id' not in vals:
-                vals['year_id'] = vals.pop('academic_year_id')
+            if 'year_id' in vals and 'academic_year_id' not in vals:
+                vals['academic_year_id'] = vals.pop('year_id')
         return super().create(vals_list)
 
     def write(self, vals):
-        if 'academic_year_id' in vals and 'year_id' not in vals:
-            vals['year_id'] = vals.pop('academic_year_id')
+        if 'year_id' in vals and 'academic_year_id' not in vals:
+            vals['academic_year_id'] = vals.pop('year_id')
         return super().write(vals)
 
     @api.model
@@ -112,37 +112,37 @@ class EactaTerm(models.Model):
         if domain:
             new_domain = []
             for leaf in domain:
-                if isinstance(leaf, (list, tuple)) and len(leaf) == 3 and leaf[0] == 'academic_year_id':
-                    new_domain.append(('year_id', leaf[1], leaf[2]))
+                if isinstance(leaf, (list, tuple)) and len(leaf) == 3 and leaf[0] == 'year_id':
+                    new_domain.append(('academic_year_id', leaf[1], leaf[2]))
                 else:
                     new_domain.append(leaf)
             domain = new_domain
         return super()._search(domain, offset=offset, limit=limit, order=order)
 
-    @api.depends('name', 'year_id.name')
+    @api.depends('name', 'academic_year_id.name')
     def _compute_display_name(self):
         for term in self:
-            if term.year_id:
-                term.display_name = f"{term.name} ({term.year_id.name})"
+            if term.academic_year_id:
+                term.display_name = f"{term.name} ({term.academic_year_id.name})"
             else:
                 term.display_name = term.name or ''
 
-    @api.constrains('date_start', 'date_end', 'year_id')
+    @api.constrains('date_start', 'date_end', 'academic_year_id')
     def _check_term_dates(self):
         for term in self:
             if term.date_start and term.date_end:
                 if term.date_end <= term.date_start:
                     raise ValidationError("La date de fin doit être strictement postérieure à la date de début.")
-                if term.year_id:
-                    if term.date_start < term.year_id.date_start or term.date_end > term.year_id.date_end:
+                if term.academic_year_id:
+                    if term.date_start < term.academic_year_id.date_start or term.date_end > term.academic_year_id.date_end:
                         raise ValidationError(
                             f"Les dates du trimestre « {term.name} » ({term.date_start} au {term.date_end}) "
-                            f"doivent être comprises dans celles de l'année « {term.year_id.name} » "
-                            f"({term.year_id.date_start} au {term.year_id.date_end})."
+                            f"doivent être comprises dans celles de l'année « {term.academic_year_id.name} » "
+                            f"({term.academic_year_id.date_start} au {term.academic_year_id.date_end})."
                         )
                     overlap = self.search([
                         ('id', '!=', term.id),
-                        ('year_id', '=', term.year_id.id),
+                        ('academic_year_id', '=', term.academic_year_id.id),
                         ('date_start', '<=', term.date_end),
                         ('date_end', '>=', term.date_start),
                     ], limit=1)

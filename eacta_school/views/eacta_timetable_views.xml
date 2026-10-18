@@ -51,12 +51,14 @@
         <field name="model">eacta.timetable.slot</field>
         <field name="arch" type="xml">
             <search>
+                <field name="academic_year_id"/>
                 <field name="class_id"/>
                 <field name="teacher_id"/>
                 <field name="course_id"/>
                 <field name="room"/>
                 <filter string="Mes cours" name="mine" domain="[('teacher_id', '=', uid)]"/>
                 <group expand="0" string="Regrouper par">
+                    <filter string="Année académique" name="group_by_academic_year" context="{'group_by': 'academic_year_id'}"/>
                     <filter string="Classe" name="group_class" context="{'group_by': 'class_id'}"/>
                     <filter string="Jour" name="group_day" context="{'group_by': 'weekday'}"/>
                     <filter string="Enseignant" name="group_teacher" context="{'group_by': 'teacher_id'}"/>

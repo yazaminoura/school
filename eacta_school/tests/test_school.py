@@ -90,33 +90,33 @@ class TestSchoolManagement(TransactionCase):
         else:
             cls.year_curr.state = 'open'
 
-        cls.term_1 = cls.env['eacta.term'].search([('year_id', '=', cls.year_curr.id), ('sequence', '=', 1)], limit=1)
+        cls.term_1 = cls.env['eacta.term'].search([('academic_year_id', '=', cls.year_curr.id), ('sequence', '=', 1)], limit=1)
         if not cls.term_1:
             cls.term_1 = cls.env['eacta.term'].create({
                 'name': '1er Trimestre',
-                'year_id': cls.year_curr.id,
+                'academic_year_id': cls.year_curr.id,
                 'sequence': 1,
                 'date_start': date(2026, 9, 1),
                 'date_end': date(2026, 11, 30),
                 'weight': 1.0,
             })
 
-        cls.term_2 = cls.env['eacta.term'].search([('year_id', '=', cls.year_curr.id), ('sequence', '=', 2)], limit=1)
+        cls.term_2 = cls.env['eacta.term'].search([('academic_year_id', '=', cls.year_curr.id), ('sequence', '=', 2)], limit=1)
         if not cls.term_2:
             cls.term_2 = cls.env['eacta.term'].create({
                 'name': '2ème Trimestre',
-                'year_id': cls.year_curr.id,
+                'academic_year_id': cls.year_curr.id,
                 'sequence': 2,
                 'date_start': date(2026, 12, 1),
                 'date_end': date(2027, 2, 28),
                 'weight': 1.0,
             })
 
-        cls.term_3 = cls.env['eacta.term'].search([('year_id', '=', cls.year_curr.id), ('sequence', '=', 3)], limit=1)
+        cls.term_3 = cls.env['eacta.term'].search([('academic_year_id', '=', cls.year_curr.id), ('sequence', '=', 3)], limit=1)
         if not cls.term_3:
             cls.term_3 = cls.env['eacta.term'].create({
                 'name': '3ème Trimestre',
-                'year_id': cls.year_curr.id,
+                'academic_year_id': cls.year_curr.id,
                 'sequence': 3,
                 'date_start': date(2027, 3, 1),
                 'date_end': date(2027, 6, 30),
@@ -576,13 +576,19 @@ class TestSchoolManagement(TransactionCase):
             ('student_id', '=', self.student_1.id),
             ('fee_type_id', '=', fee_type.id),
         ], order='due_date asc')
+        self.assertEqual(len(fees_s1), 3, "Il doit y avoir 3 échéances générées pour le premier enfant.")
+        self.assertAlmostEqual(sum(fees_s1.mapped('amount_total')), 1000.0, places=2)
 
-        self.assertEqual(len(fees_s1), 3, "Il doit y avoir 3 échéances générées.")
-        # Remise fratrie 10% sur 1000 = 900 total -> 3 échéances de 300
-        self.assertAlmostEqual(sum(fees_s1.mapped('amount_total')), 900.0, places=2)
+        fees_s2 = self.env['eacta.student.fee'].search([
+            ('student_id', '=', self.student_2.id),
+            ('fee_type_id', '=', fee_type.id),
+        ], order='due_date asc')
+        self.assertEqual(len(fees_s2), 3, "Il doit y avoir 3 échéances générées pour le deuxième enfant.")
+        # Remise fratrie 10% sur 1000 = 900 total pour le 2ème enfant -> 3 échéances de 300
+        self.assertAlmostEqual(sum(fees_s2.mapped('amount_total')), 900.0, places=2)
 
         # Enregistrement d'un premier paiement
-        fee_1 = fees_s1[0]
+        fee_1 = fees_s2[0]
         payment = self.env['eacta.fee.payment'].create({
             'fee_id': fee_1.id,
             'amount': 200.0,
@@ -831,4 +837,167 @@ class TestSchoolManagement(TransactionCase):
 
         report_act = wizard.action_print_pv()
         self.assertTrue(report_act)
+
+    # =========================================================================
+    # 12. ACADEMIC YEAR UI & SEARCH/GROUP/EXPORT (PRE-PHASE 2)
+    # =========================================================================
+    def test_13_academic_year_search_group_and_export(self):
+        """Vérifie que la recherche, le regroupement et l'export par année académique fonctionnent sur tous les modèles."""
+        models_to_test = [
+            'eacta.course.grade',
+            'eacta.timetable.slot',
+            'eacta.attendance',
+            'eacta.student.fee',
+            'eacta.term',
+        ]
+        for model_name in models_to_test:
+            Model = self.env[model_name]
+            # 1. Vérification que le champ academic_year_id est bien présent dans _fields
+            self.assertIn('academic_year_id', Model._fields, f"{model_name} doit posséder le champ academic_year_id")
+            self.assertTrue(Model._fields['academic_year_id'].store, f"{model_name}.academic_year_id doit être stocké")
+
+            # 2. Test recherche par academic_year_id
+            records = Model.search([('academic_year_id', '=', self.year_curr.id)])
+            self.assertIsNotNone(records)
+
+            # 3. Test group by academic_year_id
+            grouped = Model.read_group(
+                domain=[('academic_year_id', '=', self.year_curr.id)],
+                fields=['academic_year_id'],
+                groupby=['academic_year_id']
+            )
+            self.assertIsInstance(grouped, list)
+
+            # 4. Test export des données incluant academic_year_id
+            if records:
+                export_res = records[:2].export_data(['academic_year_id'])
+                self.assertIn('datas', export_res)
+                self.assertGreater(len(export_res['datas']), 0)
+
+    # =========================================================================
+    # 13. PHASE 2: FRAIS, ÉCHÉANCIER & REMISE FRATRIE
+    # =========================================================================
+    def test_14_installments_and_sibling_discounts(self):
+        """Test de la génération d'échéances et du calcul de la remise fratrie."""
+        ICP = self.env['ir.config_parameter'].sudo()
+        ICP.set_param('eacta_school.enable_sibling_discount', 'True')
+        ICP.set_param('eacta_school.sibling_discount_rate', '10.0')
+
+        # Création d'un deuxième enfant rattaché au même parent (Parent Alami)
+        student_sibling = self.env['eacta.student'].create({
+            'name': 'Yasmine Alami (Sœur)',
+            'gender': 'female',
+            'date_of_birth': date(2015, 6, 12),
+            'current_class_id': self.class_6a.id,
+            'parent_ids': [(6, 0, [self.partner_parent_1.id])],
+            'state': 'enrolled',
+        })
+        self.assertTrue(student_sibling.parent_ids)
+
+        # Génération d'un échéancier en 3 fois pour les deux élèves de la classe
+        fee_type = self.env.ref('eacta_school.fee_type_tuition')
+        today = fields.Date.today()
+        wizard = self.env['eacta.fee.generate.wizard'].create({
+            'fee_type_id': fee_type.id,
+            'academic_year_id': self.year_curr.id,
+            'student_ids': [(6, 0, [self.student_1.id, student_sibling.id])],
+            'description': 'Scolarité Trimestrielle',
+            'amount': 9000.0,
+            'installments': 3,
+            'first_due_date': today,
+            'apply_sibling_discount': True,
+            'skip_existing': False,
+        })
+        res = wizard.action_generate()
+        self.assertTrue(res)
+
+        # Vérification des frais de student_1 (premier enfant = pas de remise)
+        fees_s1 = self.env['eacta.student.fee'].search([
+            ('student_id', '=', self.student_1.id),
+            ('description', 'like', 'Scolarité Trimestrielle%'),
+        ], order='due_date asc')
+        self.assertEqual(len(fees_s1), 3, "L'élève 1 doit avoir 3 échéances")
+        self.assertEqual(sum(fees_s1.mapped('amount')), 9000.0)
+        self.assertEqual(sum(fees_s1.mapped('discount')), 0.0)
+        self.assertEqual(fees_s1[0].due_date, today)
+        self.assertEqual(fees_s1[1].due_date, today + relativedelta(months=1))
+        self.assertEqual(fees_s1[2].due_date, today + relativedelta(months=2))
+
+        # Vérification des frais de la sœur (deuxième enfant = 10% de remise fratrie)
+        fees_s2 = self.env['eacta.student.fee'].search([
+            ('student_id', '=', student_sibling.id),
+            ('description', 'like', 'Scolarité Trimestrielle%'),
+        ], order='due_date asc')
+        self.assertEqual(len(fees_s2), 3, "La sœur doit avoir 3 échéances")
+        self.assertEqual(sum(fees_s2.mapped('amount')), 9000.0)
+        # Remise 10% de 9000 = 900 MAD au total, soit 300 MAD par échéance
+        self.assertAlmostEqual(sum(fees_s2.mapped('discount')), 900.0, places=2)
+        self.assertAlmostEqual(sum(fees_s2.mapped('amount_total')), 8100.0, places=2)
+
+    # =========================================================================
+    # 14. PHASE 2: CRON DE RELANCE DES IMPAYÉS & PÉNALITÉS
+    # =========================================================================
+    def test_15_fee_reminder_cron_and_penalties(self):
+        """Action planifiée de relance des impayés et application des pénalités."""
+        ICP = self.env['ir.config_parameter'].sudo()
+        ICP.set_param('eacta_school.send_fee_reminder_email', 'True')
+        ICP.set_param('eacta_school.enable_late_fee', 'True')
+        ICP.set_param('eacta_school.late_fee_type', 'fixed')
+        ICP.set_param('eacta_school.late_fee_amount', '50.0')
+
+        # Création d'un frais en retard de 10 jours
+        past_date = fields.Date.today() - timedelta(days=10)
+        fee = self.env['eacta.student.fee'].create({
+            'student_id': self.student_1.id,
+            'fee_type_id': self.env.ref('eacta_school.fee_type_transport').id,
+            'academic_year_id': self.year_curr.id,
+            'amount': 500.0,
+            'due_date': past_date,
+            'parent_id': self.partner_parent_1.id,
+        })
+        self.assertTrue(fee.is_overdue)
+        self.assertEqual(fee.reminder_count, 0)
+        self.assertFalse(fee.late_fee_applied)
+
+        # Exécution du cron
+        self.env['eacta.student.fee']._cron_check_overdue_fees()
+
+        fee.invalidate_recordset()
+        # La pénalité de 50 MAD doit être appliquée
+        self.assertTrue(fee.late_fee_applied)
+        self.assertEqual(fee.late_fee_amount, 50.0)
+        self.assertEqual(fee.amount, 550.0)
+        # Le compteur de relance doit être incrémenté
+        self.assertEqual(fee.reminder_count, 1)
+        self.assertEqual(fee.last_reminder_date, fields.Date.today())
+
+    # =========================================================================
+    # 15. PHASE 2: FACTURATION ACCOUNT.MOVE & DEVISE MAD
+    # =========================================================================
+    def test_16_account_move_invoice_and_currency_mad(self):
+        """Création de factures account.move (out_invoice) en Dirham marocain (MAD)."""
+        # Vérification de la devise MAD
+        mad = self.env.ref('base.MAD')
+        self.assertTrue(mad.active, "La devise MAD doit être active")
+
+        # Création d'un frais
+        fee = self.env['eacta.student.fee'].create({
+            'student_id': self.student_1.id,
+            'fee_type_id': self.env.ref('eacta_school.fee_type_activities').id,
+            'academic_year_id': self.year_curr.id,
+            'amount': 800.0,
+            'description': 'Sortie pédagogique',
+            'parent_id': self.partner_parent_1.id,
+        })
+        self.assertEqual(fee.currency_id, mad)
+
+        # Vérification de la facture liée
+        if fee.move_id:
+            move = fee.move_id
+            self.assertEqual(move.move_type, 'out_invoice')
+            self.assertEqual(move.partner_id, self.partner_parent_1)
+            self.assertEqual(move.currency_id, mad)
+            self.assertEqual(move.amount_total, 800.0)
+            self.assertTrue(fee.action_view_invoice())
+
 

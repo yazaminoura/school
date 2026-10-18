@@ -16,7 +16,7 @@ class EactaClassDeliberationWizard(models.TransientModel):
     ], string='Période', default='term', required=True)
     term_id = fields.Many2one(
         'eacta.term', string='Trimestre',
-        domain="[('year_id', '=', academic_year_id)]")
+        domain="[('academic_year_id', '=', academic_year_id)]")
     council_date = fields.Date(
         string='Date du conseil', default=fields.Date.context_today, required=True)
     president_name = fields.Char(string='Président du conseil (Direction)')

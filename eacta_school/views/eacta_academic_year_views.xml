@@ -117,7 +117,7 @@
             <list string="Trimestres / Semestres">
                 <field name="sequence" widget="handle"/>
                 <field name="name"/>
-                <field name="year_id"/>
+                <field name="academic_year_id"/>
                 <field name="date_start"/>
                 <field name="date_end"/>
                 <field name="weight"/>
@@ -139,7 +139,7 @@
                     </div>
                     <group>
                         <group>
-                            <field name="year_id"/>
+                            <field name="academic_year_id"/>
                             <field name="sequence"/>
                         </group>
                         <group>

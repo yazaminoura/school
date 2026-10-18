@@ -12,6 +12,15 @@ PAYMENT_METHODS = [
 ]
 
 
+def _get_school_currency(env):
+    mad = env.ref('base.MAD', raise_if_not_found=False)
+    if mad:
+        if not mad.active:
+            mad.sudo().active = True
+        return mad
+    return env.company.currency_id
+
+
 class EactaFeeType(models.Model):
     _name = 'eacta.fee.type'
     _description = 'Type de frais'
@@ -20,7 +29,7 @@ class EactaFeeType(models.Model):
     name = fields.Char(string='Nom', required=True, translate=True)
     sequence = fields.Integer(default=10)
     default_amount = fields.Monetary(string='Montant par défaut', currency_field='currency_id')
-    currency_id = fields.Many2one('res.currency', default=lambda self: self.env.company.currency_id)
+    currency_id = fields.Many2one('res.currency', default=lambda self: _get_school_currency(self.env))
     description = fields.Text(string='Description')
     active = fields.Boolean(default=True)
 
@@ -64,7 +73,7 @@ class EactaStudentFee(models.Model):
     amount_paid = fields.Monetary(string='Payé', compute='_compute_amounts', store=True, currency_field='currency_id')
     amount_due = fields.Monetary(string='Reste à payer', compute='_compute_amounts', store=True,
                                  currency_field='currency_id')
-    currency_id = fields.Many2one('res.currency', default=lambda self: self.env.company.currency_id, required=True)
+    currency_id = fields.Many2one('res.currency', default=lambda self: _get_school_currency(self.env), required=True)
     date = fields.Date(string="Date d'émission", default=fields.Date.context_today, required=True)
     due_date = fields.Date(string="Échéance", required=True, default=fields.Date.context_today, tracking=True)
     payment_ids = fields.One2many('eacta.fee.payment', 'fee_id', string='Paiements & Remboursements')
@@ -78,10 +87,14 @@ class EactaStudentFee(models.Model):
     is_overdue = fields.Boolean(string='En retard', compute='_compute_is_overdue', search='_search_is_overdue')
     late_fee_applied = fields.Boolean(string='Pénalité de retard appliquée', default=False)
     late_fee_amount = fields.Monetary(string='Montant pénalité', currency_field='currency_id', default=0.0)
+    reminder_count = fields.Integer(string='Nombre de relances', default=0, readonly=True)
+    last_reminder_date = fields.Date(string='Dernière relance', readonly=True)
     company_id = fields.Many2one('res.company', default=lambda self: self.env.company)
 
-    # Intégration comptable optionnelle (si module account installé)
+    # Intégration comptable
     move_id = fields.Many2one('account.move', string='Facture client', readonly=True, copy=False)
+    move_state = fields.Selection(related='move_id.state', string='État facture', readonly=True)
+    payment_state = fields.Selection(related='move_id.payment_state', string='Paiement comptable', readonly=True)
 
     @api.depends('student_id', 'class_id')
     def _compute_class_id(self):
@@ -145,12 +158,11 @@ class EactaStudentFee(models.Model):
         ICP = self.env['ir.config_parameter'].sudo()
         enable_discount = ICP.get_param('eacta_school.enable_sibling_discount', 'False') in ('True', '1', True)
         if enable_discount and self.student_id and self.student_id.parent_ids and self.amount:
-            sibling_count = self.env['eacta.student'].search_count([
-                ('id', '!=', self.student_id.id),
+            siblings = self.env['eacta.student'].search([
                 ('parent_ids', 'in', self.student_id.parent_ids.ids),
                 ('state', 'in', ('draft', 'enrolled')),
-            ])
-            if sibling_count > 0:
+            ], order='date_of_birth asc, id asc')
+            if len(siblings) > 1 and self.student_id.id != siblings[0].id:
                 rate = float(ICP.get_param('eacta_school.sibling_discount_rate', 10.0))
                 self.discount = round(self.amount * (rate / 100.0), 2)
 
@@ -219,36 +231,72 @@ class EactaStudentFee(models.Model):
     def action_reset(self):
         self.write({'is_cancelled': False})
 
+    def action_view_invoice(self):
+        self.ensure_one()
+        if not self.move_id:
+            raise UserError("Aucune facture client associée à ces frais.")
+        return {
+            'name': 'Facture client',
+            'type': 'ir.actions.act_window',
+            'res_model': 'account.move',
+            'res_id': self.move_id.id,
+            'view_mode': 'form',
+            'target': 'current',
+        }
+
+    def action_create_invoice(self):
+        for fee in self:
+            if not fee.move_id and not fee.is_cancelled:
+                fee._sync_account_invoice()
+        return True
+
     def _sync_account_invoice(self):
-        """Intégration automatique avec account.move si le module comptabilité est installé."""
+        """Intégration automatique avec account.move."""
         if 'account.move' not in self.env:
             return
+        Journal = self.env['account.journal']
         for fee in self:
-            if fee.move_id or not fee.amount_total:
+            if fee.move_id or not fee.amount_total or fee.is_cancelled:
                 continue
             partner = fee.parent_id or (fee.student_id.parent_ids[:1] if fee.student_id else False)
+            if not partner and fee.student_id and fee.student_id.partner_id:
+                partner = fee.student_id.partner_id
             if not partner:
                 continue
+
+            journal = Journal.search([
+                ('type', '=', 'sale'),
+                ('company_id', '=', fee.company_id.id),
+            ], limit=1)
+            if not journal:
+                continue
+
+            currency = fee.currency_id or _get_school_currency(self.env)
+            line_name = f"{fee.description or fee.fee_type_id.name or 'Frais scolaires'} - {fee.student_id.name or ''}"
+            if fee.student_code:
+                line_name += f" ({fee.student_code})"
+
+            move_vals = {
+                'move_type': 'out_invoice',
+                'partner_id': partner.id,
+                'journal_id': journal.id,
+                'currency_id': currency.id,
+                'invoice_date': fee.date or fields.Date.context_today(self),
+                'invoice_date_due': fee.due_date or fee.date or fields.Date.context_today(self),
+                'ref': fee.name,
+                'invoice_line_ids': [(0, 0, {
+                    'name': line_name,
+                    'quantity': 1.0,
+                    'price_unit': fee.amount_total,
+                })],
+            }
             try:
-                journal = self.env['account.journal'].search([('type', '=', 'sale'), ('company_id', '=', fee.company_id.id)], limit=1)
-                if not journal:
-                    continue
-                move = self.env['account.move'].create({
-                    'move_type': 'out_invoice',
-                    'partner_id': partner.id,
-                    'journal_id': journal.id,
-                    'invoice_date': fee.date,
-                    'invoice_date_due': fee.due_date,
-                    'ref': fee.name,
-                    'invoice_line_ids': [(0, 0, {
-                        'name': fee.description or fee.fee_type_id.name or 'Frais scolaires',
-                        'quantity': 1,
-                        'price_unit': fee.amount_total,
-                    })],
-                })
+                move = self.env['account.move'].create(move_vals)
                 fee.move_id = move.id
-            except Exception:
-                pass  # Fallback en mode autonome
+                fee.message_post(body=f"Facture client {move.name or ''} générée avec succès.")
+            except Exception as e:
+                # Log non-fatal error in chatter
+                fee.message_post(body=f"Création de la facture client différée : {str(e)}")
 
     @api.model
     def _cron_check_overdue_fees(self):
@@ -258,12 +306,15 @@ class EactaStudentFee(models.Model):
         enable_late_fee = ICP.get_param('eacta_school.enable_late_fee', 'False') in ('True', '1', True)
         late_fee_type = ICP.get_param('eacta_school.late_fee_type', 'fixed')
         late_fee_val = float(ICP.get_param('eacta_school.late_fee_amount', 50.0))
+        send_reminder = ICP.get_param('eacta_school.send_fee_reminder_email', 'True') in ('True', '1', True)
 
         overdue_fees = self.search([
             ('state', 'in', ('unpaid', 'partial')),
             ('due_date', '<', today),
             ('is_cancelled', '=', False),
         ])
+
+        template = self.env.ref('eacta_school.email_template_fee_reminder', raise_if_not_found=False)
 
         for fee in overdue_fees:
             # 1. Pénalité de retard si activée et non encore appliquée
@@ -280,15 +331,22 @@ class EactaStudentFee(models.Model):
                     body=f"Pénalité de retard appliquée : +{penalty:.2f} {fee.currency_id.symbol or ''} (Échéance dépassée le {fee.due_date})."
                 )
 
-            # 2. Notification email aux parents
-            if fee.student_id and fee.student_id.parent_ids:
-                parents_with_email = fee.student_id.parent_ids.filtered('email')
-                for p in parents_with_email:
-                    fee.message_post(
-                        body=f"Rappel d'impayé envoyé au parent {p.name} ({p.email}) pour un montant dû de {fee.amount_due:.2f} {fee.currency_id.symbol or ''}.",
-                        partner_ids=[p.id],
-                        subtype_xmlid='mail.mt_note'
-                    )
+            # 2. Relance email au parent si configurée
+            parent = fee.parent_id or (fee.student_id.parent_ids[:1] if fee.student_id else False)
+            parent_email = parent.email if parent else False
+            days_since_last = (today - fee.last_reminder_date).days if fee.last_reminder_date else 999
+
+            if send_reminder and parent_email and days_since_last >= 7:
+                if template:
+                    try:
+                        template.send_mail(fee.id, force_send=True)
+                    except Exception as e:
+                        fee.message_post(body=f"Échec de l'envoi du mail de relance : {str(e)}")
+                fee.last_reminder_date = today
+                fee.reminder_count += 1
+                fee.message_post(
+                    body=f"Relance d'impayé #{fee.reminder_count} envoyée au parent {parent.name} ({parent_email}) pour un reste dû de {fee.amount_due:.2f} {fee.currency_id.symbol or 'DH'}."
+                )
 
 
 class EactaFeePayment(models.Model):
@@ -401,9 +459,16 @@ class EactaFeePayment(models.Model):
             if not fee.move_id:
                 continue
             partner = fee.parent_id or (fee.student_id.parent_ids[:1] if fee.student_id else False)
+            if not partner and fee.student_id and fee.student_id.partner_id:
+                partner = fee.student_id.partner_id
             if not partner:
                 continue
             try:
+                if fee.move_id.state == 'draft':
+                    try:
+                        fee.move_id.action_post()
+                    except Exception:
+                        pass
                 journal = self.env['account.journal'].search([
                     ('type', 'in', ('bank', 'cash')),
                     ('company_id', '=', fee.company_id.id),
@@ -411,12 +476,14 @@ class EactaFeePayment(models.Model):
                 if not journal:
                     continue
                 pay_type = 'outbound' if payment.payment_type == 'refund' else 'inbound'
+                currency = payment.currency_id or fee.currency_id or _get_school_currency(self.env)
                 self.env['account.payment'].create({
                     'payment_type': pay_type,
                     'partner_type': 'customer',
                     'partner_id': partner.id,
                     'amount': payment.amount,
                     'date': payment.date,
+                    'currency_id': currency.id,
                     'journal_id': journal.id,
                     'ref': f"{payment.name} - {fee.name}",
                 })
@@ -438,10 +505,10 @@ class EactaFeeGenerateWizard(models.TransientModel):
     academic_year_id = fields.Many2one('eacta.academic.year', string='Année académique',
                                        default=lambda self: self.env['eacta.academic.year'].get_current_year(),
                                        required=True)
-    class_ids = fields.Many2many('eacta.class', string='Classes', required=True)
+    class_ids = fields.Many2many('eacta.class', string='Classes')
     description = fields.Char(string='Libellé', help="ex : Scolarité 2026-2027")
     amount = fields.Monetary(string='Montant par élève', required=True, currency_field='currency_id')
-    currency_id = fields.Many2one('res.currency', default=lambda self: self.env.company.currency_id)
+    currency_id = fields.Many2one('res.currency', default=lambda self: _get_school_currency(self.env))
     installments = fields.Integer(string="Nombre d'échéances", default=1,
                                   help="Divise le montant en échéances mensuelles")
     first_due_date = fields.Date(string='Première échéance', required=True, default=fields.Date.context_today)
@@ -471,6 +538,8 @@ class EactaFeeGenerateWizard(models.TransientModel):
         self.ensure_one()
         if self.installments < 1:
             raise UserError("Le nombre d'échéances doit être au moins 1.")
+        if not self.class_ids and not self.student_ids:
+            raise UserError("Veuillez sélectionner au moins une classe ou un élève.")
         Fee = self.env['eacta.student.fee']
         per = round(self.amount / self.installments, 2)
         vals_list = []
@@ -478,46 +547,53 @@ class EactaFeeGenerateWizard(models.TransientModel):
         ICP = self.env['ir.config_parameter'].sudo()
         sibling_rate = float(ICP.get_param('eacta_school.sibling_discount_rate', 10.0))
 
-        for klass in self.class_ids:
-            students = self.student_ids if self.student_ids else klass.student_ids.filtered(lambda s: s.state in ('draft', 'enrolled'))
-            for student in students:
-                year_id = klass.academic_year_id.id if klass.academic_year_id else self.academic_year_id.id
-                if self.skip_existing and Fee.search_count([
-                        ('student_id', '=', student.id),
-                        ('fee_type_id', '=', self.fee_type_id.id),
-                        ('academic_year_id', '=', year_id),
-                        ('is_cancelled', '=', False)]):
-                    continue
+        if self.student_ids:
+            students = self.student_ids
+        else:
+            students = self.class_ids.student_ids.filtered(lambda s: s.state in ('draft', 'enrolled'))
 
-                total_discount = 0.0
-                discount_per_installment = 0.0
-                if self.apply_sibling_discount and student.parent_ids:
-                    sibling_count = self.env['eacta.student'].search_count([
-                        ('id', '!=', student.id),
-                        ('parent_ids', 'in', student.parent_ids.ids),
-                        ('state', 'in', ('draft', 'enrolled')),
-                    ])
-                    if sibling_count > 0:
-                        total_discount = round(self.amount * (sibling_rate / 100.0), 2)
-                        discount_per_installment = round(total_discount / self.installments, 2)
+        if not students:
+            raise UserError("Aucun élève trouvé pour la génération des frais.")
 
-                for i in range(self.installments):
-                    amount = per if i < self.installments - 1 else round(self.amount - per * (self.installments - 1), 2)
-                    disc = discount_per_installment if i < self.installments - 1 else round(total_discount - discount_per_installment * (self.installments - 1), 2)
-                    label = self.description or self.fee_type_id.name
-                    if self.installments > 1:
-                        label = f"{label} ({i + 1}/{self.installments})"
-                    vals_list.append({
-                        'student_id': student.id,
-                        'class_id': klass.id,
-                        'academic_year_id': year_id,
-                        'year': klass.academic_year_id.name or klass.year,
-                        'fee_type_id': self.fee_type_id.id,
-                        'description': label,
-                        'amount': amount,
-                        'discount': min(disc, amount),
-                        'due_date': self.first_due_date + relativedelta(months=i),
-                    })
+        for student in students:
+            klass = student.current_class_id or (self.class_ids[:1] if self.class_ids else False)
+            year_id = (klass.academic_year_id.id if klass and klass.academic_year_id else False) or self.academic_year_id.id
+            if self.skip_existing and Fee.search_count([
+                    ('student_id', '=', student.id),
+                    ('fee_type_id', '=', self.fee_type_id.id),
+                    ('academic_year_id', '=', year_id),
+                    ('is_cancelled', '=', False)]):
+                continue
+
+            total_discount = 0.0
+            discount_per_installment = 0.0
+            if self.apply_sibling_discount and student.parent_ids:
+                siblings = self.env['eacta.student'].search([
+                    ('parent_ids', 'in', student.parent_ids.ids),
+                    ('state', 'in', ('draft', 'enrolled')),
+                ], order='date_of_birth asc, id asc')
+                if len(siblings) > 1 and student.id != siblings[0].id:
+                    total_discount = round(self.amount * (sibling_rate / 100.0), 2)
+                    discount_per_installment = round(total_discount / self.installments, 2)
+
+            for i in range(self.installments):
+                amount = per if i < self.installments - 1 else round(self.amount - per * (self.installments - 1), 2)
+                disc = discount_per_installment if i < self.installments - 1 else round(total_discount - discount_per_installment * (self.installments - 1), 2)
+                label = self.description or self.fee_type_id.name
+                if self.installments > 1:
+                    label = f"{label} ({i + 1}/{self.installments})"
+                vals_list.append({
+                    'student_id': student.id,
+                    'class_id': klass.id if klass else False,
+                    'academic_year_id': year_id,
+                    'year': (klass.academic_year_id.name if klass and klass.academic_year_id else False) or self.academic_year_id.name or '',
+                    'fee_type_id': self.fee_type_id.id,
+                    'description': label,
+                    'amount': amount,
+                    'discount': min(disc, amount),
+                    'currency_id': self.currency_id.id,
+                    'due_date': self.first_due_date + relativedelta(months=i),
+                })
         fees = Fee.create(vals_list)
         return {
             'name': 'Frais générés',
@@ -536,17 +612,17 @@ class EactaStudentFinance(models.Model):
     fee_overdue = fields.Monetary(string='Dont en retard', compute='_compute_fee_balance',
                                   currency_field='fee_currency_id')
     fee_currency_id = fields.Many2one('res.currency', compute='_compute_fee_balance')
+    fee_count = fields.Integer(string='Nombre de frais', compute='_compute_fee_balance')
 
     @api.depends('fee_ids.amount_due', 'fee_ids.state', 'fee_ids.due_date')
     def _compute_fee_balance(self):
         today = fields.Date.context_today(self)
-        currency = self.env.company.currency_id
         for student in self:
             open_fees = student.fee_ids.filtered(lambda f: f.state in ('unpaid', 'partial'))
             student.fee_balance = sum(open_fees.mapped('amount_due'))
-            student.fee_overdue = sum(open_fees.filtered(lambda f: f.due_date and f.due_date < today)
-                                      .mapped('amount_due'))
-            student.fee_currency_id = currency
+            student.fee_overdue = sum(open_fees.filtered(lambda f: f.due_date and f.due_date < today).mapped('amount_due'))
+            student.fee_currency_id = student.fee_ids[:1].currency_id or _get_school_currency(self.env)
+            student.fee_count = len(student.fee_ids)
 
     def action_view_fees(self):
         self.ensure_one()

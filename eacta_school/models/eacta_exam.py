@@ -63,11 +63,11 @@ class EactaExam(models.Model):
             elif not exam.term_id:
                 exam.term_id = False
 
-    @api.depends('term_id', 'term_id.year_id', 'date')
+    @api.depends('term_id', 'term_id.academic_year_id', 'date')
     def _compute_academic_year_id(self):
         for exam in self:
-            if exam.term_id and exam.term_id.year_id:
-                exam.academic_year_id = exam.term_id.year_id
+            if exam.term_id and exam.term_id.academic_year_id:
+                exam.academic_year_id = exam.term_id.academic_year_id
             elif exam.date:
                 year = self.env['eacta.academic.year'].search([
                     ('date_start', '<=', exam.date),
