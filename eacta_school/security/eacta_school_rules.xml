@@ -287,5 +287,94 @@
             <field name="groups" eval="[(4, ref('base.group_portal'))]"/>
         </record>
 
+        <!-- ============================================================ -->
+        <!-- RÈGLES TRANSPORT SCOLAIRE                                     -->
+        <!-- ============================================================ -->
+        <record id="rule_school_manager_transport_line" model="ir.rule">
+            <field name="name">NR School (Manager) : toutes les lignes de transport</field>
+            <field name="model_id" ref="model_eacta_transport_line"/>
+            <field name="domain_force">[(1, '=', 1)]</field>
+            <field name="groups" eval="[(4, ref('eacta_school.group_eacta_school_manager'))]"/>
+        </record>
+
+        <record id="rule_school_manager_transport_stop" model="ir.rule">
+            <field name="name">NR School (Manager) : tous les arrêts de transport</field>
+            <field name="model_id" ref="model_eacta_transport_stop"/>
+            <field name="domain_force">[(1, '=', 1)]</field>
+            <field name="groups" eval="[(4, ref('eacta_school.group_eacta_school_manager'))]"/>
+        </record>
+
+        <record id="rule_school_direction_transport_line" model="ir.rule">
+            <field name="name">NR School (Direction) : toutes les lignes de transport</field>
+            <field name="model_id" ref="model_eacta_transport_line"/>
+            <field name="domain_force">[(1, '=', 1)]</field>
+            <field name="groups" eval="[(4, ref('eacta_school.group_eacta_school_direction'))]"/>
+        </record>
+
+        <record id="rule_school_direction_transport_stop" model="ir.rule">
+            <field name="name">NR School (Direction) : tous les arrêts de transport</field>
+            <field name="model_id" ref="model_eacta_transport_stop"/>
+            <field name="domain_force">[(1, '=', 1)]</field>
+            <field name="groups" eval="[(4, ref('eacta_school.group_eacta_school_direction'))]"/>
+        </record>
+
+        <record id="rule_school_secretary_transport_line" model="ir.rule">
+            <field name="name">NR School (Secrétariat) : toutes les lignes de transport</field>
+            <field name="model_id" ref="model_eacta_transport_line"/>
+            <field name="domain_force">[(1, '=', 1)]</field>
+            <field name="groups" eval="[(4, ref('eacta_school.group_eacta_school_secretary'))]"/>
+        </record>
+
+        <record id="rule_school_secretary_transport_stop" model="ir.rule">
+            <field name="name">NR School (Secrétariat) : tous les arrêts de transport</field>
+            <field name="model_id" ref="model_eacta_transport_stop"/>
+            <field name="domain_force">[(1, '=', 1)]</field>
+            <field name="groups" eval="[(4, ref('eacta_school.group_eacta_school_secretary'))]"/>
+        </record>
+
+        <record id="rule_school_teacher_transport_line" model="ir.rule">
+            <field name="name">NR School (Enseignant) : lignes de ses élèves ou conduite</field>
+            <field name="model_id" ref="model_eacta_transport_line"/>
+            <field name="domain_force">['|', ('driver_user_id', '=', user.id), '|', '|', ('passenger_ids.class_ids.teacher_id', '=', user.id), ('passenger_ids.class_ids.course_ids.teacher_id', '=', user.id), ('passenger_ids.course_ids.teacher_id', '=', user.id)]</field>
+            <field name="perm_read" eval="True"/>
+            <field name="perm_write" eval="False"/>
+            <field name="perm_create" eval="False"/>
+            <field name="perm_unlink" eval="False"/>
+            <field name="groups" eval="[(4, ref('eacta_school.group_eacta_school_teacher'))]"/>
+        </record>
+
+        <record id="rule_school_teacher_transport_stop" model="ir.rule">
+            <field name="name">NR School (Enseignant) : arrêts de ses élèves</field>
+            <field name="model_id" ref="model_eacta_transport_stop"/>
+            <field name="domain_force">['|', '|', ('student_ids.class_ids.teacher_id', '=', user.id), ('student_ids.class_ids.course_ids.teacher_id', '=', user.id), ('student_ids.course_ids.teacher_id', '=', user.id)]</field>
+            <field name="perm_read" eval="True"/>
+            <field name="perm_write" eval="False"/>
+            <field name="perm_create" eval="False"/>
+            <field name="perm_unlink" eval="False"/>
+            <field name="groups" eval="[(4, ref('eacta_school.group_eacta_school_teacher'))]"/>
+        </record>
+
+        <record id="rule_school_portal_transport_line" model="ir.rule">
+            <field name="name">NR School (Portail) : lignes de ses enfants ou propre ligne</field>
+            <field name="model_id" ref="model_eacta_transport_line"/>
+            <field name="domain_force">['|', '|', ('passenger_ids.parent_ids', 'in', [user.partner_id.id]), ('passenger_ids.user_id', '=', user.id), ('passenger_ids.partner_id', '=', user.partner_id.id)]</field>
+            <field name="perm_read" eval="True"/>
+            <field name="perm_write" eval="False"/>
+            <field name="perm_create" eval="False"/>
+            <field name="perm_unlink" eval="False"/>
+            <field name="groups" eval="[(4, ref('base.group_portal'))]"/>
+        </record>
+
+        <record id="rule_school_portal_transport_stop" model="ir.rule">
+            <field name="name">NR School (Portail) : arrêts de ses enfants ou propre arrêt</field>
+            <field name="model_id" ref="model_eacta_transport_stop"/>
+            <field name="domain_force">['|', '|', ('student_ids.parent_ids', 'in', [user.partner_id.id]), ('student_ids.user_id', '=', user.id), ('student_ids.partner_id', '=', user.partner_id.id)]</field>
+            <field name="perm_read" eval="True"/>
+            <field name="perm_write" eval="False"/>
+            <field name="perm_create" eval="False"/>
+            <field name="perm_unlink" eval="False"/>
+            <field name="groups" eval="[(4, ref('base.group_portal'))]"/>
+        </record>
+
     </data>
 </odoo>

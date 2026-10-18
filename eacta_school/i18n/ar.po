@@ -296,6 +296,54 @@ msgstr "تنبيهات الغياب والتأخر عبر البريد"
 msgid "Espace Scolaire / الفضاء المدرسي"
 msgstr "الفضاء المدرسي"
 
+#. module: eacta_school
+msgid "Carte d'élève"
+msgstr "بطاقة التلميذ"
 
+#. module: eacta_school
+msgid "Carte d'élève / بطاقة التلميذ"
+msgstr "بطاقة التلميذ"
 
+#. module: eacta_school
+msgid "Jeton QR Code"
+msgstr "رمز الاستجابة السريعة الآمن"
 
+#. module: eacta_school
+msgid "Régénérer jeton QR"
+msgstr "تجديد رمز QR"
+
+#. module: eacta_school
+msgid "Scanner d'assiduité"
+msgstr "ماسح تسجيل الحضور"
+
+#. module: eacta_school
+msgid "Scanner d'assiduité (QR)"
+msgstr "تسجيل الحضور عبر QR"
+
+#. module: eacta_school
+msgid "Transport"
+msgstr "النقل المدرسي"
+
+#. module: eacta_school
+msgid "Lignes de transport"
+msgstr "خطوط النقل المدرسي"
+
+#. module: eacta_school
+msgid "Arrêts de bus"
+msgstr "محطات الحافلات"
+
+#. module: eacta_school
+msgid "Passagers inscrits"
+msgstr "التلاميذ المسجلون بالنقل"
+
+#. module: eacta_school
+msgid "Capacité (places)"
+msgstr "سعة الحافلة (مقاعد)"
+
+#. module: eacta_school
+msgid "Places disponibles"
+msgstr "الأماكن الشاغرة"
+
+#. module: eacta_school
+msgid "Exporter .ics"
+msgstr "تصدير التقويم (.ics)"

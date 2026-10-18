@@ -127,3 +127,43 @@ msgstr "الكتب المتاحة"
 #: model:ir.model.fields,field_description:library_book.field_library_book_category__book_names
 msgid "Book Names"
 msgstr "أسماء الكتب"
+
+#. module: eacta_bibliotheque
+msgid "Emprunt"
+msgstr "إعارة"
+
+#. module: eacta_bibliotheque
+msgid "Emprunts"
+msgstr "الإعارات"
+
+#. module: eacta_bibliotheque
+msgid "Activer les amendes de retard"
+msgstr "تفعيل غرامات التأخير"
+
+#. module: eacta_bibliotheque
+msgid "Amende par jour de retard"
+msgstr "الغرامة لكل يوم تأخير"
+
+#. module: eacta_bibliotheque
+msgid "En retard"
+msgstr "متأخر"
+
+#. module: eacta_bibliotheque
+msgid "Dernière relance envoyée le"
+msgstr "تاريخ آخر تذكير مرسل"
+
+#. module: eacta_bibliotheque
+msgid "Nombre de relances"
+msgstr "عدد التذكيرات"
+
+#. module: eacta_bibliotheque
+msgid "Enregistrer le retour"
+msgstr "تسجيل الإرجاع"
+
+#. module: eacta_bibliotheque
+msgid "Prolonger"
+msgstr "تمديد الإعارة"
+
+#. module: eacta_bibliotheque
+msgid "Bon d'emprunt"
+msgstr "وصل الإعارة"

@@ -14,3 +14,4 @@ from . import eacta_attendance
 from . import eacta_timetable
 from . import eacta_fee
 from . import eacta_notification
+from . import eacta_transport

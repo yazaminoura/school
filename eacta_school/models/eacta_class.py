@@ -342,3 +342,13 @@ class EactaClass(models.Model):
             },
         }
 
+    def action_export_timetable_ics(self):
+        """Redirige vers le téléchargement du fichier iCalendar (.ics) de la classe."""
+        self.ensure_one()
+        return {
+            'type': 'ir.actions.act_url',
+            'url': f'/school/timetable/ics/class/{self.id}',
+            'target': 'self',
+        }
+
+

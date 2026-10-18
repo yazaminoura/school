@@ -1,0 +1,217 @@
+<?xml version="1.0" encoding="utf-8"?>
+<odoo>
+
+    <template id="attendance_scan_page" name="Scan Assiduité Élèves">
+        <t t-call="web.layout">
+            <t t-set="head">
+                <meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1, user-scalable=no"/>
+                <title>Scan Assiduité - NR School</title>
+                <style>
+                    body {
+                        background-color: #f8fafc;
+                        font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, "Helvetica Neue", Arial, sans-serif;
+                    }
+                    .scan-container {
+                        max-width: 500px;
+                        margin: 0 auto;
+                        padding: 16px;
+                    }
+                    .scan-card {
+                        background: #ffffff;
+                        border-radius: 16px;
+                        box-shadow: 0 4px 15px rgba(0, 0, 0, 0.05);
+                        padding: 20px;
+                        margin-bottom: 20px;
+                    }
+                    .scanner-box {
+                        width: 100%;
+                        height: 220px;
+                        background: #0f172a;
+                        border-radius: 12px;
+                        position: relative;
+                        overflow: hidden;
+                        display: flex;
+                        align-items: center;
+                        justify-content: center;
+                        margin-bottom: 16px;
+                    }
+                    #video-feed {
+                        width: 100%;
+                        height: 100%;
+                        object-fit: cover;
+                    }
+                    .scan-laser {
+                        position: absolute;
+                        width: 100%;
+                        height: 2px;
+                        background: #3b82f6;
+                        box-shadow: 0 0 8px #3b82f6;
+                        top: 50%;
+                        animation: scanMove 2s infinite ease-in-out;
+                    }
+                    @keyframes scanMove {
+                        0% { top: 10%; }
+                        50% { top: 90%; }
+                        100% { top: 10%; }
+                    }
+                    .avatar-scan {
+                        width: 72px;
+                        height: 72px;
+                        border-radius: 50%;
+                        object-fit: cover;
+                        border: 3px solid #10b981;
+                    }
+                </style>
+            </t>
+            <div class="scan-container">
+                <!-- En-tête -->
+                <div class="text-center mb-4 pt-2">
+                    <h3 class="fw-bold text-primary mb-1">
+                        <i class="fa fa-qrcode me-2"/>Pointage Assiduité
+                    </h3>
+                    <p class="text-muted small mb-0">Scannez la carte d'élève pour enregistrer la présence en 1 clic</p>
+                </div>
+
+                <!-- Alerte Succès / Erreur -->
+                <t t-if="attendance_created and student_data">
+                    <div class="alert alert-success d-flex align-items-center gap-3 p-3 shadow-sm rounded-4 mb-3 border-0 bg-success-subtle text-success-emphasis">
+                        <img t-att-src="student_data['image_url']" class="avatar-scan" alt="Photo" onerror="this.src='/web/static/img/placeholder.png'"/>
+                        <div class="flex-grow-1">
+                            <h5 class="fw-bold mb-1"><t t-out="student_data['name']"/></h5>
+                            <div class="small text-muted">
+                                Matricule : <strong><t t-out="student_data['code'] or '-'"/></strong> · Classe : <strong><t t-out="student_data['class_name']"/></strong>
+                            </div>
+                            <div class="badge bg-success mt-1">
+                                <i class="fa fa-check-circle me-1"/>Présence confirmée à <t t-out="student_data['timestamp']"/>
+                            </div>
+                        </div>
+                    </div>
+                </t>
+
+                <t t-if="error_message">
+                    <div class="alert alert-danger p-3 shadow-sm rounded-4 mb-3 border-0 bg-danger-subtle text-danger-emphasis">
+                        <i class="fa fa-exclamation-triangle me-2"/>
+                        <span class="fw-bold"><t t-out="error_message"/></span>
+                    </div>
+                </t>
+
+                <!-- Zone Caméra / Scanner -->
+                <div class="scan-card text-center">
+                    <div class="scanner-box" id="scanner-wrapper">
+                        <video id="video-feed" autoplay="true" playsinline="true" muted="true"></video>
+                        <div class="scan-laser"></div>
+                        <div id="cam-fallback" class="text-white p-3 d-none">
+                            <i class="fa fa-camera fa-2x mb-2 text-secondary"/>
+                            <div class="small">Caméra inactive ou non disponible</div>
+                        </div>
+                    </div>
+
+                    <div class="d-flex justify-content-center gap-2 mb-3">
+                        <button id="btn-toggle-cam" class="btn btn-outline-primary btn-sm rounded-pill px-3">
+                            <i class="fa fa-camera me-1"/>Activer caméra
+                        </button>
+                    </div>
+
+                    <!-- Formulaire de saisie / scan par douchette -->
+                    <form id="scan-form" method="POST" action="/school/attendance/scan" class="mt-3">
+                        <div class="input-group mb-2">
+                            <input type="text" id="token-input" name="token" class="form-control form-control-lg rounded-start-pill text-center font-monospace"
+                                   placeholder="Jeton QR ou code élève..." autofocus="autofocus" required="required" autocomplete="off"/>
+                            <button class="btn btn-primary rounded-end-pill px-4" type="submit">
+                                <i class="fa fa-check me-1"/>Valider
+                            </button>
+                        </div>
+                        <div class="text-muted small">
+                            Compatible douchette code-barres / QR code USB et Bluetooth
+                        </div>
+                    </form>
+                </div>
+
+                <!-- Navigation de retour -->
+                <div class="text-center mt-3">
+                    <a href="/web" class="btn btn-link text-decoration-none text-muted small">
+                        <i class="fa fa-arrow-left me-1"/>Retour au tableau de bord Odoo
+                    </a>
+                </div>
+            </div>
+
+            <!-- Script de scan interactif -->
+            <script type="text/javascript">
+                document.addEventListener('DOMContentLoaded', function () {
+                    const video = document.getElementById('video-feed');
+                    const btnCam = document.getElementById('btn-toggle-cam');
+                    const inputToken = document.getElementById('token-input');
+                    const form = document.getElementById('scan-form');
+                    let stream = null;
+                    let scanning = false;
+
+                    // Focus permanent sur le champ texte pour les scanners physiques
+                    if (inputToken) {
+                        inputToken.focus();
+                    }
+
+                    // Détection et lecture via BarcodeDetector natif (Chrome Android, Edge, Safari récent)
+                    async function startCamera() {
+                        try {
+                            stream = await navigator.mediaDevices.getUserMedia({
+                                video: { facingMode: 'environment' }
+                            });
+                            video.srcObject = stream;
+                            btnCam.classList.replace('btn-outline-primary', 'btn-outline-danger');
+                            btnCam.innerHTML = '<i class="fa fa-stop me-1"></i>Arrêter caméra';
+                            scanning = true;
+
+                            if ('BarcodeDetector' in window) {
+                                const detector = new BarcodeDetector({ formats: ['qr_code'] });
+                                const scanFrame = async () => {
+                                    if (!scanning) return;
+                                    try {
+                                        const codes = await detector.detect(video);
+                                        if (codes.length > 0) {
+                                            const rawValue = codes[0].rawValue;
+                                            if (rawValue) {
+                                                scanning = false;
+                                                inputToken.value = rawValue;
+                                                form.submit();
+                                                return;
+                                            }
+                                        }
+                                    } catch (err) {
+                                        // frame pass
+                                    }
+                                    requestAnimationFrame(scanFrame);
+                                };
+                                video.onloadedmetadata = () => {
+                                    scanFrame();
+                                };
+                            }
+                        } catch (err) {
+                            console.warn("Accès caméra refusé ou non supporté :", err);
+                            const fallback = document.getElementById('cam-fallback');
+                            if (fallback) fallback.classList.remove('d-none');
+                        }
+                    }
+
+                    function stopCamera() {
+                        if (stream) {
+                            stream.getTracks().forEach(track => track.stop());
+                            stream = null;
+                        }
+                        scanning = false;
+                        btnCam.classList.replace('btn-outline-danger', 'btn-outline-primary');
+                        btnCam.innerHTML = '<i class="fa fa-camera me-1"></i>Activer caméra';
+                    }
+
+                    btnCam.addEventListener('click', function () {
+                        if (stream) {
+                            stopCamera();
+                        } else {
+                            startCamera();
+                        }
+                    });
+                });
+            </script>
+        </t>
+    </template>
+
+</odoo>

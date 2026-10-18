@@ -28,6 +28,8 @@
                             help="Ajoute tous les cours de la classe à chaque élève"/>
                     <button name="%(eacta_school.action_report_class_timetable)d" string="Emploi du temps"
                             type="action" icon="fa-calendar"/>
+                    <button name="action_export_timetable_ics" string="Exporter .ics"
+                            type="object" icon="fa-download" help="Exporter l'emploi du temps au format iCalendar (.ics)"/>
                     <button name="%(eacta_school.action_report_class_results)d" string="Résultats"
                             type="action" icon="fa-print"/>
                 </header>

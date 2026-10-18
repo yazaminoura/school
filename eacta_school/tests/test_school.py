@@ -1164,5 +1164,192 @@ class TestSchoolManagement(TransactionCase):
         ])
         self.assertNotIn(grade_draft, portal_grades, "Une note à l'état draft ne doit pas être visible sur le portail")
 
+    # =========================================================================
+    # 19. PHASE 4: TIMETABLE CONFLICTS & ICS EXPORT
+    # =========================================================================
+    def test_20_timetable_conflicts_and_ics_export(self):
+        """Détection des conflits d'emploi du temps (enseignant, salle, classe) et export .ics RFC 5545."""
+        # Création d'un premier créneau : Lundi 08h-10h en salle B101 avec Teacher Dupont pour Class 6A
+        slot_1 = self.env['eacta.timetable.slot'].create({
+            'class_id': self.class_6a.id,
+            'course_id': self.course_math.id,
+            'teacher_id': self.user_teacher_1.id,
+            'weekday': '0',
+            'hour_from': 8.0,
+            'hour_to': 10.0,
+            'room': 'B101',
+        })
+        self.assertTrue(slot_1)
+
+        self.course_physics.write({'class_ids': [(4, self.class_6b.id)]})
+
+        # 1. Conflit Enseignant : Dupont ne peut pas enseigner à une autre classe (6B) le Lundi de 09h à 11h
+        with self.assertRaises(ValidationError):
+            self.env['eacta.timetable.slot'].create({
+                'class_id': self.class_6b.id,
+                'course_id': self.course_math.id,
+                'teacher_id': self.user_teacher_1.id,
+                'weekday': '0',
+                'hour_from': 9.0,
+                'hour_to': 11.0,
+                'room': 'B102',
+            })
+
+        # 2. Conflit Salle : Salle B101 ne peut pas accueillir une autre classe sur le même créneau
+        with self.assertRaises(ValidationError):
+            self.env['eacta.timetable.slot'].create({
+                'class_id': self.class_6b.id,
+                'course_id': self.course_physics.id,
+                'teacher_id': self.user_teacher_2.id,
+                'weekday': '0',
+                'hour_from': 8.5,
+                'hour_to': 9.5,
+                'room': 'B101',
+            })
+
+        # 3. Conflit Classe : Class 6A ne peut pas avoir deux cours qui se chevauchent
+        with self.assertRaises(ValidationError):
+            self.env['eacta.timetable.slot'].create({
+                'class_id': self.class_6a.id,
+                'course_id': self.course_physics.id,
+                'teacher_id': self.user_teacher_2.id,
+                'weekday': '0',
+                'hour_from': 9.0,
+                'hour_to': 11.0,
+                'room': 'B103',
+            })
+
+        # 4. Export iCalendar (.ics) conforme au standard RFC 5545
+        ics_class = self.env['eacta.timetable.slot'].export_ics('class', self.class_6a.id)
+        self.assertIsNotNone(ics_class)
+        self.assertIn("BEGIN:VCALENDAR", ics_class)
+        self.assertIn("VERSION:2.0", ics_class)
+        self.assertIn("BEGIN:VEVENT", ics_class)
+        self.assertIn("RRULE:FREQ=WEEKLY", ics_class)
+        self.assertIn("B101", ics_class)
+        self.assertIn("END:VCALENDAR", ics_class)
+
+        # Export pour un enseignant
+        ics_teacher = self.env['eacta.timetable.slot'].export_ics('teacher', self.user_teacher_1.id)
+        self.assertIsNotNone(ics_teacher)
+        self.assertIn("BEGIN:VCALENDAR", ics_teacher)
+        self.assertIn(self.user_teacher_1.name, ics_teacher)
+
+    # =========================================================================
+    # 20. PHASE 4: STUDENT CARD QR TOKEN & ATTENDANCE SCAN
+    # =========================================================================
+    def test_21_student_qr_card_and_scan_attendance(self):
+        """Carte d'élève avec jeton QR sécurisé et enregistrement d'assiduité 1-clic."""
+        # 1. Vérification du jeton QR cryptographique non-devinable
+        self.assertTrue(self.student_1.qr_token)
+        self.assertGreaterEqual(len(self.student_1.qr_token), 32)
+        initial_token = self.student_1.qr_token
+
+        # 2. Régénération du jeton QR
+        self.student_1.action_regenerate_qr_token()
+        self.assertNotEqual(self.student_1.qr_token, initial_token)
+
+        # 3. Action d'impression du badge / carte d'élève
+        badge_report_action = self.student_1.action_print_student_badge()
+        self.assertEqual(badge_report_action.get('type'), 'ir.actions.report')
+        self.assertEqual(badge_report_action.get('report_name'), 'eacta_school.report_student_card_badge')
+
+        # 4. Simulation de l'enregistrement d'assiduité par scan (1-clic)
+        today = fields.Date.today()
+        current_hour = fields.Datetime.now().hour
+        session = 'morning' if current_hour < 13 else 'afternoon'
+
+        # Suppression préalable d'éventuels enregistrements existants pour le test
+        self.env['eacta.attendance'].search([
+            ('student_id', '=', self.student_1.id),
+            ('date', '=', today),
+            ('session', '=', session),
+        ]).unlink()
+
+        # Enregistrement via le token
+        found_student = self.env['eacta.student'].search([('qr_token', '=', self.student_1.qr_token)], limit=1)
+        self.assertEqual(found_student, self.student_1)
+
+        attendance = self.env['eacta.attendance'].create({
+            'student_id': found_student.id,
+            'class_id': found_student.current_class_id.id,
+            'date': today,
+            'session': session,
+            'attendance_type': 'present',
+        })
+        self.assertTrue(attendance)
+        self.assertEqual(attendance.attendance_type, 'present')
+
+    # =========================================================================
+    # 21. PHASE 4: TRANSPORT SCOLAIRE (LIGNES, ARRÊTS, CAPACITÉ & SÉCURITÉ)
+    # =========================================================================
+    def test_22_transport_lines_capacity_and_rules(self):
+        """Lignes de bus, arrêts, vérification de capacité et droits d'accès."""
+        # 1. Création d'une ligne de transport avec capacité de 2 places
+        line = self.env['eacta.transport.line'].create({
+            'name': 'Ligne Navette Rabat-Agdal',
+            'code': 'L-AGDAL',
+            'driver_name': 'Hassan Tazi',
+            'driver_phone': '0661234567',
+            'vehicle_name': 'Mercedes Sprinter (45678-A-1)',
+            'capacity': 2,
+        })
+        self.assertEqual(line.available_seats, 2)
+
+        # Création des arrêts
+        stop_1 = self.env['eacta.transport.stop'].create({
+            'name': 'Arrêt Place Darna',
+            'line_id': line.id,
+            'sequence': 10,
+            'time_morning': '07:30',
+        })
+        stop_2 = self.env['eacta.transport.stop'].create({
+            'name': 'Arrêt Gare Rabat Agdal',
+            'line_id': line.id,
+            'sequence': 20,
+            'time_morning': '07:45',
+        })
+        self.assertEqual(line.stop_count, 2)
+
+        # 2. Inscription de 2 élèves (Karim et Salma)
+        self.student_1.write({
+            'transport_mode': 'bus',
+            'transport_line_id': line.id,
+            'transport_stop_id': stop_1.id,
+        })
+        self.student_2.write({
+            'transport_mode': 'bus',
+            'transport_line_id': line.id,
+            'transport_stop_id': stop_2.id,
+        })
+
+        line._compute_passengers()
+        self.assertEqual(line.passenger_count, 2)
+        self.assertEqual(line.available_seats, 0)
+
+        # 3. Tentative d'ajouter un 3ème élève : doit lever ValidationError pour capacité dépassée
+        with self.assertRaises(ValidationError):
+            self.student_3.write({
+                'transport_mode': 'bus',
+                'transport_line_id': line.id,
+            })
+
+        # 4. Incohérence d'arrêt : l'arrêt doit appartenir à la ligne sélectionnée
+        other_line = self.env['eacta.transport.line'].create({
+            'name': 'Ligne 2 - Salé',
+            'code': 'L-SALE',
+            'capacity': 15,
+        })
+        with self.assertRaises(ValidationError):
+            self.student_1.write({
+                'transport_line_id': other_line.id,
+                'transport_stop_id': stop_1.id,  # stop_1 appartient à line (Agdal), pas à other_line (Salé)
+            })
+
+        # 5. Sécurité : le parent Alami ne voit que les lignes de ses enfants
+        portal_lines = self.env['eacta.transport.line'].with_user(self.user_parent_1).search([])
+        self.assertIn(line, portal_lines)
+        self.assertNotIn(other_line, portal_lines)
+
 
 

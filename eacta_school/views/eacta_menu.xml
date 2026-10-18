@@ -16,6 +16,12 @@
     <menuitem id="menu_eacta_school_dashboard" name="Tableau de bord" parent="menu_eacta_school_root"
               action="action_eacta_school_dashboard" sequence="1"/>
 
+    <record id="action_eacta_attendance_scan" model="ir.actions.act_url">
+        <field name="name">Scanner d'assiduité</field>
+        <field name="url">/school/attendance/scan</field>
+        <field name="target">new</field>
+    </record>
+
     <!-- Scolarité -->
     <menuitem id="menu_eacta_school_scolarite" name="Scolarité" parent="menu_eacta_school_root" sequence="10"/>
     <menuitem id="menu_eacta_student" name="Élèves" parent="menu_eacta_school_scolarite"
@@ -26,8 +32,17 @@
               action="action_eacta_attendance" sequence="25"/>
     <menuitem id="menu_eacta_take_attendance" name="Faire l'appel" parent="menu_eacta_school_scolarite"
               action="action_eacta_attendance_wizard" sequence="26"/>
+    <menuitem id="menu_eacta_attendance_scan_item" name="Scanner d'assiduité (QR)" parent="menu_eacta_school_scolarite"
+              action="action_eacta_attendance_scan" sequence="27"/>
     <menuitem id="menu_partner_category_form" name="Parents" parent="menu_eacta_school_scolarite"
               action="action_eacta_school_parents" sequence="30"/>
+
+    <!-- Transport Scolaire -->
+    <menuitem id="menu_eacta_school_transport" name="Transport" parent="menu_eacta_school_root" sequence="25"/>
+    <menuitem id="menu_eacta_transport_line" name="Lignes de transport" parent="menu_eacta_school_transport"
+              action="action_eacta_transport_line" sequence="10"/>
+    <menuitem id="menu_eacta_transport_stop" name="Arrêts de bus" parent="menu_eacta_school_transport"
+              action="action_eacta_transport_stop" sequence="20"/>
 
     <!-- Pédagogie -->
     <menuitem id="menu_eacta_school_pedagogie" name="Pédagogie" parent="menu_eacta_school_root" sequence="20"/>

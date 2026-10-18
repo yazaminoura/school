@@ -1,0 +1,88 @@
+<?xml version="1.0" encoding="utf-8"?>
+<odoo>
+
+    <!-- Déclaration de l'action de rapport Carte d'élève / Badge -->
+    <record id="action_report_student_card_badge" model="ir.actions.report">
+        <field name="name">Carte d'élève / بطاقة التلميذ</field>
+        <field name="model">eacta.student</field>
+        <field name="report_type">qweb-pdf</field>
+        <field name="report_name">eacta_school.report_student_card_badge</field>
+        <field name="report_file">eacta_school.report_student_card_badge</field>
+        <field name="binding_model_id" ref="model_eacta_student"/>
+        <field name="binding_type">report</field>
+    </record>
+
+    <!-- Modèle QWeb de la Carte d'élève -->
+    <template id="report_student_card_badge">
+        <t t-call="web.basic_layout">
+            <div class="page" style="font-family: 'Segoe UI', Arial, sans-serif;">
+                <t t-foreach="docs" t-as="student">
+                    <div style="width: 86mm; height: 54mm; margin: 10mm auto; border: 2px solid #1E3A8A; border-radius: 8px; overflow: hidden; page-break-after: always; position: relative; background: #FFFFFF; box-shadow: 0 4px 6px rgba(0,0,0,0.1);">
+                        <!-- Bandeau supérieur -->
+                        <div style="background-color: #1E3A8A; color: #FFFFFF; padding: 4px 8px; display: flex; align-items: center; justify-content: space-between;">
+                            <div style="display: flex; align-items: center; gap: 6px;">
+                                <t t-if="student.company_id.logo">
+                                    <img t-att-src="image_data_uri(student.company_id.logo)" style="max-height: 22px; max-width: 50px; background: white; border-radius: 2px; padding: 1px;" alt="Logo"/>
+                                </t>
+                                <span style="font-size: 10px; font-weight: bold; text-transform: uppercase;">
+                                    <t t-out="student.company_id.name or 'NR School'"/>
+                                </span>
+                            </div>
+                            <span style="font-size: 9px; font-weight: bold; background: #3B82F6; padding: 2px 6px; border-radius: 4px;">
+                                <t t-out="student.academic_year_id.name or '2026-2027'"/>
+                            </span>
+                        </div>
+
+                        <!-- Titre de la carte -->
+                        <div style="text-align: center; background: #F1F5F9; padding: 2px 0; border-bottom: 1px solid #CBD5E1;">
+                            <span style="font-size: 9px; font-weight: bold; color: #1E3A8A; letter-spacing: 0.5px;">
+                                CARTE SCOLAIRE OFFICIELLE / بطاقة مدرسية
+                            </span>
+                        </div>
+
+                        <!-- Corps du badge -->
+                        <div style="padding: 6px 8px; display: flex; gap: 8px; align-items: center;">
+                            <!-- Photo de l'élève -->
+                            <div style="width: 58px; height: 68px; border: 1px solid #CBD5E1; border-radius: 4px; overflow: hidden; background: #F8FAFC; text-align: center; flex-shrink: 0;">
+                                <t t-if="student.image_128">
+                                    <img t-att-src="image_data_uri(student.image_128)" style="width: 100%; height: 100%; object-fit: cover;" alt="Photo"/>
+                                </t>
+                                <t t-else="">
+                                    <div style="padding-top: 18px; color: #94A3B8; font-size: 9px;">PHOTO</div>
+                                </t>
+                            </div>
+
+                            <!-- Informations de l'élève -->
+                            <div style="flex-grow: 1; font-size: 9px; line-height: 1.3; color: #1E293B;">
+                                <div style="font-size: 11px; font-weight: bold; color: #0F172A; margin-bottom: 2px;">
+                                    <t t-out="student.name"/>
+                                </div>
+                                <div>Matricule : <strong><t t-out="student.code or '-'"/></strong></div>
+                                <div>Classe : <strong><t t-out="student.current_class_id.name or 'N/A'"/></strong></div>
+                                <t t-if="student.date_of_birth">
+                                    <div>Né(e) le : <t t-out="student.date_of_birth"/></div>
+                                </t>
+                                <t t-if="student.blood_group">
+                                    <div>Groupe : <strong style="color: #DC2626;"><t t-out="student.blood_group"/></strong></div>
+                                </t>
+                            </div>
+
+                            <!-- QR Code Sécurisé portant le jeton cryptographique -->
+                            <div style="width: 58px; text-align: center; flex-shrink: 0;">
+                                <img t-att-src="'/report/barcode/?barcode_type=QR&amp;value=' + (student.qr_token or student.code or str(student.id)) + '&amp;width=100&amp;height=100'"
+                                     style="width: 54px; height: 54px;" alt="QR Code"/>
+                                <div style="font-size: 6px; color: #64748B; margin-top: 1px;">Jeton sécurisé</div>
+                            </div>
+                        </div>
+
+                        <!-- Pied de carte -->
+                        <div style="position: absolute; bottom: 0; left: 0; right: 0; background: #F8FAFC; border-top: 1px solid #E2E8F0; padding: 2px 8px; text-align: center; font-size: 7px; color: #64748B;">
+                            Cette carte est strictement personnelle. En cas de perte, contacter l'administration.
+                        </div>
+                    </div>
+                </t>
+            </div>
+        </t>
+    </template>
+
+</odoo>

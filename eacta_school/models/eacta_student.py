@@ -1,7 +1,7 @@
 from dateutil.relativedelta import relativedelta
 
 from odoo import api, fields, models
-from odoo.exceptions import UserError
+from odoo.exceptions import UserError, ValidationError
 
 from .eacta_course_grade import APPRECIATIONS, appreciation_for
 
@@ -118,6 +118,10 @@ class EactaStudent(models.Model):
         ('parents', 'Déposé par les parents'),
         ('autonomous', 'Autonome (Pied / Vélo)'),
     ], string='Mode de transport', default='parents')
+    transport_line_id = fields.Many2one('eacta.transport.line', string="Ligne de transport", tracking=True)
+    transport_stop_id = fields.Many2one('eacta.transport.stop', string="Arrêt de bus",
+                                        domain="[('line_id', '=', transport_line_id)]", tracking=True)
+    qr_token = fields.Char(string="Jeton QR Code", copy=False, readonly=True, index=True)
     canteen = fields.Boolean(string='Demi-pensionnaire / Cantine', default=False)
 
     # ------------------------------------------------------------------
@@ -349,15 +353,35 @@ class EactaStudent(models.Model):
             domain = ['|', ('code', operator, name), ('name', operator, name)] + list(domain)
         return self._search(domain, limit=limit, order=order)
 
+    @api.constrains('transport_line_id', 'transport_stop_id')
+    def _check_transport_line_stop(self):
+        for student in self:
+            if student.transport_stop_id and student.transport_line_id:
+                if student.transport_stop_id.line_id != student.transport_line_id:
+                    raise ValidationError(
+                        f"L'arrêt « {student.transport_stop_id.name} » n'appartient pas à la ligne « {student.transport_line_id.name} »."
+                    )
+            if student.transport_line_id and student.transport_line_id.capacity:
+                line = student.transport_line_id
+                passengers = self.search([('transport_line_id', '=', line.id)])
+                if len(passengers) > line.capacity:
+                    raise ValidationError(
+                        f"Capacité dépassée pour la ligne « {line.name} » : "
+                        f"{len(passengers)} passager(s) pour {line.capacity} place(s) disponible(s)."
+                    )
+
     # ------------------------------------------------------------------
     # CRUD
     # ------------------------------------------------------------------
     @api.model_create_multi
     def create(self, vals_list):
+        import secrets
         sequence = self.env['ir.sequence']
         for vals in vals_list:
             if not vals.get('code'):
                 vals['code'] = sequence.next_by_code('eacta.student.code') or False
+            if not vals.get('qr_token'):
+                vals['qr_token'] = secrets.token_urlsafe(32)
             class_id = vals.get('current_class_id')
             if class_id:
                 class_ids = vals.get('class_ids') or []
@@ -374,6 +398,18 @@ class EactaStudent(models.Model):
             if student.parent_ids:
                 student.parent_ids.filtered(lambda p: not p.is_school_parent).write({'is_school_parent': True})
         return students
+
+    def action_regenerate_qr_token(self):
+        """Régénère un jeton cryptographique sécurisé pour le QR code de la carte d'élève."""
+        import secrets
+        for student in self:
+            student.qr_token = secrets.token_urlsafe(32)
+        return True
+
+    def action_print_student_badge(self):
+        """Lance l'impression de la carte d'élève officielle avec QR code."""
+        self.ensure_one()
+        return self.env.ref('eacta_school.action_report_student_card_badge').report_action(self, config=False)
 
     def write(self, vals):
         if 'current_class_id' in vals:

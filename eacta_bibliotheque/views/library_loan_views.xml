@@ -59,6 +59,10 @@
                             <field name="fine_paid"/>
                             <field name="currency_id" invisible="1"/>
                         </group>
+                        <group string="Relances" invisible="not reminder_count and not last_reminder_date">
+                            <field name="last_reminder_date"/>
+                            <field name="reminder_count"/>
+                        </group>
                     </group>
                     <group string="Retour" invisible="not returned">
                         <field name="return_responsible_id"/>

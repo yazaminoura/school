@@ -151,8 +151,23 @@
                 <app data-string="Bibliothèque" string="Bibliothèque" name="eacta_bibliotheque"
                      groups="eacta_bibliotheque.group_eacta_library_manager">
                     <block title="Règles de prêt" name="library_rules">
-                        <setting string="Amendes de retard" help="Montant facturé par jour de retard">
-                            <field name="library_fine_per_day"/>
+                        <setting string="Amendes de retard" help="Appliquer une pénalité financière pour chaque jour de retard lors du retour des livres">
+                            <field name="library_enable_overdue_fines"/>
+                            <div class="content-group" invisible="not library_enable_overdue_fines">
+                                <div class="row mt-2">
+                                    <label for="library_fine_per_day" class="col-lg-5 o_light_label"/>
+                                    <field name="library_fine_per_day"/>
+                                </div>
+                            </div>
+                        </setting>
+                        <setting string="Relances automatiques" help="Notification automatique par email en cas d'emprunt en retard">
+                            <field name="library_send_overdue_reminder_email"/>
+                            <div class="content-group" invisible="not library_send_overdue_reminder_email">
+                                <div class="row mt-2">
+                                    <label for="library_overdue_reminder_interval_days" class="col-lg-5 o_light_label"/>
+                                    <field name="library_overdue_reminder_interval_days"/>
+                                </div>
+                            </div>
                         </setting>
                         <setting string="Prolongations" help="Nombre maximum de prolongations par emprunt">
                             <field name="library_max_renewals"/>

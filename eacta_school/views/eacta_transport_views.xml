@@ -1,0 +1,203 @@
+<?xml version="1.0" encoding="utf-8"?>
+<odoo>
+
+    <!-- ============================================================ -->
+    <!-- LIGNES DE TRANSPORT SCOLAIRE                                  -->
+    <!-- ============================================================ -->
+
+    <record id="view_eacta_transport_line_tree" model="ir.ui.view">
+        <field name="name">eacta.transport.line.list</field>
+        <field name="model">eacta.transport.line</field>
+        <field name="arch" type="xml">
+            <list string="Lignes de transport" sample="1">
+                <field name="code"/>
+                <field name="name"/>
+                <field name="driver_name"/>
+                <field name="driver_phone"/>
+                <field name="vehicle_name"/>
+                <field name="capacity"/>
+                <field name="passenger_count"/>
+                <field name="available_seats" decoration-danger="available_seats == 0" decoration-success="available_seats &gt; 0"/>
+                <field name="stop_count"/>
+                <field name="company_id" groups="base.group_multi_company" optional="hide"/>
+            </list>
+        </field>
+    </record>
+
+    <record id="view_eacta_transport_line_form" model="ir.ui.view">
+        <field name="name">eacta.transport.line.form</field>
+        <field name="model">eacta.transport.line</field>
+        <field name="arch" type="xml">
+            <form string="Ligne de transport scolaire">
+                <sheet>
+                    <div class="oe_button_box" name="button_box">
+                        <button class="oe_stat_button" icon="fa-users" type="action" name="%(eacta_school.action_eacta_student)d"
+                                context="{'search_default_transport_line_id': id}">
+                            <field name="passenger_count" widget="statinfo" string="Passagers"/>
+                        </button>
+                    </div>
+                    <widget name="web_ribbon" title="Complète" bg_color="text-bg-danger" invisible="available_seats &gt; 0"/>
+                    <div class="oe_title">
+                        <label for="name" string="Nom de la ligne"/>
+                        <h1>
+                            <field name="name" placeholder="ex: Ligne 1 - Centre Ville / Agdal"/>
+                        </h1>
+                        <div class="o_row">
+                            <span class="oe_grey">Code : </span>
+                            <field name="code" placeholder="ex: L1" class="oe_inline"/>
+                        </div>
+                    </div>
+
+                    <group>
+                        <group string="Véhicule &amp; Chauffeur">
+                            <field name="vehicle_name" placeholder="ex: Minibus Sprinter 12345|A|6"/>
+                            <field name="driver_name" placeholder="ex: Ahmed Alami"/>
+                            <field name="driver_phone" placeholder="ex: 06 12 34 56 78"/>
+                            <field name="driver_user_id" options="{'no_create': True}"/>
+                        </group>
+                        <group string="Capacité &amp; Places">
+                            <field name="capacity"/>
+                            <field name="passenger_count"/>
+                            <field name="available_seats"/>
+                            <field name="active" widget="boolean_toggle"/>
+                            <field name="company_id" groups="base.group_multi_company"/>
+                        </group>
+                    </group>
+
+                    <notebook>
+                        <page string="Passagers inscrits" name="passengers">
+                            <field name="passenger_ids" readonly="1">
+                                <list string="Élèves inscrits">
+                                    <field name="code"/>
+                                    <field name="name"/>
+                                    <field name="current_class_id"/>
+                                    <field name="transport_stop_id"/>
+                                    <field name="gender"/>
+                                    <field name="state" widget="badge"/>
+                                </list>
+                            </field>
+                        </page>
+
+                        <page string="Arrêts desservis" name="stops">
+                            <field name="stop_ids">
+                                <list editable="bottom">
+                                    <field name="sequence" widget="handle"/>
+                                    <field name="name"/>
+                                    <field name="time_morning"/>
+                                    <field name="time_evening"/>
+                                    <field name="location"/>
+                                    <field name="student_count"/>
+                                </list>
+                            </field>
+                        </page>
+
+                        <page string="Itinéraire &amp; Notes" name="notes">
+                            <field name="note" placeholder="Détail du parcours, consignes particulières pour le chauffeur..."/>
+                        </page>
+                    </notebook>
+                </sheet>
+                <chatter/>
+            </form>
+        </field>
+    </record>
+
+    <record id="view_eacta_transport_line_search" model="ir.ui.view">
+        <field name="name">eacta.transport.line.search</field>
+        <field name="model">eacta.transport.line</field>
+        <field name="arch" type="xml">
+            <search string="Recherche de ligne de transport">
+                <field name="name"/>
+                <field name="code"/>
+                <field name="driver_name"/>
+                <field name="vehicle_name"/>
+                <separator/>
+                <filter string="Places disponibles" name="available_seats" domain="[('available_seats', '&gt;', 0)]"/>
+                <filter string="Complètes" name="full_lines" domain="[('available_seats', '=', 0)]"/>
+                <separator/>
+                <filter string="Archivées" name="inactive" domain="[('active', '=', False)]"/>
+            </search>
+        </field>
+    </record>
+
+    <record id="action_eacta_transport_line" model="ir.actions.act_window">
+        <field name="name">Lignes de transport</field>
+        <field name="res_model">eacta.transport.line</field>
+        <field name="view_mode">list,form</field>
+        <field name="search_view_id" ref="view_eacta_transport_line_search"/>
+        <field name="help" type="html">
+            <p class="o_view_nocontent_smiling_face">
+                Définissez vos lignes de transport scolaire
+            </p>
+            <p>
+                Gérez les véhicules, chauffeurs, arrêts de bus et contrôlez la capacité maximale pour chaque ligne.
+            </p>
+        </field>
+    </record>
+
+    <!-- ============================================================ -->
+    <!-- ARRÊTS DE TRANSPORT SCOLAIRE                                  -->
+    <!-- ============================================================ -->
+
+    <record id="view_eacta_transport_stop_tree" model="ir.ui.view">
+        <field name="name">eacta.transport.stop.list</field>
+        <field name="model">eacta.transport.stop</field>
+        <field name="arch" type="xml">
+            <list string="Arrêts de transport" sample="1">
+                <field name="sequence" widget="handle"/>
+                <field name="name"/>
+                <field name="line_id"/>
+                <field name="time_morning"/>
+                <field name="time_evening"/>
+                <field name="location"/>
+                <field name="student_count"/>
+            </list>
+        </field>
+    </record>
+
+    <record id="view_eacta_transport_stop_form" model="ir.ui.view">
+        <field name="name">eacta.transport.stop.form</field>
+        <field name="model">eacta.transport.stop</field>
+        <field name="arch" type="xml">
+            <form string="Arrêt de transport scolaire">
+                <sheet>
+                    <group>
+                        <group string="Arrêt">
+                            <field name="name"/>
+                            <field name="line_id" options="{'no_create': True}"/>
+                            <field name="sequence"/>
+                        </group>
+                        <group string="Horaires &amp; Lieu">
+                            <field name="time_morning"/>
+                            <field name="time_evening"/>
+                            <field name="location"/>
+                        </group>
+                    </group>
+                    <notebook>
+                        <page string="Élèves inscrits" name="students">
+                            <field name="student_ids" readonly="1">
+                                <list string="Élèves à cet arrêt">
+                                    <field name="code"/>
+                                    <field name="name"/>
+                                    <field name="current_class_id"/>
+                                    <field name="state" widget="badge"/>
+                                </list>
+                            </field>
+                        </page>
+                    </notebook>
+                </sheet>
+            </form>
+        </field>
+    </record>
+
+    <record id="action_eacta_transport_stop" model="ir.actions.act_window">
+        <field name="name">Arrêts de transport</field>
+        <field name="res_model">eacta.transport.stop</field>
+        <field name="view_mode">list,form</field>
+        <field name="help" type="html">
+            <p class="o_view_nocontent_smiling_face">
+                Définissez les arrêts et les horaires des navettes scolaires
+            </p>
+        </field>
+    </record>
+
+</odoo>

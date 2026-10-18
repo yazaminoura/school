@@ -4,7 +4,10 @@ from odoo import api, fields, models
 from odoo.exceptions import UserError, ValidationError
 
 PARAM_DEFAULTS = {
+    'enable_overdue_fines': False,
     'fine_per_day': 1.0,
+    'send_overdue_reminder_email': True,
+    'overdue_reminder_interval_days': 7,
     'max_loans_student': 3,
     'max_loans_teacher': 10,
     'max_renewals': 2,
@@ -62,6 +65,9 @@ class LibraryLoan(models.Model):
     fine_paid = fields.Boolean(string='Amende réglée', tracking=True)
     currency_id = fields.Many2one('res.currency', default=lambda self: self.env.company.currency_id)
 
+    last_reminder_date = fields.Date(string="Dernière relance envoyée le", readonly=True, copy=False)
+    reminder_count = fields.Integer(string="Nombre de relances", default=0, readonly=True, copy=False)
+
     responsible_id = fields.Many2one('res.users', string="Prêté par", default=lambda self: self.env.user,
                                      tracking=True, readonly=True)
     processed_date = fields.Datetime(string="Enregistré le", default=fields.Datetime.now, readonly=True)
@@ -74,9 +80,11 @@ class LibraryLoan(models.Model):
     def _param(self, key):
         value = self.env['ir.config_parameter'].sudo().get_param(f'library.{key}')
         default = PARAM_DEFAULTS[key]
+        if isinstance(default, bool):
+            return value in ('True', '1', True) if value not in (None, False, '') else default
         try:
             return type(default)(value) if value not in (None, False, '') else default
-        except ValueError:
+        except (ValueError, TypeError):
             return default
 
     @api.depends('book_id', 'checkout_date')
@@ -96,6 +104,7 @@ class LibraryLoan(models.Model):
     @api.depends('returned', 'is_lost', 'due_date', 'return_date', 'returned_barcode_id', 'barcode_id')
     def _compute_state(self):
         today = fields.Date.context_today(self)
+        enable_fines = self._param('enable_overdue_fines')
         fine_per_day = self._param('fine_per_day')
         for loan in self:
             end = loan.return_date if loan.returned else today
@@ -114,7 +123,7 @@ class LibraryLoan(models.Model):
             loan.was_overdue = state == 'returned' and late > 0
             loan.complete_return = state == 'returned' and loan.returned_barcode_id == loan.barcode_id
             loan.days_late = late if state != 'lost' else 0
-            loan.fine_amount = round(late * fine_per_day, 2) if state in ('overdue', 'returned') else 0.0
+            loan.fine_amount = round(late * fine_per_day, 2) if (enable_fines and state in ('overdue', 'returned')) else 0.0
 
     def _compute_color(self):
         colors = {'ongoing': 10, 'overdue': 1, 'returned': 0, 'lost': 9}
@@ -199,9 +208,10 @@ class LibraryLoan(models.Model):
         Fee = self.env['eacta.student.fee']
         fee_type = False
         today = fields.Date.context_today(self)
+        enable_fines = self._param('enable_overdue_fines')
         for loan in self.filtered(lambda l: not l.returned and not l.is_lost):
             late = max((today - loan.due_date).days, 0) if loan.due_date else 0
-            fine_amount = round(late * loan._param('fine_per_day'), 2)
+            fine_amount = round(late * loan._param('fine_per_day'), 2) if enable_fines else 0.0
             loan.write({
                 'returned': True,
                 'return_date': today,
@@ -209,7 +219,7 @@ class LibraryLoan(models.Model):
                 'returned_barcode_id': loan.barcode_id.id,
             })
             loan.activity_unlink(['mail.mail_activity_data_todo'])
-            if not loan.fine_paid and fine_amount > 0 and loan.borrower_type == 'student' and loan.student_id:
+            if enable_fines and not loan.fine_paid and fine_amount > 0 and loan.borrower_type == 'student' and loan.student_id:
                 if not fee_type:
                     fee_type = self.env['eacta.fee.type'].search([('name', 'ilike', 'Biblioth')], limit=1)
                 if not fee_type:
@@ -286,12 +296,19 @@ class LibraryLoan(models.Model):
     # ------------------------------------------------------------------
     @api.model
     def _cron_check_overdue(self):
-        """Met à jour les retards et planifie une relance pour chaque nouvel emprunt en retard."""
+        """Met à jour les retards et envoie des rappels par email selon l'intervalle configuré."""
+        today = fields.Date.context_today(self)
         active = self.search([('returned', '=', False), ('is_lost', '=', False)])
         self.env.add_to_compute(self._fields['state'], active)
         active.flush_recordset()
+
+        send_reminder = self._param('send_overdue_reminder_email')
+        min_interval_days = self._param('overdue_reminder_interval_days')
+        template = self.env.ref('eacta_bibliotheque.email_template_library_loan_overdue', raise_if_not_found=False)
         todo = self.env.ref('mail.mail_activity_data_todo', raise_if_not_found=False)
+
         for loan in active.filtered(lambda l: l.state == 'overdue'):
+            # 1. Planification d'activité pour le bibliothécaire
             if todo and not loan.activity_ids.filtered(lambda a: a.activity_type_id == todo):
                 loan.activity_schedule(
                     'mail.mail_activity_data_todo',
@@ -300,6 +317,31 @@ class LibraryLoan(models.Model):
                          f"par {loan.borrower_name}.",
                     user_id=loan.responsible_id.id or self.env.user.id,
                 )
+
+            # 2. Envoi email de relance avec intervalle minimum
+            days_since_last = (today - loan.last_reminder_date).days if loan.last_reminder_date else 9999
+            if send_reminder and days_since_last >= min_interval_days:
+                recipient_email = False
+                if loan.borrower_type == 'student' and loan.student_id:
+                    recipient_email = (
+                        (loan.student_id.parent_ids and loan.student_id.parent_ids[0].email)
+                        or loan.student_id.email
+                        or (loan.student_id.partner_id and loan.student_id.partner_id.email)
+                    )
+                elif loan.borrower_type == 'teacher' and loan.teacher_id:
+                    recipient_email = loan.teacher_id.email
+
+                if recipient_email and template:
+                    try:
+                        template.send_mail(loan.id, force_send=True)
+                    except Exception as e:
+                        loan.message_post(body=f"Échec de l'envoi du mail de relance : {str(e)}")
+                    loan.last_reminder_date = today
+                    loan.reminder_count += 1
+                    loan.message_post(
+                        body=f"Relance de retard #{loan.reminder_count} envoyée par email à {recipient_email} "
+                             f"pour le livre « {loan.book_id.name} » ({loan.days_late}j de retard)."
+                    )
 
     @api.model
     def _generate_demo_loans(self):

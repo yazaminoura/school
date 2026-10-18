@@ -186,6 +186,94 @@ class EactaTimetableSlot(models.Model):
         }
 
     @api.model
+    def _generate_ics_string(self, slots, title="Emploi du temps", start_date=None, end_date=None):
+        """
+        Génère une chaîne iCalendar (.ics) conforme au standard RFC 5545
+        avec répétition hebdomadaire pour les créneaux réguliers.
+        """
+        import datetime
+        now = datetime.datetime.utcnow().strftime("%Y%m%dT%H%M%SZ")
+        weekday_map = {'0': 'MO', '1': 'TU', '2': 'WE', '3': 'TH', '4': 'FR', '5': 'SA'}
+
+        lines = [
+            "BEGIN:VCALENDAR",
+            "VERSION:2.0",
+            "PRODID:-//NR School//Emploi du Temps 1.0//FR",
+            f"X-WR-CALNAME:{title}",
+            "CALSCALE:GREGORIAN",
+            "METHOD:PUBLISH",
+        ]
+
+        base_date = start_date or fields.Date.today()
+        # Trouver le lundi de référence
+        monday = base_date - datetime.timedelta(days=base_date.weekday())
+        until_dt = (end_date or (base_date + datetime.timedelta(days=270)))
+        until_str = until_dt.strftime("%Y%m%dT235959Z")
+
+        for slot in slots:
+            day_offset = int(slot.weekday)
+            slot_date = monday + datetime.timedelta(days=day_offset)
+            if slot_date < base_date:
+                slot_date += datetime.timedelta(days=7)
+
+            start_hours = int(slot.hour_from)
+            start_mins = int(round((slot.hour_from - start_hours) * 60))
+            end_hours = int(slot.hour_to)
+            end_mins = int(round((slot.hour_to - end_hours) * 60))
+
+            dtstart = f"{slot_date.strftime('%Y%m%d')}T{start_hours:02d}{start_mins:02d}00"
+            dtend = f"{slot_date.strftime('%Y%m%d')}T{end_hours:02d}{end_mins:02d}00"
+            byday = weekday_map.get(slot.weekday, 'MO')
+
+            summary = f"{slot.course_id.name or 'Cours'} - {slot.class_id.name or ''}"
+            desc = f"Matière: {slot.course_id.name or ''}\\nEnseignant: {slot.teacher_id.name or 'Non assigné'}\\nSalle: {slot.room or 'Non assignée'}"
+            location = slot.room or ''
+            uid = f"slot-{slot.id}-{slot_date.strftime('%Y%m%d')}@nrschool"
+
+            lines.extend([
+                "BEGIN:VEVENT",
+                f"UID:{uid}",
+                f"DTSTAMP:{now}",
+                f"DTSTART:{dtstart}",
+                f"DTEND:{dtend}",
+                f"RRULE:FREQ=WEEKLY;BYDAY={byday};UNTIL={until_str}",
+                f"SUMMARY:{summary}",
+                f"DESCRIPTION:{desc}",
+                f"LOCATION:{location}",
+                "STATUS:CONFIRMED",
+                "END:VEVENT",
+            ])
+
+        lines.append("END:VCALENDAR")
+        return "\r\n".join(lines)
+
+    @api.model
+    def export_ics(self, mode, record_id):
+        """Export du planning d'une classe ou d'un enseignant au format .ics."""
+        if mode == 'class':
+            klass = self.env['eacta.class'].browse(record_id)
+            if not klass.exists():
+                return None
+            klass.check_access('read')
+            slots = self.search([('class_id', '=', klass.id)])
+            title = f"Emploi du temps - {klass.name}"
+            start_date = klass.start_date or (klass.academic_year_id.date_start if klass.academic_year_id else fields.Date.today())
+            end_date = klass.end_date or (klass.academic_year_id.date_end if klass.academic_year_id else fields.Date.today())
+        elif mode == 'teacher':
+            teacher = self.env['res.users'].browse(record_id)
+            if not teacher.exists():
+                return None
+            teacher.check_access('read')
+            slots = self.search([('teacher_id', '=', teacher.id)])
+            title = f"Emploi du temps - {teacher.name}"
+            start_date = fields.Date.today()
+            import datetime
+            end_date = fields.Date.today() + datetime.timedelta(days=270)
+        else:
+            return None
+        return self._generate_ics_string(slots, title, start_date, end_date)
+
+    @api.model
     def _generate_demo_admin(self):
         """Emploi du temps et frais de démonstration pour les classes de démo (déterministe)."""
         self = self.with_context(tracking_disable=True, mail_create_nolog=True, mail_notrack=True)
