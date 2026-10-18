@@ -39,6 +39,9 @@
               action="action_eacta_course_grade" sequence="30"/>
     <menuitem id="menu_eacta_student_result" name="Bulletins &amp; Résultats" parent="menu_eacta_school_pedagogie"
               action="action_student_result" sequence="40"/>
+    <menuitem id="menu_eacta_class_deliberation" name="PV de délibération" parent="menu_eacta_school_pedagogie"
+              action="action_eacta_class_deliberation_wizard" sequence="45"/>
+
 
     <!-- Analyse -->
     <menuitem id="menu_eacta_school_reporting" name="Analyse" parent="menu_eacta_school_root" sequence="80"/>

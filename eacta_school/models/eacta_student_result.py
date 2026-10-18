@@ -24,7 +24,9 @@ def honor_mention_for(avg):
         return 'encouragements'
     if avg >= 10.0:
         return 'honneur'
-    return False
+    if avg >= 8.0:
+        return 'avertissement'
+    return 'blame'
 
 
 class EactaStudentResult(models.Model):
@@ -51,6 +53,8 @@ class EactaStudentResult(models.Model):
     passed = fields.Boolean(string='Admis / Validé', compute='_compute_appreciation', store=True)
 
     line_ids = fields.One2many('eacta.student.result.line', 'result_id', string='Notes par matière')
+    total_coefficient = fields.Float(string='Total Coeff.', compute='_compute_totals', store=True)
+    total_points = fields.Float(string='Total Points', compute='_compute_totals', store=True, digits=(6, 2))
     absence_count = fields.Integer(string='Absences')
     unjustified_absence_count = fields.Integer(string='Absences non justifiées')
     late_count = fields.Integer(string='Retards')
@@ -74,6 +78,13 @@ class EactaStudentResult(models.Model):
             rec.appreciation = appreciation_for(rec.average)
             rec.honor_mention = honor_mention_for(rec.average)
             rec.passed = rec.average >= pass_mark
+
+    @api.depends('line_ids.coefficient', 'line_ids.points')
+    def _compute_totals(self):
+        for rec in self:
+            rec.total_coefficient = sum(rec.line_ids.mapped('coefficient'))
+            rec.total_points = sum(rec.line_ids.mapped('points'))
+
 
     @api.depends('student_id.name', 'academic_year_id.name', 'term_id.name', 'result_type')
     def _compute_display_name(self):
@@ -346,7 +357,14 @@ class EactaStudentResultLine(models.Model):
     course_id = fields.Many2one('eacta.course', string='Matière', required=True, index=True)
     coefficient = fields.Float(string='Coeff.', default=1.0)
     average = fields.Float(string='Moyenne', digits=(4, 2))
+    points = fields.Float(string='Points', compute='_compute_points', store=True, digits=(5, 2))
     appreciation = fields.Selection(APPRECIATIONS, string='Appréciation')
     passed = fields.Boolean(string='Validé')
     teacher_id = fields.Many2one('res.users', string='Enseignant')
     teacher_remarks = fields.Char(string='Observation')
+
+    @api.depends('average', 'coefficient')
+    def _compute_points(self):
+        for line in self:
+            line.points = round((line.average or 0.0) * (line.coefficient or 1.0), 2)
+

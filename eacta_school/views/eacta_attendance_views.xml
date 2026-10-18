@@ -62,6 +62,14 @@
                         </group>
                     </group>
                     <group string="Justificatif &amp; Observations" invisible="attendance_type == 'present'">
+                        <group>
+                            <field name="justification_date" invisible="not justified"/>
+                            <field name="justification_filename" invisible="1"/>
+                            <field name="justification_attachment" filename="justification_filename" widget="binary"/>
+                        </group>
+                        <group>
+                            <field name="justification_attachment_ids" widget="many2many_binary"/>
+                        </group>
                         <field name="justification_note" placeholder="Détails du motif, certificat médical reçu, appel téléphonique des parents..."/>
                     </group>
                 </sheet>

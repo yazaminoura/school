@@ -18,9 +18,10 @@ class EactaClass(models.Model):
     academic_year_id = fields.Many2one(
         'eacta.academic.year', string='Année académique', required=True, tracking=True,
         default=lambda self: self.env['eacta.academic.year'].get_current_year(), index=True)
-    year_id = fields.Many2one(
-        'eacta.academic.year', string='Année académique (alias)',
-        related='academic_year_id', readonly=False, store=True)
+
+    @property
+    def year_id(self):
+        return self.academic_year_id
     year = fields.Char(
         string='Année', compute='_compute_year_text', inverse='_inverse_year_text',
         store=True, tracking=True)
@@ -48,6 +49,10 @@ class EactaClass(models.Model):
     success_rate = fields.Float(string='Taux de réussite (%)', compute='_compute_results', digits=(5, 1))
     exam_count = fields.Integer(string='Examens', compute='_compute_exam_count')
     has_draft_students = fields.Boolean(string='Inscriptions en attente', compute='_compute_has_draft_students')
+    absence_count = fields.Integer(string='Absences totales', compute='_compute_attendance_stats')
+    unjustified_absence_count = fields.Integer(string='Absences non justifiées', compute='_compute_attendance_stats')
+    late_count = fields.Integer(string='Retards', compute='_compute_attendance_stats')
+    attendance_rate = fields.Float(string="Taux d'assiduité (%)", compute='_compute_attendance_stats', digits=(5, 1))
 
     _sql_constraints = [
         ('name_academic_year_unique', 'unique(name, academic_year_id)', 'Une classe avec le même nom existe déjà pour cette année académique !'),
@@ -116,11 +121,37 @@ class EactaClass(models.Model):
         for class_ in self:
             class_.exam_count = counts.get(class_.id, 0)
 
+    def _compute_attendance_stats(self):
+        Attendance = self.env['eacta.attendance']
+        for class_ in self:
+            records = Attendance.search([('class_id', '=', class_.id)])
+            absences = records.filtered(lambda a: a.attendance_type == 'absent')
+            lates = records.filtered(lambda a: a.attendance_type == 'late')
+            presents = records.filtered(lambda a: a.attendance_type == 'present')
+            total = len(records)
+            class_.absence_count = len(absences)
+            class_.unjustified_absence_count = len(absences.filtered(lambda a: not a.justified))
+            class_.late_count = len(lates)
+            class_.attendance_rate = round(100.0 * (len(presents) / total), 1) if total else 100.0
+
+
     @api.depends('name', 'academic_year_id.name', 'year')
     def _compute_display_name(self):
         for class_ in self:
             y_name = class_.academic_year_id.name or class_.year
             class_.display_name = f"{class_.name} ({y_name})" if y_name else class_.name
+
+    @api.model
+    def _search(self, domain, offset=0, limit=None, order=None):
+        if domain:
+            new_domain = []
+            for leaf in domain:
+                if isinstance(leaf, (list, tuple)) and len(leaf) == 3 and leaf[0] == 'year_id':
+                    new_domain.append(('academic_year_id', leaf[1], leaf[2]))
+                else:
+                    new_domain.append(leaf)
+            domain = new_domain
+        return super()._search(domain, offset=offset, limit=limit, order=order)
 
     @api.model
     def _name_search(self, name, domain=None, operator='ilike', limit=None, order=None):
@@ -295,3 +326,19 @@ class EactaClass(models.Model):
                 'default_from_class_id': self.id,
             },
         }
+
+    def action_open_deliberation_wizard(self):
+        """Ouvre l'assistant de délibération du conseil de classe."""
+        self.ensure_one()
+        return {
+            'name': f"PV de délibération - {self.name}",
+            'type': 'ir.actions.act_window',
+            'res_model': 'eacta.class.deliberation.wizard',
+            'view_mode': 'form',
+            'target': 'new',
+            'context': {
+                'default_class_id': self.id,
+                'default_academic_year_id': self.academic_year_id.id,
+            },
+        }
+

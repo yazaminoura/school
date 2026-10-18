@@ -41,9 +41,10 @@ class EactaExam(models.Model):
     academic_year_id = fields.Many2one(
         'eacta.academic.year', string='Année académique', compute='_compute_academic_year_id',
         store=True, readonly=False, index=True)
-    year_id = fields.Many2one(
-        'eacta.academic.year', string='Année académique (alias)',
-        related='academic_year_id', store=True, readonly=False)
+
+    @property
+    def year_id(self):
+        return self.academic_year_id
     class_ids = fields.Many2many(
         'eacta.class', 'eacta_exam_class_rel', 'exam_id', 'class_ids', string="Classes",
         compute='_compute_class_ids', store=True, readonly=False)
@@ -75,6 +76,18 @@ class EactaExam(models.Model):
                 exam.academic_year_id = year or False
             elif not exam.academic_year_id:
                 exam.academic_year_id = False
+
+    @api.model
+    def _search(self, domain, offset=0, limit=None, order=None):
+        if domain:
+            new_domain = []
+            for leaf in domain:
+                if isinstance(leaf, (list, tuple)) and len(leaf) == 3 and leaf[0] == 'year_id':
+                    new_domain.append(('academic_year_id', leaf[1], leaf[2]))
+                else:
+                    new_domain.append(leaf)
+            domain = new_domain
+        return super()._search(domain, offset=offset, limit=limit, order=order)
 
     grade_ids = fields.One2many('eacta.course.grade', 'exam_id', string='Notes')
     grade_count = fields.Integer(string='Copies', compute='_compute_stats', store=True)
@@ -168,6 +181,25 @@ class EactaExam(models.Model):
 
     def action_reset_draft(self):
         self.write({'state': 'draft'})
+
+    def action_submit_grades(self):
+        """Soumet toutes les notes en brouillon de cet examen."""
+        for exam in self:
+            draft_grades = exam.grade_ids.filtered(lambda g: g.state == 'draft')
+            draft_grades.action_submit()
+
+    def action_validate_grades(self):
+        """Valide toutes les notes soumises ou brouillon de cet examen."""
+        for exam in self:
+            grades = exam.grade_ids.filtered(lambda g: g.state in ('draft', 'submitted'))
+            grades.action_validate()
+
+    def action_publish_grades(self):
+        """Publie toutes les notes validées de cet examen."""
+        for exam in self:
+            grades = exam.grade_ids.filtered(lambda g: g.state == 'validated')
+            grades.action_publish()
+
 
     # ------------------------------------------------------------------
     # Données de démonstration

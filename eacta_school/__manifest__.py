@@ -29,6 +29,7 @@ NR School - Gestion scolaire
         'reports/student_report.xml',
         'reports/student_certificate_report.xml',
         'reports/school_admin_reports.xml',
+        'reports/school_deliberation_report.xml',
         'views/eacta_academic_year_views.xml',
         'views/eacta_student_result_views.xml',
         'views/res_config_settings_views.xml',
@@ -46,6 +47,7 @@ NR School - Gestion scolaire
         'views/eacta_fee_views.xml',
         'wizard/eacta_promotion_wizard_views.xml',
         'wizard/eacta_attendance_wizard_views.xml',
+        'wizard/eacta_class_deliberation_wizard_views.xml',
         'views/eacta_menu.xml',
     ],
     'demo': [

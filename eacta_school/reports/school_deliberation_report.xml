@@ -1,0 +1,182 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<odoo>
+
+    <!-- ================================================================
+         PROCÈS-VERBAL DE DÉLIBÉRATION DU CONSEIL DE CLASSE
+         ================================================================ -->
+    <template id="report_class_deliberation_document">
+        <t t-call="web.external_layout">
+            <t t-call="eacta_school.eacta_school_report_assets"/>
+            <div class="page eacta_report">
+                <div class="eacta_report_title">
+                    <div>
+                        <div class="text-uppercase small text-muted font-monospace">Royaume du Maroc · Établissement Scolaire</div>
+                        <h2>Procès-Verbal de Délibération</h2>
+                    </div>
+                    <div class="eacta_report_sub text-end">
+                        <t t-if="doc.period_type == 'term'">
+                            <strong><span t-out="doc.term_id.name or 'Trimestre'"/></strong> · 
+                        </t>
+                        <t t-else="">
+                            <strong>Bilan Annuel</strong> · 
+                        </t>
+                        Année <strong t-out="doc.academic_year_id.name or '-'"/>
+                        <div class="small text-muted">Séance du <span t-field="doc.council_date"/></div>
+                    </div>
+                </div>
+
+                <div class="eacta_identity">
+                    <div>
+                        <div class="eacta_label">Classe</div>
+                        <div class="eacta_value" t-out="doc.class_id.display_name or '-'"/>
+                        <div class="text-muted small">Prof. Principal : <t t-out="doc.class_id.teacher_id.name or '-'"/></div>
+                    </div>
+                    <div>
+                        <div class="eacta_label">Présidence du Conseil</div>
+                        <div class="eacta_value" t-out="doc.president_name or 'La Direction'"/>
+                        <div class="text-muted small">Secrétaire : <t t-out="doc.secretary_name or '-'"/></div>
+                    </div>
+                    <div>
+                        <div class="eacta_label">Période délibérée</div>
+                        <div class="eacta_value">
+                            <t t-if="doc.period_type == 'term'"><span t-out="doc.term_id.name"/></t>
+                            <t t-else="">Année scolaire complète</t>
+                        </div>
+                        <div class="text-muted small">Date du PV : <span t-field="doc.council_date"/></div>
+                    </div>
+                </div>
+
+                <t t-set="data" t-value="doc.get_deliberation_data()"/>
+
+                <table class="eacta_table mt-3">
+                    <thead>
+                        <tr>
+                            <th class="text-center" style="width: 5%;">Rang</th>
+                            <th style="width: 12%;">Matricule</th>
+                            <th style="width: 25%;">Élève</th>
+                            <th class="text-end" style="width: 12%;">Moyenne / 20</th>
+                            <th style="width: 18%;">Mention du conseil</th>
+                            <th class="text-center" style="width: 14%;">Assiduité</th>
+                            <th class="text-center" style="width: 14%;">Décision</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        <tr t-foreach="data['results']" t-as="res">
+                            <td class="text-center">
+                                <strong><t t-out="res.rank or '-'"/></strong>
+                            </td>
+                            <td>
+                                <span class="text-muted font-monospace small" t-out="res.student_id.code or '-'"/>
+                            </td>
+                            <td>
+                                <strong t-out="res.student_id.name"/>
+                            </td>
+                            <td t-attf-class="text-end #{'eacta_fail' if res.average &lt; 10 else 'eacta_pass'}">
+                                <strong><t t-out="'%.2f' % res.average"/></strong>
+                            </td>
+                            <td>
+                                <span t-if="res.honor_mention"
+                                      t-attf-class="badge #{'text-bg-danger' if res.honor_mention in ('avertissement', 'blame') else ('text-bg-warning' if res.honor_mention == 'felicitations' else 'text-bg-info')}">
+                                    <t t-out="dict(res._fields['honor_mention'].selection).get(res.honor_mention)"/>
+                                </span>
+                                <span t-else="" class="text-muted">-</span>
+                            </td>
+                            <td class="text-center small">
+                                <t t-out="res.absence_count"/> abs. (<span class="text-danger" t-out="res.unjustified_absence_count"/> nj)
+                                <t t-if="res.late_count"> · <span class="text-warning" t-out="res.late_count"/> ret.</t>
+                            </td>
+                            <td class="text-center">
+                                <span t-if="res.passed" class="badge text-bg-success">Admis</span>
+                                <span t-else="" class="badge text-bg-danger">Ajourné</span>
+                            </td>
+                        </tr>
+                        <tr t-if="not data['results']">
+                            <td colspan="7" class="text-center text-muted p-4">
+                                Aucun résultat disponible pour cette classe sur cette période.
+                            </td>
+                        </tr>
+                    </tbody>
+                </table>
+
+                <div class="eacta_summary mt-4">
+                    <div>
+                        <div class="eacta_label">Effectif</div>
+                        <div class="eacta_big"><t t-out="data['total_students']"/></div>
+                        <div class="small text-muted">élèves</div>
+                    </div>
+                    <div>
+                        <div class="eacta_label">Moyenne classe</div>
+                        <div class="eacta_big" t-out="'%.2f' % data['class_avg']"/>
+                        <div class="small text-muted">sur 20</div>
+                    </div>
+                    <div>
+                        <div class="eacta_label">Plus forte note</div>
+                        <div class="eacta_big text-success" t-out="'%.2f' % data['max_avg']"/>
+                        <div class="small text-muted">Major de promo</div>
+                    </div>
+                    <div>
+                        <div class="eacta_label">Plus faible note</div>
+                        <div class="eacta_big text-danger" t-out="'%.2f' % data['min_avg']"/>
+                        <div class="small text-muted">Min classe</div>
+                    </div>
+                    <div>
+                        <div class="eacta_label">Taux de réussite</div>
+                        <div t-attf-class="eacta_big #{'text-success' if data['success_rate'] &gt;= 50 else 'text-danger'}"
+                             t-out="'%.1f %%' % data['success_rate']"/>
+                        <div class="small text-muted"><t t-out="data['passed_count']"/> admis / <t t-out="data['failed_count']"/> ajournés</div>
+                    </div>
+                </div>
+
+                <div class="mt-3 p-3 bg-light rounded border">
+                    <div class="eacta_label mb-1">Synthèse des distinctions &amp; mentions du conseil</div>
+                    <div class="d-flex gap-3 flex-wrap small">
+                        <span><strong>Félicitations :</strong> <t t-out="data['mentions_count']['felicitations']"/></span> · 
+                        <span><strong>Tableau d'honneur :</strong> <t t-out="data['mentions_count']['tableau_honneur']"/></span> · 
+                        <span><strong>Compliments :</strong> <t t-out="data['mentions_count']['compliments']"/></span> · 
+                        <span><strong>Encouragements :</strong> <t t-out="data['mentions_count']['encouragements']"/></span> · 
+                        <span class="text-danger"><strong>Avertissements :</strong> <t t-out="data['mentions_count']['avertissement']"/></span> · 
+                        <span class="text-danger"><strong>Blâmes :</strong> <t t-out="data['mentions_count']['blame']"/></span>
+                    </div>
+                </div>
+
+                <div class="mt-3 p-3 bg-light rounded border" t-if="doc.general_notes">
+                    <div class="eacta_label mb-1">Observations et décisions collégiales du conseil</div>
+                    <p class="mb-0" t-out="doc.general_notes"/>
+                </div>
+
+                <div class="eacta_signatures">
+                    <div>
+                        Le professeur principal<br/>
+                        <t t-out="doc.secretary_name or (doc.class_id.teacher_id.name if doc.class_id else '')"/>
+                    </div>
+                    <div>
+                        Membres du conseil de classe<br/>
+                        <span class="small text-muted">(Enseignants des matières)</span>
+                    </div>
+                    <div>
+                        Président du conseil<br/>
+                        <t t-out="doc.president_name or 'La Direction'"/>
+                    </div>
+                </div>
+            </div>
+        </t>
+    </template>
+
+    <template id="report_class_deliberation">
+        <t t-call="web.html_container">
+            <t t-foreach="docs" t-as="doc">
+                <t t-call="eacta_school.report_class_deliberation_document"/>
+            </t>
+        </t>
+    </template>
+
+    <record id="action_report_class_deliberation" model="ir.actions.report">
+        <field name="name">PV de Délibération du Conseil de Classe</field>
+        <field name="model">eacta.class.deliberation.wizard</field>
+        <field name="report_type">qweb-pdf</field>
+        <field name="report_name">eacta_school.report_class_deliberation</field>
+        <field name="report_file">eacta_school.report_class_deliberation</field>
+        <field name="print_report_name">'PV_Deliberation_%s_%s' % (object.class_id.name, object.period_type)</field>
+    </record>
+
+</odoo>

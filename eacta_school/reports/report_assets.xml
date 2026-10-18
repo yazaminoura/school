@@ -37,7 +37,7 @@
             .eacta_report .eacta_summary .eacta_big { font-size: 20px; font-weight: 800; color: #8e1b3a; }
             .eacta_report .eacta_signatures { display: table; width: 100%; margin-top: 40px; }
             .eacta_report .eacta_signatures > div {
-                display: table-cell; width: 50%; text-align: center; color: #64748b; height: 70px;
+                display: table-cell; width: 33.33%; text-align: center; color: #64748b; height: 70px;
             }
         </style>
     </template>

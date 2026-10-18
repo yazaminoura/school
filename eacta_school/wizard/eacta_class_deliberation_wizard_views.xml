@@ -1,0 +1,44 @@
+<?xml version="1.0" encoding="utf-8"?>
+<odoo>
+    <record id="view_eacta_class_deliberation_wizard_form" model="ir.ui.view">
+        <field name="name">eacta.class.deliberation.wizard.form</field>
+        <field name="model">eacta.class.deliberation.wizard</field>
+        <field name="arch" type="xml">
+            <form string="Procès-Verbal de Délibération (Conseil de Classe)">
+                <sheet>
+                    <div class="alert alert-info" role="alert">
+                        Sélectionnez la classe et la période pour générer le <strong>Procès-Verbal de Délibération</strong> officiel du conseil de classe avec moyennes, mentions et statistiques.
+                    </div>
+                    <group>
+                        <group string="Classe &amp; Période">
+                            <field name="class_id" options="{'no_create': True}"/>
+                            <field name="academic_year_id" options="{'no_create': True}"/>
+                            <field name="period_type" widget="radio" options="{'horizontal': true}"/>
+                            <field name="term_id" options="{'no_create': True}" invisible="period_type != 'term'"/>
+                        </group>
+                        <group string="Séance du Conseil">
+                            <field name="council_date"/>
+                            <field name="president_name" placeholder="Ex: Directeur des études..."/>
+                            <field name="secretary_name" placeholder="Ex: Professeur principal..."/>
+                            <field name="recompute_before_print"/>
+                        </group>
+                    </group>
+                    <group string="Appréciations &amp; Synthèse globale">
+                        <field name="general_notes" placeholder="Remarques et décisions collégiales du conseil de classe pour l'ensemble des élèves..."/>
+                    </group>
+                </sheet>
+                <footer>
+                    <button string="Imprimer le PV de Délibération" name="action_print_pv" type="object" class="btn-primary" icon="fa-print"/>
+                    <button string="Annuler" class="btn-secondary" special="cancel"/>
+                </footer>
+            </form>
+        </field>
+    </record>
+
+    <record id="action_eacta_class_deliberation_wizard" model="ir.actions.act_window">
+        <field name="name">PV de délibération</field>
+        <field name="res_model">eacta.class.deliberation.wizard</field>
+        <field name="view_mode">form</field>
+        <field name="target">new</field>
+    </record>
+</odoo>

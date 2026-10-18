@@ -21,6 +21,11 @@
                 <field name="status" widget="badge" decoration-warning="status == 'pending'"
                        decoration-danger="status == 'absent'"/>
                 <field name="grade"/>
+                <field name="state" widget="badge"
+                       decoration-info="state == 'draft'"
+                       decoration-warning="state == 'submitted'"
+                       decoration-primary="state == 'validated'"
+                       decoration-success="state == 'published'"/>
                 <field name="appreciation" optional="show"/>
                 <field name="comment" optional="hide"/>
             </list>
@@ -44,6 +49,11 @@
                 <field name="status" widget="badge" decoration-warning="status == 'pending'"
                        decoration-danger="status == 'absent'"/>
                 <field name="grade" invisible="status in ('absent', 'exempt')" class="fw-bold"/>
+                <field name="state" widget="badge"
+                       decoration-info="state == 'draft'"
+                       decoration-warning="state == 'submitted'"
+                       decoration-primary="state == 'validated'"
+                       decoration-success="state == 'published'"/>
                 <field name="appreciation"/>
                 <field name="comment"/>
             </list>
@@ -55,6 +65,13 @@
         <field name="model">eacta.course.grade</field>
         <field name="arch" type="xml">
             <form string="Note">
+                <header>
+                    <button name="action_submit" string="Soumettre" type="object" class="btn-primary" invisible="state != 'draft'"/>
+                    <button name="action_validate" string="Valider" type="object" class="btn-primary" groups="eacta_school.group_eacta_school_direction,eacta_school.group_eacta_school_manager" invisible="state not in ('draft', 'submitted')"/>
+                    <button name="action_publish" string="Publier" type="object" class="btn-success" groups="eacta_school.group_eacta_school_direction,eacta_school.group_eacta_school_manager" invisible="state != 'validated'"/>
+                    <button name="action_draft" string="Remettre en brouillon" type="object" class="btn-secondary" invisible="state == 'draft'"/>
+                    <field name="state" widget="statusbar" statusbar_visible="draft,submitted,validated,published"/>
+                </header>
                 <sheet>
                     <div class="oe_title">
                         <label for="student_id"/>
@@ -101,6 +118,11 @@
                 <field name="year"/>
                 <filter string="Mes matières" name="my_courses" domain="[('teacher_id', '=', uid)]"/>
                 <separator/>
+                <filter string="Brouillon" name="state_draft" domain="[('state', '=', 'draft')]"/>
+                <filter string="Soumises" name="state_submitted" domain="[('state', '=', 'submitted')]"/>
+                <filter string="Validées" name="state_validated" domain="[('state', '=', 'validated')]"/>
+                <filter string="Publiées" name="state_published" domain="[('state', '=', 'published')]"/>
+                <separator/>
                 <filter string="À noter" name="pending" domain="[('status', '=', 'pending')]"/>
                 <filter string="Notées" name="graded" domain="[('status', '=', 'graded')]"/>
                 <filter string="Absents" name="absent" domain="[('status', '=', 'absent')]"/>
@@ -108,6 +130,7 @@
                 <filter string="Sous la moyenne" name="failed" domain="[('status', '=', 'graded'), ('grade', '&lt;', 10)]"/>
                 <filter string="Date" name="filter_date" date="date"/>
                 <group expand="0" string="Regrouper par">
+                    <filter string="État" name="group_by_state" context="{'group_by': 'state'}"/>
                     <filter string="Année académique" name="group_by_academic_year" context="{'group_by': 'academic_year_id'}"/>
                     <filter string="Trimestre" name="group_by_term" context="{'group_by': 'term_id'}"/>
                     <filter string="Élève" name="group_by_student" context="{'group_by': 'student_id'}"/>

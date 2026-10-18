@@ -22,7 +22,19 @@ class EactaAttendance(models.Model):
         ('late', 'Retard'),
         ('present', 'Présent'),
     ], string='Type', default='absent', required=True, tracking=True)
-    type = fields.Selection(related='attendance_type', readonly=False, string='Type (alias)')
+
+    @property
+    def type(self):
+        return self.attendance_type
+
+    @api.model
+    def _search(self, domain, offset=0, limit=None, order=None):
+        def _remap(term):
+            if isinstance(term, (list, tuple)) and len(term) == 3 and term[0] == 'type':
+                return ('attendance_type', term[1], term[2])
+            return term
+        remapped_domain = [_remap(term) for term in domain] if domain else domain
+        return super()._search(remapped_domain, offset=offset, limit=limit, order=order)
     session = fields.Selection([
         ('all_day', 'Journée entière'),
         ('morning', 'Matin'),
@@ -39,8 +51,12 @@ class EactaAttendance(models.Model):
         ('appointment', 'Rendez-vous médical'),
         ('convocation', 'Convocation administrative'),
         ('other', 'Autre motif'),
-    ], string='Motif')
-    justification_note = fields.Text(string='Détail ou justificatif')
+    ], string='Motif', tracking=True)
+    justification_note = fields.Text(string='Détail ou motif', tracking=True)
+    justification_attachment = fields.Binary(string='Pièce justificative', attachment=True)
+    justification_filename = fields.Char(string='Nom de la pièce')
+    justification_attachment_ids = fields.Many2many('ir.attachment', string='Pièces justificatives')
+    justification_date = fields.Date(string='Date de justification', tracking=True)
     company_id = fields.Many2one('res.company', string='Établissement', default=lambda self: self.env.company)
 
     _sql_constraints = [
@@ -100,15 +116,11 @@ class EactaAttendance(models.Model):
                     "Un motif est obligatoire lorsqu'une absence ou un retard est marqué(e) comme justifié(e)."
                 )
 
-    def action_mark_justified(self):
-        self.write({'justified': True})
-
-    def action_mark_unjustified(self):
-        self.write({'justified': False})
-
     @api.model_create_multi
     def create(self, vals_list):
         for vals in vals_list:
+            if 'type' in vals and 'attendance_type' not in vals:
+                vals['attendance_type'] = vals.pop('type')
             if vals.get('student_id') and vals.get('date') and vals.get('session') and vals.get('attendance_type'):
                 dup = self.search([
                     ('student_id', '=', vals['student_id']),
@@ -125,6 +137,8 @@ class EactaAttendance(models.Model):
         return records
 
     def write(self, vals):
+        if 'type' in vals and 'attendance_type' not in vals:
+            vals['attendance_type'] = vals.pop('type')
         res = super().write(vals)
         if any(k in vals for k in ('attendance_type', 'justified', 'student_id', 'date')):
             self._check_and_create_absence_alert()
@@ -186,3 +200,22 @@ class EactaAttendance(models.Model):
                                 partner_ids=[p.id],
                                 subtype_xmlid='mail.mt_note'
                             )
+
+    def action_mark_justified(self):
+        """Marque l'absence ou le retard comme justifié(e)."""
+        for att in self:
+            vals = {
+                'justified': True,
+                'justification_date': fields.Date.context_today(self),
+            }
+            if not att.reason:
+                vals['reason'] = 'other'
+            att.write(vals)
+
+    def action_mark_unjustified(self):
+        """Réinitialise la justification de l'absence ou du retard."""
+        self.write({
+            'justified': False,
+            'justification_date': False,
+        })
+

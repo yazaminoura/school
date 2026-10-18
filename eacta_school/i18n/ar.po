@@ -180,3 +180,72 @@ msgstr "حساب التلميذ"
 msgid "Contact / Partenaire élève"
 msgstr "جهة اتصال التلميذ"
 
+#. module: eacta_school
+msgid "PV de délibération"
+msgstr "محضر مداولات مجلس القسم"
+
+#. module: eacta_school
+msgid "Procès-Verbal de Délibération"
+msgstr "محضر مداولات مجلس القسم"
+
+#. module: eacta_school
+msgid "Brouillon"
+msgstr "مسودة"
+
+#. module: eacta_school
+msgid "Soumis"
+msgstr "تم الإرسال"
+
+#. module: eacta_school
+msgid "Validé"
+msgstr "مؤكد"
+
+#. module: eacta_school
+msgid "Publié"
+msgstr "منشور"
+
+#. module: eacta_school
+msgid "Soumettre"
+msgstr "إرسال"
+
+#. module: eacta_school
+msgid "Valider"
+msgstr "تأكيد"
+
+#. module: eacta_school
+msgid "Publier"
+msgstr "نشر"
+
+#. module: eacta_school
+msgid "Remettre en brouillon"
+msgstr "إرجاع إلى مسودة"
+
+#. module: eacta_school
+msgid "Mention du conseil"
+msgstr "ملاحظة مجلس القسم"
+
+#. module: eacta_school
+msgid "Avertissement"
+msgstr "إنذار"
+
+#. module: eacta_school
+msgid "Blâme"
+msgstr "توبيخ"
+
+#. module: eacta_school
+msgid "Pièce justificative"
+msgstr "الوثيقة التبريرية"
+
+#. module: eacta_school
+msgid "Pièces justificatives"
+msgstr "الوثائق التبريرية"
+
+#. module: eacta_school
+msgid "Valider le justificatif"
+msgstr "قبول التبرير"
+
+#. module: eacta_school
+msgid "Marquer non justifié"
+msgstr "تحديد كغير مبرر"
+
+

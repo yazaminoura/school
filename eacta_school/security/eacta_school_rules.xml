@@ -224,7 +224,7 @@
         <record id="rule_school_portal_grade" model="ir.rule">
             <field name="name">NR School (Portail) : notes de ses enfants ou ses propres notes</field>
             <field name="model_id" ref="model_eacta_course_grade"/>
-            <field name="domain_force">['|', '|', ('student_id.parent_ids', 'in', [user.partner_id.id]), ('student_id.user_id', '=', user.id), ('student_id.partner_id', '=', user.partner_id.id)]</field>
+            <field name="domain_force">['&amp;', ('state', '=', 'published'), '|', '|', ('student_id.parent_ids', 'in', [user.partner_id.id]), ('student_id.user_id', '=', user.id), ('student_id.partner_id', '=', user.partner_id.id)]</field>
             <field name="perm_read" eval="True"/>
             <field name="perm_write" eval="False"/>
             <field name="perm_create" eval="False"/>

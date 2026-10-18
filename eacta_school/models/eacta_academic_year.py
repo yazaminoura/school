@@ -85,15 +85,39 @@ class EactaTerm(models.Model):
         'eacta.academic.year', string='Année académique',
         required=True, ondelete='cascade', index=True
     )
-    academic_year_id = fields.Many2one(
-        'eacta.academic.year', related='year_id', readonly=False,
-        string='Année académique (alias)', store=True
-    )
     date_start = fields.Date(string='Date de début', required=True)
     date_end = fields.Date(string='Date de fin', required=True)
     sequence = fields.Integer(string='Séquence', default=10)
     weight = fields.Float(string='Pondération annuelle', default=1.0, help="Poids de ce trimestre dans la moyenne annuelle")
     active = fields.Boolean(default=True)
+
+    @property
+    def academic_year_id(self):
+        return self.year_id
+
+    @api.model_create_multi
+    def create(self, vals_list):
+        for vals in vals_list:
+            if 'academic_year_id' in vals and 'year_id' not in vals:
+                vals['year_id'] = vals.pop('academic_year_id')
+        return super().create(vals_list)
+
+    def write(self, vals):
+        if 'academic_year_id' in vals and 'year_id' not in vals:
+            vals['year_id'] = vals.pop('academic_year_id')
+        return super().write(vals)
+
+    @api.model
+    def _search(self, domain, offset=0, limit=None, order=None):
+        if domain:
+            new_domain = []
+            for leaf in domain:
+                if isinstance(leaf, (list, tuple)) and len(leaf) == 3 and leaf[0] == 'academic_year_id':
+                    new_domain.append(('year_id', leaf[1], leaf[2]))
+                else:
+                    new_domain.append(leaf)
+            domain = new_domain
+        return super()._search(domain, offset=offset, limit=limit, order=order)
 
     @api.depends('name', 'year_id.name')
     def _compute_display_name(self):
@@ -126,3 +150,4 @@ class EactaTerm(models.Model):
                         raise ValidationError(
                             f"Les dates du trimestre « {term.name} » chevauchent celles de « {overlap.name} »."
                         )
+

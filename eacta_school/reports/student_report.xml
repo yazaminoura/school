@@ -183,6 +183,7 @@
                             <th>Matière</th>
                             <th class="text-center">Coeff.</th>
                             <th class="text-end">Moyenne / 20</th>
+                            <th class="text-end">Points</th>
                             <th class="text-center">Validation</th>
                             <th>Appréciation / Remarques</th>
                         </tr>
@@ -197,6 +198,7 @@
                             <td t-attf-class="text-end #{'eacta_fail' if line.average &lt; 10 else 'eacta_pass'}">
                                 <strong><t t-out="'%.2f' % line.average"/></strong>
                             </td>
+                            <td class="text-end" t-out="'%.2f' % line.points"/>
                             <td class="text-center">
                                 <span t-if="line.passed" class="badge text-bg-success">Validé</span>
                                 <span t-else="" class="badge text-bg-danger">Non validé</span>
@@ -207,9 +209,22 @@
                             </td>
                         </tr>
                         <tr t-if="not o.line_ids">
-                            <td colspan="5" class="text-center text-muted">Aucune note enregistrée pour cette période.</td>
+                            <td colspan="6" class="text-center text-muted">Aucune note enregistrée pour cette période.</td>
                         </tr>
                     </tbody>
+                    <tfoot t-if="o.line_ids" style="font-weight: bold; background-color: #f1f5f9; border-top: 2px solid #8e1b3a;">
+                        <tr>
+                            <td>Total général</td>
+                            <td class="text-center" t-out="'%g' % o.total_coefficient"/>
+                            <td class="text-end" t-out="'%.2f' % o.average"/>
+                            <td class="text-end" t-out="'%.2f' % o.total_points"/>
+                            <td class="text-center">
+                                <span t-if="o.passed" class="text-success">Admis</span>
+                                <span t-else="" class="text-danger">Ajourné</span>
+                            </td>
+                            <td></td>
+                        </tr>
+                    </tfoot>
                 </table>
 
                 <div class="eacta_summary">
@@ -223,8 +238,9 @@
                         <div class="eacta_big" t-out="dict(o._fields['appreciation'].selection).get(o.appreciation) or '-'"/>
                     </div>
                     <div t-if="o.honor_mention">
-                        <div class="eacta_label">Distinction</div>
-                        <div class="eacta_big text-warning" t-out="dict(o._fields['honor_mention'].selection).get(o.honor_mention)"/>
+                        <div class="eacta_label">Mention du conseil</div>
+                        <div t-attf-class="eacta_big #{'text-danger' if o.honor_mention in ('avertissement', 'blame') else 'text-warning'}"
+                             t-out="dict(o._fields['honor_mention'].selection).get(o.honor_mention)"/>
                     </div>
                     <div t-if="o.rank">
                         <div class="eacta_label">Rang</div>
@@ -255,7 +271,8 @@
 
                 <div class="eacta_signatures">
                     <div>Le professeur principal<br/><t t-out="o.class_id.teacher_id.name if o.class_id else ''"/></div>
-                    <div>La direction</div>
+                    <div>La direction de l'établissement</div>
+                    <div>Visa des parents / tuteur</div>
                 </div>
             </div>
         </t>

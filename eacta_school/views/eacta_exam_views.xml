@@ -14,6 +14,14 @@
                     <button name="action_generate_grade_sheet" string="Ajouter les élèves manquants" type="object"
                             invisible="state in ('done', 'cancel') or not grade_count"/>
                     <button name="action_done" string="Clôturer" type="object" invisible="state != 'grading'"/>
+                    <button name="action_submit_grades" string="Soumettre les notes" type="object"
+                            class="btn-secondary" invisible="not grade_count or state in ('draft', 'cancel')"/>
+                    <button name="action_validate_grades" string="Valider les notes" type="object"
+                            class="btn-secondary" groups="eacta_school.group_eacta_school_direction,eacta_school.group_eacta_school_manager"
+                            invisible="not grade_count or state == 'cancel'"/>
+                    <button name="action_publish_grades" string="Publier les notes" type="object"
+                            class="btn-success" groups="eacta_school.group_eacta_school_direction,eacta_school.group_eacta_school_manager"
+                            invisible="not grade_count or state == 'cancel'"/>
                     <button name="action_cancel" string="Annuler" type="object" invisible="state in ('done', 'cancel')"/>
                     <button name="action_reset_draft" string="Remettre en planifié" type="object"
                             invisible="state not in ('done', 'cancel')"/>

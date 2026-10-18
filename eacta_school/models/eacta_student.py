@@ -128,6 +128,8 @@ class EactaStudent(models.Model):
         ('tableau_honneur', "Tableau d'honneur"),
         ('compliments', 'Compliments'),
         ('encouragements', 'Encouragements'),
+        ('avertissement', 'Avertissement'),
+        ('blame', 'Blâme'),
         ('none', 'Sans distinction'),
     ], string='Distinction du conseil', compute='_compute_honor_mention', store=True)
 
@@ -281,7 +283,7 @@ class EactaStudent(models.Model):
     @api.depends('average', 'grade_count')
     def _compute_honor_mention(self):
         for student in self:
-            if not student.grade_count or student.average < 12:
+            if not student.grade_count:
                 student.honor_mention = 'none'
             elif student.average >= 16:
                 student.honor_mention = 'felicitations'
@@ -289,8 +291,14 @@ class EactaStudent(models.Model):
                 student.honor_mention = 'tableau_honneur'
             elif student.average >= 13:
                 student.honor_mention = 'compliments'
-            else:
+            elif student.average >= 12:
                 student.honor_mention = 'encouragements'
+            elif student.average >= 10:
+                student.honor_mention = 'tableau_honneur'
+            elif student.average >= 8:
+                student.honor_mention = 'avertissement'
+            else:
+                student.honor_mention = 'blame'
 
     @api.depends('selected_year', 'current_year', 'class_ids', 'course_ids', 'course_grade_ids')
     def _compute_selected_year_info(self):
@@ -340,6 +348,9 @@ class EactaStudent(models.Model):
                         vals['course_ids'] = [(6, 0, klass.course_ids.ids)]
         students = super().create(vals_list)
         students._sync_class_courses()
+        for student in students:
+            if student.parent_ids:
+                student.parent_ids.filtered(lambda p: not p.is_school_parent).write({'is_school_parent': True})
         return students
 
     def write(self, vals):
@@ -364,6 +375,10 @@ class EactaStudent(models.Model):
         res = super().write(vals)
         if 'class_ids' in vals or 'current_class_id' in vals:
             self._sync_class_courses()
+        if 'parent_ids' in vals:
+            for student in self:
+                if student.parent_ids:
+                    student.parent_ids.filtered(lambda p: not p.is_school_parent).write({'is_school_parent': True})
         return res
 
     def _sync_class_courses(self):

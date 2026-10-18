@@ -28,8 +28,32 @@ class EactaTimetableSlot(models.Model):
     academic_year_id = fields.Many2one(
         'eacta.academic.year', string='Année académique',
         related='class_id.academic_year_id', store=True, index=True)
-    year_id = fields.Many2one('eacta.academic.year', related='academic_year_id', store=True)
     year = fields.Char(related='academic_year_id.name', store=True, string='Année')
+
+    @property
+    def year_id(self):
+        return self.academic_year_id
+
+    @api.model_create_multi
+    def create(self, vals_list):
+        for vals in vals_list:
+            if 'year_id' in vals and 'academic_year_id' not in vals:
+                vals['academic_year_id'] = vals.pop('year_id')
+        return super().create(vals_list)
+
+    def write(self, vals):
+        if 'year_id' in vals and 'academic_year_id' not in vals:
+            vals['academic_year_id'] = vals.pop('year_id')
+        return super().write(vals)
+
+    @api.model
+    def _search(self, domain, offset=0, limit=None, order=None):
+        def _remap(term):
+            if isinstance(term, (list, tuple)) and len(term) == 3 and term[0] == 'year_id':
+                return ('academic_year_id', term[1], term[2])
+            return term
+        remapped_domain = [_remap(term) for term in domain] if domain else domain
+        return super()._search(remapped_domain, offset=offset, limit=limit, order=order)
     course_id = fields.Many2one('eacta.course', string='Matière', required=True, ondelete='cascade',
                                 domain="[('id', 'in', allowed_course_ids)]")
     allowed_course_ids = fields.Many2many('eacta.course', compute='_compute_allowed_course_ids')

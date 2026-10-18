@@ -20,6 +20,9 @@
                     <button name="action_promote_class" string="Passage de classe"
                             type="object" class="btn-secondary" icon="fa-graduation-cap"
                             help="Ouvre l'assistant de passage en classe supérieure pour cette classe"/>
+                    <button name="action_open_deliberation_wizard" string="PV de délibération"
+                            type="object" class="btn-primary" icon="fa-balance-scale"
+                            help="Générer le procès-verbal de délibération du conseil de classe"/>
                     <button name="action_sync_courses_to_students" string="Inscrire aux cours"
                             type="object" class="btn-secondary" invisible="not course_ids or not student_ids"
                             help="Ajoute tous les cours de la classe à chaque élève"/>
@@ -36,8 +39,8 @@
                         </button>
                         <button name="action_view_attendances" type="object" class="oe_stat_button" icon="fa-clock-o">
                             <div class="o_field_widget o_stat_info">
-                                <span class="o_stat_value">Appel</span>
-                                <span class="o_stat_text">Assiduité</span>
+                                <span class="o_stat_value"><field name="absence_count"/> abs.</span>
+                                <span class="o_stat_text">Assiduité (<field name="attendance_rate"/>%)</span>
                             </div>
                         </button>
                         <button name="action_view_courses" type="object" class="oe_stat_button" icon="fa-book">

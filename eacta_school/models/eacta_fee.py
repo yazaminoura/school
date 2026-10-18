@@ -39,10 +39,20 @@ class EactaStudentFee(models.Model):
                                readonly=False)
     academic_year_id = fields.Many2one('eacta.academic.year', string='Année académique', compute='_compute_class_id',
                                        store=True, readonly=False, index=True)
-    year_id = fields.Many2one(
-        'eacta.academic.year', string='Année académique (alias)',
-        related='academic_year_id', store=True, readonly=False)
     year = fields.Char(string='Année', compute='_compute_class_id', store=True, readonly=False)
+
+    @property
+    def year_id(self):
+        return self.academic_year_id
+
+    @api.model
+    def _search(self, domain, offset=0, limit=None, order=None):
+        def _remap(term):
+            if isinstance(term, (list, tuple)) and len(term) == 3 and term[0] == 'year_id':
+                return ('academic_year_id', term[1], term[2])
+            return term
+        remapped_domain = [_remap(term) for term in domain] if domain else domain
+        return super()._search(remapped_domain, offset=offset, limit=limit, order=order)
     parent_id = fields.Many2one('res.partner', string='Payeur', compute='_compute_parent_id', store=True,
                                 readonly=False)
     fee_type_id = fields.Many2one('eacta.fee.type', string='Type de frais', required=True, tracking=True)
@@ -155,12 +165,19 @@ class EactaStudentFee(models.Model):
     @api.model_create_multi
     def create(self, vals_list):
         for vals in vals_list:
+            if 'year_id' in vals and 'academic_year_id' not in vals:
+                vals['academic_year_id'] = vals.pop('year_id')
             if not vals.get('name') or vals['name'] == '/':
                 vals['name'] = self.env['ir.sequence'].next_by_code('eacta.student.fee') or '/'
         records = super().create(vals_list)
         for rec in records:
             rec._sync_account_invoice()
         return records
+
+    def write(self, vals):
+        if 'year_id' in vals and 'academic_year_id' not in vals:
+            vals['academic_year_id'] = vals.pop('year_id')
+        return super().write(vals)
 
     @api.depends('name', 'fee_type_id', 'description')
     def _compute_display_name(self):

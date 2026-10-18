@@ -38,7 +38,7 @@ class LibraryDeskWizard(models.TransientModel):
     return_loan_id = fields.Many2one('library.loan', string='Emprunt correspondant',
                                      compute='_compute_return_loan', store=True, readonly=False)
     return_borrower = fields.Char(string='Emprunteur', related='return_loan_id.borrower_name', readonly=True)
-    return_book = fields.Char(string='Livre', related='return_loan_id.book_id.name', readonly=True)
+    return_book = fields.Char(string='Livre retourné', related='return_loan_id.book_id.name', readonly=True)
     return_due_date = fields.Date(string='Échéance', related='return_loan_id.due_date', readonly=True)
     return_days_late = fields.Integer(string='Jours de retard', compute='_compute_return_fine')
     return_fine = fields.Float(string='Amende due', compute='_compute_return_fine', digits=(10, 2))

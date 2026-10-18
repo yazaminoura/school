@@ -708,3 +708,127 @@ class TestSchoolManagement(TransactionCase):
         att_for_teacher = self.env['eacta.attendance'].with_user(self.user_teacher_1).search([])
         self.assertIn(att_6a, att_for_teacher)
         self.assertNotIn(att_other, att_for_teacher)
+
+    # =========================================================================
+    # 9. PHASE 1: GRADES WORKFLOW & STATE PERMISSIONS
+    # =========================================================================
+    def test_10_grade_workflow_and_state_permissions(self):
+        """Cycle complet d'une note : Brouillon -> Soumis -> Validé -> Publié."""
+        exam = self.env['eacta.exam'].create({
+            'name': 'Contrôle Workflow',
+            'course_id': self.course_math.id,
+            'exam_type': 'quiz',
+            'date': date.today() - timedelta(days=1),
+            'academic_year_id': self.year_curr.id,
+            'term_id': self.term_1.id,
+            'class_ids': [(4, self.class_6a.id)],
+        })
+        grade = self.env['eacta.course.grade'].create({
+            'exam_id': exam.id,
+            'student_id': self.student_1.id,
+            'class_id': self.class_6a.id,
+            'status': 'graded',
+            'grade': 16.5,
+        })
+        self.assertEqual(grade.state, 'draft')
+
+        # 1. Le parent ne peut pas voir une note en brouillon
+        parent_grades = self.env['eacta.course.grade'].with_user(self.user_parent_1).search([('id', '=', grade.id)])
+        self.assertFalse(parent_grades)
+
+        # 2. Soumission par l'enseignant
+        grade.with_user(self.user_teacher_1).action_submit()
+        self.assertEqual(grade.state, 'submitted')
+
+        # 3. L'enseignant ne peut pas valider lui-même
+        with self.assertRaises(UserError):
+            grade.with_user(self.user_teacher_1).action_validate()
+
+        # 4. La Direction valide la note
+        grade.with_user(self.user_direction).action_validate()
+        self.assertEqual(grade.state, 'validated')
+
+        # 5. L'enseignant ne peut plus modifier une note validée
+        with self.assertRaises(UserError):
+            grade.with_user(self.user_teacher_1).write({'grade': 14.0})
+
+        # 6. La Direction publie la note
+        grade.with_user(self.user_direction).action_publish()
+        self.assertEqual(grade.state, 'published')
+
+        # 7. Maintenant que la note est publiée, le parent peut la consulter
+        parent_grades_pub = self.env['eacta.course.grade'].with_user(self.user_parent_1).search([('id', '=', grade.id)])
+        self.assertEqual(parent_grades_pub, grade)
+
+        # 8. Reset en brouillon par la Direction
+        grade.with_user(self.user_direction).action_draft()
+        self.assertEqual(grade.state, 'draft')
+
+    # =========================================================================
+    # 10. PHASE 1: ATTENDANCE JUSTIFICATION & STATISTICS
+    # =========================================================================
+    def test_11_attendance_justification_and_class_stats(self):
+        """Gestion des justificatifs d'absence et statistiques de classe."""
+        initial_unjust = self.class_6a.unjustified_absence_count
+        initial_total = self.class_6a.absence_count
+
+        att = self.env['eacta.attendance'].create({
+            'student_id': self.student_1.id,
+            'class_id': self.class_6a.id,
+            'date': date.today(),
+            'session': 'morning',
+            'attendance_type': 'absent',
+            'justified': False,
+        })
+        self.class_6a._compute_attendance_stats()
+        self.assertEqual(self.class_6a.unjustified_absence_count, initial_unjust + 1)
+        self.assertEqual(self.class_6a.absence_count, initial_total + 1)
+
+        # Justification
+        att.action_mark_justified()
+        self.assertTrue(att.justified)
+        self.assertTrue(att.justification_date)
+        self.class_6a._compute_attendance_stats()
+        self.assertEqual(self.class_6a.unjustified_absence_count, initial_unjust)
+        self.assertEqual(self.class_6a.absence_count, initial_total + 1)
+
+        # Dé-justification
+        att.action_mark_unjustified()
+        self.assertFalse(att.justified)
+        self.assertFalse(att.justification_date)
+
+    # =========================================================================
+    # 11. PHASE 1: CLASS COUNCIL DELIBERATION (PV) & BULLETIN
+    # =========================================================================
+    def test_12_class_council_deliberation_pv_and_report_card(self):
+        """Génération du PV de délibération du conseil de classe et structure bulletin."""
+        # Calcul des résultats du 1er trimestre
+        self.env['eacta.student.result'].compute_all_results(
+            academic_year=self.year_curr, term=self.term_1, classes=self.class_6a
+        )
+        res = self.env['eacta.student.result'].search([
+            ('student_id', '=', self.student_1.id),
+            ('class_id', '=', self.class_6a.id),
+            ('term_id', '=', self.term_1.id),
+        ], limit=1)
+        if res:
+            self.assertIn(res.honor_mention, ('felicitations', 'compliments', 'encouragements', 'honneur', 'avertissement', 'blame'))
+            self.assertGreaterEqual(res.total_coefficient, 0.0)
+
+        # Assistant PV de délibération
+        wizard = self.env['eacta.class.deliberation.wizard'].create({
+            'class_id': self.class_6a.id,
+            'academic_year_id': self.year_curr.id,
+            'period_type': 'term',
+            'term_id': self.term_1.id,
+            'recompute_before_print': True,
+        })
+        data = wizard.get_deliberation_data()
+        self.assertIn('total_students', data)
+        self.assertIn('class_avg', data)
+        self.assertIn('success_rate', data)
+        self.assertIn('mentions_count', data)
+
+        report_act = wizard.action_print_pv()
+        self.assertTrue(report_act)
+

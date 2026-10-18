@@ -33,7 +33,7 @@ def appreciation_for(grade):
 class CourseGrade(models.Model):
     _name = 'eacta.course.grade'
     _description = 'Note'
-    _inherit = ['mail.thread']
+    _inherit = ['mail.thread', 'mail.activity.mixin']
     _order = 'date desc, student_id'
     _rec_name = 'student_id'
 
@@ -45,15 +45,22 @@ class CourseGrade(models.Model):
     academic_year_id = fields.Many2one(
         'eacta.academic.year', string='Année académique', compute='_compute_academic_year_id',
         store=True, readonly=False, index=True)
-    year_id = fields.Many2one(
-        'eacta.academic.year', string='Année académique (alias)',
-        related='academic_year_id', store=True, readonly=False)
+
+    @property
+    def year_id(self):
+        return self.academic_year_id
     term_id = fields.Many2one('eacta.term', string='Trimestre', related='exam_id.term_id', store=True, index=True)
     year = fields.Char(related='academic_year_id.name', store=True, string='Année')
     date = fields.Date(related='exam_id.date', store=True, string='Date')
     exam_type = fields.Selection(related='exam_id.exam_type', store=True)
     teacher_id = fields.Many2one(related='exam_id.teacher_id', store=True, string='Enseignant')
     coefficient = fields.Float(related='course_id.coefficient', store=True, string='Coeff.')
+    state = fields.Selection([
+        ('draft', 'Brouillon'),
+        ('submitted', 'Soumis'),
+        ('validated', 'Validé'),
+        ('published', 'Publié'),
+    ], string='État', default='draft', required=True, tracking=True, index=True)
     status = fields.Selection([
         ('pending', 'À noter'),
         ('graded', 'Noté'),
@@ -71,6 +78,18 @@ class CourseGrade(models.Model):
     def _compute_academic_year_id(self):
         for record in self:
             record.academic_year_id = record.exam_id.academic_year_id or record.class_id.academic_year_id or False
+
+    @api.model
+    def _search(self, domain, offset=0, limit=None, order=None):
+        if domain:
+            new_domain = []
+            for leaf in domain:
+                if isinstance(leaf, (list, tuple)) and len(leaf) == 3 and leaf[0] == 'year_id':
+                    new_domain.append(('academic_year_id', leaf[1], leaf[2]))
+                else:
+                    new_domain.append(leaf)
+            domain = new_domain
+        return super()._search(domain, offset=offset, limit=limit, order=order)
 
     _sql_constraints = [
         ('student_exam_unique', 'UNIQUE(student_id, exam_id)', "Cet élève a déjà une note pour cet examen."),
@@ -136,21 +155,72 @@ class CourseGrade(models.Model):
         if self.status == 'pending' and self.grade:
             self.status = 'graded'
 
+    def action_submit(self):
+        """Passe la note à l'état Soumis."""
+        for grade in self:
+            if grade.state != 'draft':
+                raise UserError("Seule une note en brouillon peut être soumise.")
+            grade.state = 'submitted'
+
+    def action_validate(self):
+        """Valide la note (Direction ou Administration requise)."""
+        if not (self.env.user.has_group('eacta_school.group_eacta_school_direction') or
+                self.env.user.has_group('eacta_school.group_eacta_school_manager')):
+            raise UserError("Seule la direction ou l'administration peut valider les notes.")
+        for grade in self:
+            if grade.state not in ('draft', 'submitted'):
+                raise UserError("Seule une note soumise ou en brouillon peut être validée.")
+            grade.state = 'validated'
+
+    def action_publish(self):
+        """Publie la note (Direction ou Administration requise)."""
+        if not (self.env.user.has_group('eacta_school.group_eacta_school_direction') or
+                self.env.user.has_group('eacta_school.group_eacta_school_manager')):
+            raise UserError("Seule la direction ou l'administration peut publier les notes.")
+        for grade in self:
+            if grade.state != 'validated':
+                raise UserError("Seule une note préalablement validée peut être publiée.")
+            grade.state = 'published'
+
+    def action_draft(self):
+        """Réinitialise la note en brouillon."""
+        is_dir_mgr = (self.env.user.has_group('eacta_school.group_eacta_school_direction') or
+                      self.env.user.has_group('eacta_school.group_eacta_school_manager'))
+        for grade in self:
+            if grade.state in ('validated', 'published') and not is_dir_mgr:
+                raise UserError("Seule la direction ou l'administration peut repasser une note validée ou publiée en brouillon.")
+            grade.state = 'draft'
+
     @api.model_create_multi
     def create(self, vals_list):
         for vals in vals_list:
             if vals.get('grade') and 'status' not in vals:
                 vals['status'] = 'graded'
+            if 'state' not in vals:
+                vals['state'] = 'draft'
         return super().create(vals_list)
 
     def write(self, vals):
+        is_mgr = self.env.user.has_group('eacta_school.group_eacta_school_manager')
+        is_dir = self.env.user.has_group('eacta_school.group_eacta_school_direction')
+
         # Restriction: impossible de modifier les notes si l'examen ou l'année est clôturé(e)
-        if not self.env.user.has_group('eacta_school.group_eacta_school_manager'):
+        if not is_mgr:
             for record in self:
                 if record.exam_id and record.exam_id.state == 'done':
                     raise UserError(f"L'examen « {record.exam_id.name} » est clôturé. Seul un administrateur peut modifier les notes.")
                 if record.academic_year_id and record.academic_year_id.state == 'closed':
                     raise UserError(f"L'année académique « {record.academic_year_id.name} » est clôturée. Les notes sont verrouillées.")
+
+        # Permissions basées sur l'état
+        critical_fields = {'grade', 'status', 'exam_id', 'student_id', 'is_justified'}
+        if any(f in vals for f in critical_fields):
+            for record in self:
+                if record.state == 'published' and not is_mgr:
+                    raise UserError("La note est publiée. Seul un administrateur peut la modifier.")
+                if record.state == 'validated' and not (is_dir or is_mgr):
+                    raise UserError("La note est validée. Seule la direction ou l'administration peut la modifier.")
+
         if 'grade' in vals and 'status' not in vals:
             pending = self.filtered(lambda g: g.status == 'pending')
             if pending:
@@ -158,3 +228,12 @@ class CourseGrade(models.Model):
                 others = self - pending
                 return super(CourseGrade, others).write(vals) if others else True
         return super().write(vals)
+
+    def unlink(self):
+        is_mgr = self.env.user.has_group('eacta_school.group_eacta_school_manager')
+        if not is_mgr:
+            for record in self:
+                if record.state in ('validated', 'published'):
+                    raise UserError("Impossible de supprimer une note validée ou publiée. Repassez-la d'abord en brouillon.")
+        return super().unlink()
+
