@@ -15,10 +15,27 @@ class TestSchoolManagement(TransactionCase):
 
         # Users and Groups
         cls.group_manager = cls.env.ref('eacta_school.group_eacta_school_manager')
+        cls.group_direction = cls.env.ref('eacta_school.group_eacta_school_direction')
         cls.group_teacher = cls.env.ref('eacta_school.group_eacta_school_teacher')
         cls.group_finance = cls.env.ref('eacta_school.group_eacta_school_finance')
         cls.group_secretary = cls.env.ref('eacta_school.group_eacta_school_secretary')
+        cls.group_parent = cls.env.ref('eacta_school.group_eacta_school_parent')
+        cls.group_student = cls.env.ref('eacta_school.group_eacta_school_student')
         cls.group_portal = cls.env.ref('base.group_portal')
+
+        cls.user_direction = cls.env['res.users'].create({
+            'name': 'Directeur Bennani',
+            'login': 'dir_bennani',
+            'email': 'directeur@school.local',
+            'groups_id': [(6, 0, [cls.group_direction.id])],
+        })
+
+        cls.user_student_1 = cls.env['res.users'].create({
+            'name': 'Karim Alami User',
+            'login': 'karim_student',
+            'email': 'karim@school.local',
+            'groups_id': [(6, 0, [cls.group_student.id])],
+        })
 
         cls.user_teacher_1 = cls.env['res.users'].create({
             'name': 'Professeur Dupont',
@@ -169,6 +186,7 @@ class TestSchoolManagement(TransactionCase):
             'gender': 'male',
             'date_of_birth': date(2013, 5, 14),
             'parent_ids': [(4, cls.partner_parent_1.id)],
+            'user_id': cls.user_student_1.id,
             'class_ids': [(4, cls.class_6a.id)],
             'blood_group': 'O+',
             'allergies': 'Arachides',
@@ -660,3 +678,33 @@ class TestSchoolManagement(TransactionCase):
         self.assertIn(self.student_1, students_for_parent)
         self.assertIn(self.student_2, students_for_parent)
         self.assertNotIn(self.student_3, students_for_parent)
+
+        # 4. L'élève connecté en portail ne voit que sa propre fiche
+        students_for_student = self.env['eacta.student'].with_user(self.user_student_1).search([])
+        self.assertEqual(students_for_student, self.student_1)
+
+        # 5. La Direction a une vue globale sur toutes les classes et tous les élèves
+        classes_for_dir = self.env['eacta.class'].with_user(self.user_direction).search([])
+        self.assertIn(self.class_6a, classes_for_dir)
+        self.assertIn(other_class, classes_for_dir)
+
+        # 6. Un enseignant ne voit que ses propres classes et présences
+        classes_for_teacher = self.env['eacta.class'].with_user(self.user_teacher_1).search([])
+        self.assertIn(self.class_6a, classes_for_teacher)
+        self.assertNotIn(other_class, classes_for_teacher)
+
+        att_6a = self.env['eacta.attendance'].create({
+            'student_id': self.student_1.id,
+            'class_id': self.class_6a.id,
+            'date': date.today(),
+            'attendance_type': 'absent',
+        })
+        att_other = self.env['eacta.attendance'].create({
+            'student_id': stranger_student.id,
+            'class_id': other_class.id,
+            'date': date.today(),
+            'attendance_type': 'absent',
+        })
+        att_for_teacher = self.env['eacta.attendance'].with_user(self.user_teacher_1).search([])
+        self.assertIn(att_6a, att_for_teacher)
+        self.assertNotIn(att_other, att_for_teacher)

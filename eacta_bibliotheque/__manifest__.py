@@ -1,6 +1,6 @@
 {
     'name': 'NR School - Bibliothèque',
-    'version': '18.0.2.0',
+    'version': '18.0.3.0',
     'summary': "Catalogue, exemplaires, emprunts, retards et amendes de la bibliothèque scolaire",
     'description': """
 Bibliothèque NR School
@@ -15,7 +15,7 @@ Bibliothèque NR School
     'category': 'Education',
     'author': 'NR School',
     'license': 'LGPL-3',
-    'icon': '/eacta_bibliothèque/static/description/icon.png',
+    'icon': '/eacta_bibliotheque/static/description/icon.png',
     'depends': ['base', 'mail', 'web', 'eacta_school'],
     'data': [
         'security/library_security.xml',
@@ -34,9 +34,9 @@ Bibliothèque NR School
     ],
     'assets': {
         'web.assets_backend': [
-            'eacta_bibliothèque/static/src/library.scss',
-            'eacta_bibliothèque/static/src/dashboard/library_dashboard.js',
-            'eacta_bibliothèque/static/src/dashboard/library_dashboard.xml',
+            'eacta_bibliotheque/static/src/library.scss',
+            'eacta_bibliotheque/static/src/dashboard/library_dashboard.js',
+            'eacta_bibliotheque/static/src/dashboard/library_dashboard.xml',
         ],
     },
     'installable': True,

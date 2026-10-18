@@ -1,6 +1,6 @@
 {
     'name': 'NR School - Événements',
-    'version': '18.0.2.0',
+    'version': '18.0.3.0',
     'summary': "Sorties, voyages, cérémonies et réunions : inscriptions, autorisations parentales, présences",
     'description': """
 Événements scolaires NR School

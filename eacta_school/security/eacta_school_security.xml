@@ -35,12 +35,33 @@
             <field name="implied_ids" eval="[(4, ref('group_eacta_school_user'))]"/>
         </record>
 
+        <!-- Groupe Direction / Direction Pédagogique -->
+        <record id="group_eacta_school_direction" model="res.groups">
+            <field name="name">Direction</field>
+            <field name="category_id" ref="module_category_eacta_school"/>
+            <field name="implied_ids" eval="[(4, ref('group_eacta_school_teacher')), (4, ref('group_eacta_school_secretary'))]"/>
+        </record>
+
         <!-- Groupe Administration / Manager -->
         <record id="group_eacta_school_manager" model="res.groups">
             <field name="name">Administration (Manager)</field>
             <field name="category_id" ref="module_category_eacta_school"/>
-            <field name="implied_ids" eval="[(4, ref('group_eacta_school_teacher')), (4, ref('group_eacta_school_secretary')), (4, ref('group_eacta_school_finance'))]"/>
+            <field name="implied_ids" eval="[(4, ref('group_eacta_school_direction')), (4, ref('group_eacta_school_finance'))]"/>
             <field name="users" eval="[(4, ref('base.user_root')), (4, ref('base.user_admin'))]"/>
+        </record>
+
+        <!-- Groupe Portail : Parent d'élève -->
+        <record id="group_eacta_school_parent" model="res.groups">
+            <field name="name">Parent / Tuteur</field>
+            <field name="category_id" ref="module_category_eacta_school"/>
+            <field name="implied_ids" eval="[(4, ref('base.group_portal'))]"/>
+        </record>
+
+        <!-- Groupe Portail : Élève -->
+        <record id="group_eacta_school_student" model="res.groups">
+            <field name="name">Élève</field>
+            <field name="category_id" ref="module_category_eacta_school"/>
+            <field name="implied_ids" eval="[(4, ref('base.group_portal'))]"/>
         </record>
     </data>
 </odoo>

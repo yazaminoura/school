@@ -18,7 +18,7 @@
                     <button name="action_mark_lost" string="Déclarer perdu" type="object"
                             invisible="not id or state not in ('ongoing', 'overdue')"
                             confirm="Déclarer cet exemplaire perdu ? Il sera retiré du fonds disponible."/>
-                    <button name="action_reopen" string="Rouvrir" type="object" groups="eacta_bibliothèque.group_eacta_library_manager"
+                    <button name="action_reopen" string="Rouvrir" type="object" groups="eacta_bibliotheque.group_eacta_library_manager"
                             invisible="state not in ('returned', 'lost')"/>
                     <field name="state" widget="statusbar" statusbar_visible="ongoing,returned"/>
                 </header>

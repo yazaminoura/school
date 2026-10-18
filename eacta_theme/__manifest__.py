@@ -1,7 +1,7 @@
 # -*- coding: utf-8 -*-
 {
     'name': 'NR School - Thème',
-    'version': '18.0.2.6',
+    'version': '18.0.3.0',
     'category': 'Theme/Backend',
     'summary': "Charte graphique de l'établissement pour l'interface Odoo",
     'description': """

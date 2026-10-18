@@ -148,8 +148,8 @@
         <field name="inherit_id" ref="base.res_config_settings_view_form"/>
         <field name="arch" type="xml">
             <xpath expr="//form" position="inside">
-                <app data-string="Bibliothèque" string="Bibliothèque" name="eacta_bibliothèque"
-                     groups="eacta_bibliothèque.group_eacta_library_manager">
+                <app data-string="Bibliothèque" string="Bibliothèque" name="eacta_bibliotheque"
+                     groups="eacta_bibliotheque.group_eacta_library_manager">
                     <block title="Règles de prêt" name="library_rules">
                         <setting string="Amendes de retard" help="Montant facturé par jour de retard">
                             <field name="library_fine_per_day"/>
@@ -174,7 +174,7 @@
         <field name="res_model">res.config.settings</field>
         <field name="view_mode">form</field>
         <field name="target">inline</field>
-        <field name="context">{'module': 'eacta_bibliothèque', 'bin_size': False}</field>
+        <field name="context">{'module': 'eacta_bibliotheque', 'bin_size': False}</field>
     </record>
 
 </odoo>

@@ -62,8 +62,8 @@
         <field name="name">Bon d'emprunt</field>
         <field name="model">library.loan</field>
         <field name="report_type">qweb-pdf</field>
-        <field name="report_name">eacta_bibliothèque.report_loan_receipt</field>
-        <field name="report_file">eacta_bibliothèque.report_loan_receipt</field>
+        <field name="report_name">eacta_bibliotheque.report_loan_receipt</field>
+        <field name="report_file">eacta_bibliotheque.report_loan_receipt</field>
         <field name="print_report_name">'Bon - %s' % (object.reference)</field>
         <field name="binding_model_id" ref="model_library_loan"/>
         <field name="binding_type">report</field>
@@ -107,8 +107,8 @@
         <field name="name">Étiquettes code-barres</field>
         <field name="model">library.book.barcode</field>
         <field name="report_type">qweb-pdf</field>
-        <field name="report_name">eacta_bibliothèque.report_copy_labels</field>
-        <field name="report_file">eacta_bibliothèque.report_copy_labels</field>
+        <field name="report_name">eacta_bibliotheque.report_copy_labels</field>
+        <field name="report_file">eacta_bibliotheque.report_copy_labels</field>
         <field name="binding_model_id" ref="model_library_book_barcode"/>
         <field name="binding_type">report</field>
     </record>

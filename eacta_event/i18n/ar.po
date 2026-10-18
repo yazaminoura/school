@@ -1,0 +1,49 @@
+# Translation of Odoo Server.
+# This file contains the translation of the following modules:
+# 	* eacta_event
+#
+msgid ""
+msgstr ""
+"Project-Id-Version: Odoo Server 18.0\n"
+"Report-Msgid-Bugs-To: \n"
+"POT-Creation-Date: 2026-10-18 16:00+0000\n"
+"PO-Revision-Date: 2026-10-18 16:00+0000\n"
+"Last-Translator: NR School\n"
+"Language-Team: Arabic\n"
+"Language: ar\n"
+"MIME-Version: 1.0\n"
+"Content-Type: text/plain; charset=UTF-8\n"
+"Content-Transfer-Encoding: 8bit\n"
+"Plural-Forms: nplurals=6; plural=n==0 ? 0 : n==1 ? 1 : n==2 ? 2 : n%100>=3 && n%100<=10 ? 3 : n%100>=11 && n%100<=99 ? 4 : 5;\n"
+
+#. module: eacta_event
+msgid "Événements"
+msgstr "الأنشطة المدرسية"
+
+#. module: eacta_event
+msgid "Événement scolaire"
+msgstr "نشاط مدرسي"
+
+#. module: eacta_event
+msgid "Sortie scolaire"
+msgstr "خرجة مدرسية"
+
+#. module: eacta_event
+msgid "Voyage scolaire"
+msgstr "رحلة مدرسية"
+
+#. module: eacta_event
+msgid "Autorisation parentale"
+msgstr "ترخيص ولي الأمر"
+
+#. module: eacta_event
+msgid "Inscriptions"
+msgstr "المشاركون المسجلون"
+
+#. module: eacta_event
+msgid "Présence"
+msgstr "حاضر"
+
+#. module: eacta_event
+msgid "Responsable"
+msgstr "المسؤول عن النشاط"

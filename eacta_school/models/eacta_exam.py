@@ -42,7 +42,8 @@ class EactaExam(models.Model):
         'eacta.academic.year', string='Année académique', compute='_compute_academic_year_id',
         store=True, readonly=False, index=True)
     year_id = fields.Many2one(
-        'eacta.academic.year', related='academic_year_id', store=True, readonly=False)
+        'eacta.academic.year', string='Année académique (alias)',
+        related='academic_year_id', store=True, readonly=False)
     class_ids = fields.Many2many(
         'eacta.class', 'eacta_exam_class_rel', 'exam_id', 'class_ids', string="Classes",
         compute='_compute_class_ids', store=True, readonly=False)

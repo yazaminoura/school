@@ -31,6 +31,8 @@ class EactaStudent(models.Model):
     parent_ids = fields.Many2many(
         'res.partner', relation='eacta_partner_student_rel', column1='student_id', column2='partner_id',
         string='Parents / Tuteurs')
+    user_id = fields.Many2one('res.users', string='Compte utilisateur élève', copy=False, tracking=True)
+    partner_id = fields.Many2one('res.partner', string='Contact / Partenaire élève', copy=False, tracking=True)
     enrollment_date = fields.Date(string="Date d'inscription", default=fields.Date.context_today)
     student_comment = fields.Text(string='Commentaire')
     color = fields.Integer(string='Couleur')

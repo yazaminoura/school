@@ -260,6 +260,7 @@
                             <field name="gender" widget="radio" options="{'horizontal': true}"/>
                             <field name="parent_ids" widget="many2many_tags" placeholder="Parents ou tuteurs..."
                                    context="{'default_is_school_parent': True}"/>
+                            <field name="user_id" placeholder="Compte portail élève..." options="{'no_create_edit': True}"/>
                             <field name="phone" widget="phone"/>
                             <field name="email" widget="email"/>
                             <field name="address" placeholder="Adresse postale"/>

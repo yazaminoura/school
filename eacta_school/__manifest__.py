@@ -18,7 +18,7 @@ NR School - Gestion scolaire
     'website': 'https://www.e-acta.com',
     'license': 'LGPL-3',
     'icon': '/eacta_school/static/src/img/nr_school_icon.png',
-    'depends': ['base', 'mail', 'web'],
+    'depends': ['base', 'mail', 'web', 'portal'],
     'data': [
         'security/eacta_school_security.xml',
         'security/ir.model.access.csv',

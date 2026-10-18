@@ -19,7 +19,7 @@ Ce document décrit la procédure recommandée pour déployer la suite logiciell
 | Module | Version | Rôle |
 |---|---|---|
 | `eacta_school` | 18.0.3.0 | Module cœur : élèves, années académiques, trimestres, notes, assiduité, finances, emplois du temps |
-| `eacta_bibliothèque` | 18.0.2.0 | Catalogue, gestion des prêts/retours, retards et amendes |
+| `eacta_bibliotheque` | 18.0.2.0 | Catalogue, gestion des prêts/retours, retards et amendes |
 | `eacta_event` | 18.0.2.0 | Sorties scolaires, événements, autorisations parentales |
 | `eacta_theme` | 18.0.2.4 | Charte graphique backend et page de connexion institutionnelle |
 
@@ -44,7 +44,7 @@ Ce document décrit la procédure recommandée pour déployer la suite logiciell
 
 4. Installer les modules sur la base de données de production :
    ```bash
-   odoo -c /etc/odoo/odoo.conf -d nrschool_prod -i eacta_school,eacta_bibliothèque,eacta_event,eacta_theme --stop-after-init
+   odoo -c /etc/odoo/odoo.conf -d nrschool_prod -i eacta_school,eacta_bibliotheque,eacta_event,eacta_theme --stop-after-init
    ```
 
 ---
@@ -66,7 +66,7 @@ Grâce au script de post-migration automatique inclus (`eacta_school/migrations/
 
 3. **Lancer la mise à niveau Odoo** :
    ```bash
-   odoo -c /etc/odoo/odoo.conf -d nrschool_prod -u eacta_school,eacta_bibliothèque,eacta_event,eacta_theme --stop-after-init
+   odoo -c /etc/odoo/odoo.conf -d nrschool_prod -u eacta_school,eacta_bibliotheque,eacta_event,eacta_theme --stop-after-init
    ```
 
 4. **Ce que le script de migration exécute automatiquement** :

@@ -131,3 +131,52 @@ msgstr "ترقية إلى السنة الموالية"
 #. module: eacta_school
 msgid "Pénalité de retard"
 msgstr "غرامة التأخير"
+
+#. module: eacta_school
+msgid "Direction"
+msgstr "الإدارة التربوية"
+
+#. module: eacta_school
+msgid "Parent / Tuteur"
+msgstr "ولي الأمر / الوصي"
+
+#. module: eacta_school
+msgid "Élève"
+msgstr "التلميذ"
+
+#. module: eacta_school
+msgid "Élèves"
+msgstr "التلاميذ"
+
+#. module: eacta_school
+msgid "Classes"
+msgstr "الفصول الدراسية"
+
+#. module: eacta_school
+msgid "Cours"
+msgstr "المواد الدراسية"
+
+#. module: eacta_school
+msgid "Examens"
+msgstr "الامتحانات"
+
+#. module: eacta_school
+msgid "Notes"
+msgstr "النقط"
+
+#. module: eacta_school
+msgid "Emploi du temps"
+msgstr "جدول الحصص"
+
+#. module: eacta_school
+msgid "Frais de scolarité"
+msgstr "رسوم التمدرس"
+
+#. module: eacta_school
+msgid "Compte utilisateur élève"
+msgstr "حساب التلميذ"
+
+#. module: eacta_school
+msgid "Contact / Partenaire élève"
+msgstr "جهة اتصال التلميذ"
+

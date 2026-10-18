@@ -62,12 +62,64 @@
         </record>
 
         <!-- ============================================================ -->
+        <!-- RÈGLES DIRECTION / DIRECTION PÉDAGOGIQUE                     -->
+        <!-- ============================================================ -->
+        <record id="rule_school_direction_student" model="ir.rule">
+            <field name="name">NR School (Direction) : tous les élèves</field>
+            <field name="model_id" ref="model_eacta_student"/>
+            <field name="domain_force">[(1, '=', 1)]</field>
+            <field name="groups" eval="[(4, ref('eacta_school.group_eacta_school_direction'))]"/>
+        </record>
+
+        <record id="rule_school_direction_class" model="ir.rule">
+            <field name="name">NR School (Direction) : toutes les classes</field>
+            <field name="model_id" ref="model_eacta_class"/>
+            <field name="domain_force">[(1, '=', 1)]</field>
+            <field name="groups" eval="[(4, ref('eacta_school.group_eacta_school_direction'))]"/>
+        </record>
+
+        <record id="rule_school_direction_course" model="ir.rule">
+            <field name="name">NR School (Direction) : tous les cours</field>
+            <field name="model_id" ref="model_eacta_course"/>
+            <field name="domain_force">[(1, '=', 1)]</field>
+            <field name="groups" eval="[(4, ref('eacta_school.group_eacta_school_direction'))]"/>
+        </record>
+
+        <record id="rule_school_direction_grade" model="ir.rule">
+            <field name="name">NR School (Direction) : toutes les notes</field>
+            <field name="model_id" ref="model_eacta_course_grade"/>
+            <field name="domain_force">[(1, '=', 1)]</field>
+            <field name="groups" eval="[(4, ref('eacta_school.group_eacta_school_direction'))]"/>
+        </record>
+
+        <record id="rule_school_direction_exam" model="ir.rule">
+            <field name="name">NR School (Direction) : tous les examens</field>
+            <field name="model_id" ref="model_eacta_exam"/>
+            <field name="domain_force">[(1, '=', 1)]</field>
+            <field name="groups" eval="[(4, ref('eacta_school.group_eacta_school_direction'))]"/>
+        </record>
+
+        <record id="rule_school_direction_result" model="ir.rule">
+            <field name="name">NR School (Direction) : tous les résultats</field>
+            <field name="model_id" ref="model_eacta_student_result"/>
+            <field name="domain_force">[(1, '=', 1)]</field>
+            <field name="groups" eval="[(4, ref('eacta_school.group_eacta_school_direction'))]"/>
+        </record>
+
+        <record id="rule_school_direction_attendance" model="ir.rule">
+            <field name="name">NR School (Direction) : toute l'assiduité</field>
+            <field name="model_id" ref="model_eacta_attendance"/>
+            <field name="domain_force">[(1, '=', 1)]</field>
+            <field name="groups" eval="[(4, ref('eacta_school.group_eacta_school_direction'))]"/>
+        </record>
+
+        <!-- ============================================================ -->
         <!-- RÈGLES ENSEIGNANTS                                           -->
         <!-- ============================================================ -->
         <record id="rule_school_teacher_student" model="ir.rule">
             <field name="name">NR School (Enseignant) : élèves de ses classes ou cours</field>
             <field name="model_id" ref="model_eacta_student"/>
-            <field name="domain_force">['|', ('class_ids.teacher_id', '=', user.id), ('class_ids.course_ids.teacher_id', '=', user.id)]</field>
+            <field name="domain_force">['|', '|', ('class_ids.teacher_id', '=', user.id), ('class_ids.course_ids.teacher_id', '=', user.id), ('course_ids.teacher_id', '=', user.id)]</field>
             <field name="perm_read" eval="True"/>
             <field name="perm_write" eval="True"/>
             <field name="perm_create" eval="False"/>
@@ -119,6 +171,28 @@
             <field name="groups" eval="[(4, ref('eacta_school.group_eacta_school_teacher'))]"/>
         </record>
 
+        <record id="rule_school_teacher_attendance" model="ir.rule">
+            <field name="name">NR School (Enseignant) : assiduité de ses classes ou cours</field>
+            <field name="model_id" ref="model_eacta_attendance"/>
+            <field name="domain_force">['|', '|', ('class_id.teacher_id', '=', user.id), ('class_id.course_ids.teacher_id', '=', user.id), ('course_id.teacher_id', '=', user.id)]</field>
+            <field name="perm_read" eval="True"/>
+            <field name="perm_write" eval="True"/>
+            <field name="perm_create" eval="True"/>
+            <field name="perm_unlink" eval="False"/>
+            <field name="groups" eval="[(4, ref('eacta_school.group_eacta_school_teacher'))]"/>
+        </record>
+
+        <record id="rule_school_teacher_timetable" model="ir.rule">
+            <field name="name">NR School (Enseignant) : créneaux de ses classes ou cours</field>
+            <field name="model_id" ref="model_eacta_timetable_slot"/>
+            <field name="domain_force">['|', ('teacher_id', '=', user.id), ('class_id.teacher_id', '=', user.id)]</field>
+            <field name="perm_read" eval="True"/>
+            <field name="perm_write" eval="False"/>
+            <field name="perm_create" eval="False"/>
+            <field name="perm_unlink" eval="False"/>
+            <field name="groups" eval="[(4, ref('eacta_school.group_eacta_school_teacher'))]"/>
+        </record>
+
         <!-- ============================================================ -->
         <!-- RÈGLES SECRÉTARIAT                                           -->
         <!-- ============================================================ -->
@@ -137,9 +211,9 @@
         <!-- RÈGLES PORTAIL (PARENTS & ÉLÈVES)                            -->
         <!-- ============================================================ -->
         <record id="rule_school_portal_student" model="ir.rule">
-            <field name="name">NR School (Portail) : ses propres enfants</field>
+            <field name="name">NR School (Portail) : ses propres enfants ou son propre profil</field>
             <field name="model_id" ref="model_eacta_student"/>
-            <field name="domain_force">['|', ('parent_ids', 'in', [user.partner_id.id]), ('parent_ids.child_ids', 'in', [user.partner_id.id])]</field>
+            <field name="domain_force">['|', '|', ('parent_ids', 'in', [user.partner_id.id]), ('user_id', '=', user.id), ('partner_id', '=', user.partner_id.id)]</field>
             <field name="perm_read" eval="True"/>
             <field name="perm_write" eval="False"/>
             <field name="perm_create" eval="False"/>
@@ -148,9 +222,9 @@
         </record>
 
         <record id="rule_school_portal_grade" model="ir.rule">
-            <field name="name">NR School (Portail) : notes de ses enfants</field>
+            <field name="name">NR School (Portail) : notes de ses enfants ou ses propres notes</field>
             <field name="model_id" ref="model_eacta_course_grade"/>
-            <field name="domain_force">[('student_id.parent_ids', 'in', [user.partner_id.id])]</field>
+            <field name="domain_force">['|', '|', ('student_id.parent_ids', 'in', [user.partner_id.id]), ('student_id.user_id', '=', user.id), ('student_id.partner_id', '=', user.partner_id.id)]</field>
             <field name="perm_read" eval="True"/>
             <field name="perm_write" eval="False"/>
             <field name="perm_create" eval="False"/>
@@ -159,9 +233,9 @@
         </record>
 
         <record id="rule_school_portal_result" model="ir.rule">
-            <field name="name">NR School (Portail) : bulletins de ses enfants</field>
+            <field name="name">NR School (Portail) : bulletins de ses enfants ou ses propres bulletins</field>
             <field name="model_id" ref="model_eacta_student_result"/>
-            <field name="domain_force">[('student_id.parent_ids', 'in', [user.partner_id.id])]</field>
+            <field name="domain_force">['|', '|', ('student_id.parent_ids', 'in', [user.partner_id.id]), ('student_id.user_id', '=', user.id), ('student_id.partner_id', '=', user.partner_id.id)]</field>
             <field name="perm_read" eval="True"/>
             <field name="perm_write" eval="False"/>
             <field name="perm_create" eval="False"/>
@@ -170,9 +244,9 @@
         </record>
 
         <record id="rule_school_portal_attendance" model="ir.rule">
-            <field name="name">NR School (Portail) : assiduité de ses enfants</field>
+            <field name="name">NR School (Portail) : assiduité de ses enfants ou sa propre assiduité</field>
             <field name="model_id" ref="model_eacta_attendance"/>
-            <field name="domain_force">[('student_id.parent_ids', 'in', [user.partner_id.id])]</field>
+            <field name="domain_force">['|', '|', ('student_id.parent_ids', 'in', [user.partner_id.id]), ('student_id.user_id', '=', user.id), ('student_id.partner_id', '=', user.partner_id.id)]</field>
             <field name="perm_read" eval="True"/>
             <field name="perm_write" eval="False"/>
             <field name="perm_create" eval="False"/>
@@ -181,9 +255,9 @@
         </record>
 
         <record id="rule_school_portal_fee" model="ir.rule">
-            <field name="name">NR School (Portail) : frais de scolarité de ses enfants</field>
+            <field name="name">NR School (Portail) : frais de scolarité de ses enfants ou ses propres frais</field>
             <field name="model_id" ref="model_eacta_student_fee"/>
-            <field name="domain_force">['|', ('student_id.parent_ids', 'in', [user.partner_id.id]), ('parent_id', '=', user.partner_id.id)]</field>
+            <field name="domain_force">['|', '|', '|', ('student_id.parent_ids', 'in', [user.partner_id.id]), ('parent_id', '=', user.partner_id.id), ('student_id.user_id', '=', user.id), ('student_id.partner_id', '=', user.partner_id.id)]</field>
             <field name="perm_read" eval="True"/>
             <field name="perm_write" eval="False"/>
             <field name="perm_create" eval="False"/>
@@ -192,9 +266,9 @@
         </record>
 
         <record id="rule_school_portal_payment" model="ir.rule">
-            <field name="name">NR School (Portail) : reçus de paiement de ses enfants</field>
+            <field name="name">NR School (Portail) : reçus de paiement de ses enfants ou ses propres reçus</field>
             <field name="model_id" ref="model_eacta_fee_payment"/>
-            <field name="domain_force">['|', ('fee_id.student_id.parent_ids', 'in', [user.partner_id.id]), ('fee_id.parent_id', '=', user.partner_id.id)]</field>
+            <field name="domain_force">['|', '|', '|', ('fee_id.student_id.parent_ids', 'in', [user.partner_id.id]), ('fee_id.parent_id', '=', user.partner_id.id), ('fee_id.student_id.user_id', '=', user.id), ('fee_id.student_id.partner_id', '=', user.partner_id.id)]</field>
             <field name="perm_read" eval="True"/>
             <field name="perm_write" eval="False"/>
             <field name="perm_create" eval="False"/>
@@ -203,9 +277,9 @@
         </record>
 
         <record id="rule_school_portal_timetable" model="ir.rule">
-            <field name="name">NR School (Portail) : créneaux de cours de ses enfants</field>
+            <field name="name">NR School (Portail) : créneaux de cours de ses enfants ou sa propre classe</field>
             <field name="model_id" ref="model_eacta_timetable_slot"/>
-            <field name="domain_force">[('class_id.student_ids.parent_ids', 'in', [user.partner_id.id])]</field>
+            <field name="domain_force">['|', '|', ('class_id.student_ids.parent_ids', 'in', [user.partner_id.id]), ('class_id.student_ids.user_id', '=', user.id), ('class_id.student_ids.partner_id', '=', user.partner_id.id)]</field>
             <field name="perm_read" eval="True"/>
             <field name="perm_write" eval="False"/>
             <field name="perm_create" eval="False"/>

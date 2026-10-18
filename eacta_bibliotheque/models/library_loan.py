@@ -276,7 +276,7 @@ class LibraryLoan(models.Model):
         return True
 
     def action_print_receipt(self):
-        return self.env.ref('eacta_bibliothèque.action_report_loan_receipt').report_action(self)
+        return self.env.ref('eacta_bibliotheque.action_report_loan_receipt').report_action(self)
 
     def action_view_details(self):
         self.ensure_one()

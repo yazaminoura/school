@@ -46,7 +46,8 @@ class CourseGrade(models.Model):
         'eacta.academic.year', string='Année académique', compute='_compute_academic_year_id',
         store=True, readonly=False, index=True)
     year_id = fields.Many2one(
-        'eacta.academic.year', related='academic_year_id', store=True, readonly=False)
+        'eacta.academic.year', string='Année académique (alias)',
+        related='academic_year_id', store=True, readonly=False)
     term_id = fields.Many2one('eacta.term', string='Trimestre', related='exam_id.term_id', store=True, index=True)
     year = fields.Char(related='academic_year_id.name', store=True, string='Année')
     date = fields.Date(related='exam_id.date', store=True, string='Date')

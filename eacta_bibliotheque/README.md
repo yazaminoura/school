@@ -1,4 +1,4 @@
-# NR School - Bibliothèque Scolaire (`eacta_bibliothèque`)
+# NR School - Bibliothèque Scolaire (`eacta_bibliotheque`)
 
 Module de gestion de bibliothèque scolaire intégré pour Odoo 18.0.
 
@@ -28,8 +28,8 @@ Module de gestion de bibliothèque scolaire intégré pour Odoo 18.0.
 
 ## Rôles & Sécurité
 
-- **Responsable Bibliothèque** (`eacta_bibliothèque.group_library_manager`) : Gestion complète du fonds, modification des exemplaires, annulation et gestion des amendes.
-- **Opérateur de Guichet** (`eacta_bibliothèque.group_library_user`) : Saisie des prêts et retours, consultation du catalogue.
+- **Responsable Bibliothèque** (`eacta_bibliotheque.group_library_manager`) : Gestion complète du fonds, modification des exemplaires, annulation et gestion des amendes.
+- **Opérateur de Guichet** (`eacta_bibliotheque.group_library_user`) : Saisie des prêts et retours, consultation du catalogue.
 
 ## Installation
 

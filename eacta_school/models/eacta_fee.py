@@ -39,7 +39,9 @@ class EactaStudentFee(models.Model):
                                readonly=False)
     academic_year_id = fields.Many2one('eacta.academic.year', string='Année académique', compute='_compute_class_id',
                                        store=True, readonly=False, index=True)
-    year_id = fields.Many2one('eacta.academic.year', related='academic_year_id', store=True, readonly=False)
+    year_id = fields.Many2one(
+        'eacta.academic.year', string='Année académique (alias)',
+        related='academic_year_id', store=True, readonly=False)
     year = fields.Char(string='Année', compute='_compute_class_id', store=True, readonly=False)
     parent_id = fields.Many2one('res.partner', string='Payeur', compute='_compute_parent_id', store=True,
                                 readonly=False)

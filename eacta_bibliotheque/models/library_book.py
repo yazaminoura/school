@@ -200,7 +200,7 @@ class LibraryBook(models.Model):
         }
 
     def action_print_labels(self):
-        return self.env.ref('eacta_bibliothèque.action_report_copy_labels').report_action(self.barcode_ids)
+        return self.env.ref('eacta_bibliotheque.action_report_copy_labels').report_action(self.barcode_ids)
 
     # Compatibilité avec l'ancien bouton
     def action_generate_barcodes(self):

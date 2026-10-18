@@ -17,17 +17,17 @@
                         <button class="btn btn-light" t-on-click="() => this.load()">
                             <i class="fa fa-refresh me-1"/>Actualiser
                         </button>
-                        <button class="btn btn-primary" t-on-click="() => this.open('eacta_bibliothèque.action_library_book')">
+                        <button class="btn btn-primary" t-on-click="() => this.open('eacta_bibliotheque.action_library_book')">
                             <i class="fa fa-book me-1"/>Catalogue
                         </button>
-                        <button class="btn btn-primary" t-on-click="() => this.open('eacta_bibliothèque.action_library_loan')">
+                        <button class="btn btn-primary" t-on-click="() => this.open('eacta_bibliotheque.action_library_loan')">
                             <i class="fa fa-exchange me-1"/>Emprunts
                         </button>
                     </div>
                 </div>
 
                 <div class="o_eacta_dash_kpis">
-                    <div class="o_eacta_dash_kpi" t-on-click="() => this.open('eacta_bibliothèque.action_library_book')">
+                    <div class="o_eacta_dash_kpi" t-on-click="() => this.open('eacta_bibliotheque.action_library_book')">
                         <div class="o_eacta_dash_kpi_icon o_eacta_tone_primary"><i class="fa fa-book"/></div>
                         <div>
                             <div class="o_eacta_dash_kpi_value" t-out="kpis.titles"/>
@@ -35,7 +35,7 @@
                             <div class="o_eacta_dash_kpi_hint"><t t-out="kpis.copies"/> exemplaires · <t t-out="kpis.available"/> disponibles</div>
                         </div>
                     </div>
-                    <div class="o_eacta_dash_kpi" t-on-click="() => this.open('eacta_bibliothèque.action_library_loan')">
+                    <div class="o_eacta_dash_kpi" t-on-click="() => this.open('eacta_bibliotheque.action_library_loan')">
                         <div class="o_eacta_dash_kpi_icon o_eacta_tone_info"><i class="fa fa-exchange"/></div>
                         <div>
                             <div class="o_eacta_dash_kpi_value" t-out="kpis.on_loan"/>
@@ -43,7 +43,7 @@
                             <div class="o_eacta_dash_kpi_hint"><t t-out="kpis.readers"/> lecteur(s) · <t t-out="kpis.month_loans"/> ce mois-ci</div>
                         </div>
                     </div>
-                    <div class="o_eacta_dash_kpi" t-on-click="() => this.open('eacta_bibliothèque.action_overdue_loans')">
+                    <div class="o_eacta_dash_kpi" t-on-click="() => this.open('eacta_bibliotheque.action_overdue_loans')">
                         <div class="o_eacta_dash_kpi_icon o_eacta_tone_warning"><i class="fa fa-clock-o"/></div>
                         <div>
                             <div class="o_eacta_dash_kpi_value" t-out="kpis.overdue"/>
@@ -73,7 +73,7 @@
                     <section class="o_eacta_panel o_eacta_span_2">
                         <header>
                             <h3>Retards</h3>
-                            <a href="#" t-on-click.prevent="() => this.open('eacta_bibliothèque.action_overdue_loans')">Tout voir</a>
+                            <a href="#" t-on-click.prevent="() => this.open('eacta_bibliotheque.action_overdue_loans')">Tout voir</a>
                         </header>
                         <div t-if="d.overdue.length" class="o_eacta_rows">
                             <div t-foreach="d.overdue" t-as="l" t-key="l.id" class="o_eacta_exam_row">
