@@ -208,7 +208,11 @@ class EactaThemeConfig(models.Model):
 
     @api.model
     def _get_current(self):
-        return self.sudo().search([('is_current', '=', True)], limit=1)
+        current = self.sudo().search([('is_current', '=', True)], limit=1)
+        if not current:
+            self._ensure_current_theme()
+            current = self.sudo().search([('is_current', '=', True)], limit=1)
+        return current
 
     @staticmethod
     def _navbar_colors(v):

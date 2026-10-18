@@ -73,13 +73,85 @@
             <field name="duration">30</field>
         </record>
 
+        <!-- Parents de démonstration (Comptes portail) -->
+        <record id="demo_partner_parent_alami" model="res.partner">
+            <field name="name">M. Mohammed Alami</field>
+            <field name="email">parent.alami@demo.nrschool.com</field>
+            <field name="phone">+212 661 123456</field>
+            <field name="is_school_parent" eval="True"/>
+        </record>
+        <record id="demo_user_parent_alami" model="res.users">
+            <field name="name">Mohammed Alami</field>
+            <field name="login">parent.alami@demo.nrschool.com</field>
+            <field name="email">parent.alami@demo.nrschool.com</field>
+            <field name="partner_id" ref="demo_partner_parent_alami"/>
+            <field name="groups_id" eval="[(4, ref('base.group_portal'))]"/>
+        </record>
+
+        <record id="demo_partner_parent_bennani" model="res.partner">
+            <field name="name">Mme Fatima Bennani</field>
+            <field name="email">parent.bennani@demo.nrschool.com</field>
+            <field name="phone">+212 661 654321</field>
+            <field name="is_school_parent" eval="True"/>
+        </record>
+        <record id="demo_user_parent_bennani" model="res.users">
+            <field name="name">Fatima Bennani</field>
+            <field name="login">parent.bennani@demo.nrschool.com</field>
+            <field name="email">parent.bennani@demo.nrschool.com</field>
+            <field name="partner_id" ref="demo_partner_parent_bennani"/>
+            <field name="groups_id" eval="[(4, ref('base.group_portal'))]"/>
+        </record>
+
+        <!-- Utilisateur portail élève de démonstration -->
+        <record id="demo_partner_student_david" model="res.partner">
+            <field name="name">David Moreau</field>
+            <field name="email">david.moreau@demo.nrschool.com</field>
+        </record>
+        <record id="demo_user_student_david" model="res.users">
+            <field name="name">David Moreau</field>
+            <field name="login">david.moreau@demo.nrschool.com</field>
+            <field name="email">david.moreau@demo.nrschool.com</field>
+            <field name="partner_id" ref="demo_partner_student_david"/>
+            <field name="groups_id" eval="[(4, ref('base.group_portal')), (4, ref('eacta_school.group_eacta_school_student'))]"/>
+        </record>
+
+        <!-- Transport scolaire de démonstration -->
+        <record id="demo_transport_line_1" model="eacta.transport.line">
+            <field name="name">Ligne 1 - Centre Ville / Hassan</field>
+            <field name="vehicle_name">Mercedes Sprinter</field>
+            <field name="license_plate">12345-A-1</field>
+            <field name="driver_name">Karim Tazi</field>
+            <field name="driver_phone">+212 662 000111</field>
+            <field name="capacity">18</field>
+        </record>
+
+        <record id="demo_transport_stop_1" model="eacta.transport.stop">
+            <field name="name">Arrêt Gare Rabat-Ville</field>
+            <field name="line_id" ref="demo_transport_line_1"/>
+            <field name="sequence">1</field>
+            <field name="morning_time">7.45</field>
+            <field name="evening_time">16.45</field>
+        </record>
+
+        <record id="demo_transport_stop_2" model="eacta.transport.stop">
+            <field name="name">Arrêt Bab Rouah</field>
+            <field name="line_id" ref="demo_transport_line_1"/>
+            <field name="sequence">2</field>
+            <field name="morning_time">8.00</field>
+            <field name="evening_time">16.30</field>
+        </record>
+
         <!-- Existing Students (25) -->
         <record id="eacta_school.student_david" model="eacta.student">
             <field name="name">David Moreau</field>
             <field name="date_of_birth">2011-07-10</field>
             <field name="gender">male</field>
             <field name="address">101 Rue des Étudiants, 13001 Marseille</field>
-            <field name="class_ids" eval="[(4, ref('eacta_school.class_1a_2023'))]"/>
+            <field name="parent_ids" eval="[(4, ref('demo_partner_parent_alami'))]"/>
+            <field name="user_id" ref="demo_user_student_david"/>
+            <field name="class_ids" eval="[(4, ref('eacta_school.class_1a_2023')), (4, ref('eacta_school.class_6a_2026'))]"/>
+            <field name="transport_line_id" ref="demo_transport_line_1"/>
+            <field name="transport_stop_id" ref="demo_transport_stop_1"/>
             <field name="image_128">iVBORw0KGgoAAAANSUhEUgAAAIAAAACACAIAAABMXPacAAABLElEQVR4nO3RQREAIAzAMIZ/zyAjjzUKetd5J9LVAds1AGsA1gCsAVgDsAZgDcAagDUAawDWAKwBWAOwBmANwBqANQBrANYArAFYA7AGYA3AGoA1AGsA1gCsAVgDsAZgDcAagDUAawDWAKwBWAOwBmANwBqANQBrANYArAFYA7AGYA3AGoA1AGsA1gCsAVgDsAZgDcAagDUAawDWAKwBWAOwBmANwBqANQBrANYArAFYA7AGYA3AGoA1AGsA1gCsAVgDsAZgDcAagDUAawDWAKwBWAOwBmANwBqANQBrANYArAFYA7AGYA3AGoA1AGsA1gCsAVgDsAZgDcAagDUAawDWAKwBWAOwBmANwBqANQBrANYArAFYA7AGYA3AGoA1AGsA1gCsAVgDsAZgH8/hAf+bYtS1AAAAAElFTkSuQmCC</field>
         </record>
 
@@ -88,7 +160,8 @@
             <field name="date_of_birth">2009-09-05</field>
             <field name="gender">female</field>
             <field name="address">202 Avenue de l'Éducation, 31000 Toulouse</field>
-            <field name="class_ids" eval="[(4, ref('eacta_school.class_1b_2023'))]"/>
+            <field name="parent_ids" eval="[(4, ref('demo_partner_parent_alami'))]"/>
+            <field name="class_ids" eval="[(4, ref('eacta_school.class_1b_2023')), (4, ref('eacta_school.class_6a_2026'))]"/>
         </record>
 
         <record id="eacta_school.student_alice" model="eacta.student">
@@ -96,7 +169,10 @@
             <field name="date_of_birth">2010-05-15</field>
             <field name="gender">female</field>
             <field name="address">123 Rue de l'École, 75001 Paris</field>
-            <field name="class_ids" eval="[(4, ref('eacta_school.class_1a_2023'))]"/>
+            <field name="parent_ids" eval="[(4, ref('demo_partner_parent_bennani'))]"/>
+            <field name="class_ids" eval="[(4, ref('eacta_school.class_1a_2023')), (4, ref('eacta_school.class_6b_2026'))]"/>
+            <field name="transport_line_id" ref="demo_transport_line_1"/>
+            <field name="transport_stop_id" ref="demo_transport_stop_2"/>
         </record>
 
         <record id="eacta_school.student_bob" model="eacta.student">
@@ -104,7 +180,8 @@
             <field name="date_of_birth">2009-11-30</field>
             <field name="gender">male</field>
             <field name="address">456 Avenue du Collège, 69002 Lyon</field>
-            <field name="class_ids" eval="[(4, ref('eacta_school.class_1b_2023'))]"/>
+            <field name="parent_ids" eval="[(4, ref('demo_partner_parent_bennani'))]"/>
+            <field name="class_ids" eval="[(4, ref('eacta_school.class_1b_2023')), (4, ref('eacta_school.class_6b_2026'))]"/>
         </record>
 
         <record id="eacta_school.student_claire" model="eacta.student">
@@ -112,7 +189,7 @@
             <field name="date_of_birth">2008-03-22</field>
             <field name="gender">female</field>
             <field name="address">789 Boulevard du Lycée, 33000 Bordeaux</field>
-            <field name="class_ids" eval="[(4, ref('eacta_school.class_3a_2024'))]"/>
+            <field name="class_ids" eval="[(4, ref('eacta_school.class_3a_2024')), (4, ref('eacta_school.class_6a_2026'))]"/>
         </record>
 
         <record id="eacta_school.student_lucas_roux" model="eacta.student">
@@ -120,7 +197,7 @@
             <field name="date_of_birth">2012-02-14</field>
             <field name="gender">male</field>
             <field name="address">34 Rue des Lilas, 69003 Lyon</field>
-            <field name="class_ids" eval="[(4, ref('eacta_school.class_1a_2023'))]"/>
+            <field name="class_ids" eval="[(4, ref('eacta_school.class_1a_2023')), (4, ref('eacta_school.class_6a_2026'))]"/>
         </record>
 
         <record id="eacta_school.student_sophie_leroy" model="eacta.student">
@@ -128,7 +205,7 @@
             <field name="date_of_birth">2011-11-08</field>
             <field name="gender">female</field>
             <field name="address">56 Avenue Victor Hugo, 75016 Paris</field>
-            <field name="class_ids" eval="[(4, ref('eacta_school.class_1a_2023'))]"/>
+            <field name="class_ids" eval="[(4, ref('eacta_school.class_1a_2023')), (4, ref('eacta_school.class_6b_2026'))]"/>
         </record>
 
         <record id="eacta_school.student_thomas_girard" model="eacta.student">
@@ -136,7 +213,7 @@
             <field name="date_of_birth">2010-06-25</field>
             <field name="gender">male</field>
             <field name="address">12 Boulevard des Écoles, 33000 Bordeaux</field>
-            <field name="class_ids" eval="[(4, ref('eacta_school.class_1b_2023'))]"/>
+            <field name="class_ids" eval="[(4, ref('eacta_school.class_1b_2023')), (4, ref('eacta_school.class_6b_2026'))]"/>
         </record>
 
         <record id="eacta_school.student_julie_morin" model="eacta.student">

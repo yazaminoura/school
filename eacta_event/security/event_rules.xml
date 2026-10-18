@@ -1,10 +1,63 @@
 <?xml version="1.0" encoding="utf-8"?>
 <odoo>
     <data noupdate="1">
+        <!-- Multi-société -->
         <record id="eacta_event_company_rule" model="ir.rule">
             <field name="name">Événements : multi-société</field>
             <field name="model_id" ref="model_eacta_school_event"/>
             <field name="domain_force">['|', ('company_id', '=', False), ('company_id', 'in', company_ids)]</field>
+        </record>
+
+        <record id="eacta_event_registration_company_rule" model="ir.rule">
+            <field name="name">Inscriptions événements : multi-société</field>
+            <field name="model_id" ref="model_eacta_school_event_registration"/>
+            <field name="domain_force">['|', ('company_id', '=', False), ('company_id', 'in', company_ids)]</field>
+        </record>
+
+        <!-- Direction & Responsable : visibilité complète -->
+        <record id="eacta_event_manager_rule" model="ir.rule">
+            <field name="name">Événements : Direction &amp; Responsable (Tous)</field>
+            <field name="model_id" ref="model_eacta_school_event"/>
+            <field name="groups" eval="[(4, ref('group_eacta_event_manager')), (4, ref('eacta_school.group_eacta_school_direction'))]"/>
+            <field name="domain_force">[(1, '=', 1)]</field>
+        </record>
+
+        <record id="eacta_event_registration_manager_rule" model="ir.rule">
+            <field name="name">Inscriptions événements : Direction &amp; Responsable (Toutes)</field>
+            <field name="model_id" ref="model_eacta_school_event_registration"/>
+            <field name="groups" eval="[(4, ref('group_eacta_event_manager')), (4, ref('eacta_school.group_eacta_school_direction'))]"/>
+            <field name="domain_force">[(1, '=', 1)]</field>
+        </record>
+
+        <!-- Enseignants : leurs événements, événements supervisés et classes assignées -->
+        <record id="eacta_event_teacher_rule" model="ir.rule">
+            <field name="name">Événements : Enseignants (leurs événements et classes)</field>
+            <field name="model_id" ref="model_eacta_school_event"/>
+            <field name="groups" eval="[(4, ref('eacta_school.group_eacta_school_teacher'))]"/>
+            <field name="domain_force">['|', '|', ('organizer_id', '=', user.id), ('supervisor_ids', 'in', [user.id]), ('class_ids.teacher_id', '=', user.id)]</field>
+        </record>
+
+        <record id="eacta_event_registration_teacher_rule" model="ir.rule">
+            <field name="name">Inscriptions événements : Enseignants (leurs événements et classes)</field>
+            <field name="model_id" ref="model_eacta_school_event_registration"/>
+            <field name="groups" eval="[(4, ref('eacta_school.group_eacta_school_teacher'))]"/>
+            <field name="domain_force">['|', '|', ('event_id.organizer_id', '=', user.id), ('event_id.supervisor_ids', 'in', [user.id]), ('class_id.teacher_id', '=', user.id)]</field>
+        </record>
+
+        <!-- Parents : uniquement les inscriptions de leurs propres enfants -->
+        <record id="eacta_event_registration_parent_rule" model="ir.rule">
+            <field name="name">Inscriptions événements : Parents (leurs enfants)</field>
+            <field name="model_id" ref="model_eacta_school_event_registration"/>
+            <field name="groups" eval="[(4, ref('eacta_school.group_eacta_school_parent')), (4, ref('base.group_portal'))]"/>
+            <field name="domain_force">[('student_id.parent_ids', 'in', [user.partner_id.id])]</field>
+        </record>
+
+        <!-- Élèves : uniquement leur propre inscription -->
+        <record id="eacta_event_registration_student_rule" model="ir.rule">
+            <field name="name">Inscriptions événements : Élèves (leur inscription)</field>
+            <field name="model_id" ref="model_eacta_school_event_registration"/>
+            <field name="groups" eval="[(4, ref('eacta_school.group_eacta_school_student'))]"/>
+            <field name="domain_force">['|', ('student_id.user_id', '=', user.id), ('student_id.partner_id', '=', user.partner_id.id)]</field>
         </record>
     </data>
 </odoo>

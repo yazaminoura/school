@@ -229,7 +229,8 @@ class EactaExam(models.Model):
         }
         classes = self.env['eacta.class'].search([('id', 'in', [
             c.id for c in (ref(x) for x in ('class_1a_2023', 'class_1b_2023', 'class_2a_2023', 'class_2b_2023',
-                                            'class_3a_2024', 'class_3b_2024', 'class_4a_2024', 'class_4b_2024')) if c
+                                            'class_3a_2024', 'class_3b_2024', 'class_4a_2024', 'class_4b_2024',
+                                            'class_6a_2026', 'class_6b_2026')) if c
         ])])
         today = fields.Date.context_today(self)
         for n, klass in enumerate(classes):

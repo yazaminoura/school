@@ -112,5 +112,22 @@
             <field name="academic_year_id" ref="academic_year_2024_2025"/>
             <field name="year">2024-2025</field>
         </record>
+
+        <!-- Classes for current open year 2026-2027 -->
+        <record id="eacta_school.class_6a_2026" model="eacta.class">
+            <field name="name">Classe 6A</field>
+            <field name="level">secondary</field>
+            <field name="capacity">25</field>
+            <field name="academic_year_id" ref="academic_year_2026_2027"/>
+            <field name="year">2026-2027</field>
+        </record>
+
+        <record id="eacta_school.class_6b_2026" model="eacta.class">
+            <field name="name">Classe 6B</field>
+            <field name="level">secondary</field>
+            <field name="capacity">25</field>
+            <field name="academic_year_id" ref="academic_year_2026_2027"/>
+            <field name="year">2026-2027</field>
+        </record>
     </data>
 </odoo>

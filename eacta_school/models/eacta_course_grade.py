@@ -191,6 +191,13 @@ class CourseGrade(models.Model):
                 raise UserError("Seule la direction ou l'administration peut repasser une note validée ou publiée en brouillon.")
             grade.state = 'draft'
 
+    def action_reject(self, reason=None):
+        """Rejette une note soumise pour révision par l'enseignant."""
+        self.action_draft()
+        if reason:
+            for grade in self:
+                grade.message_post(body=f"Note rejetée pour révision : {reason}")
+
     @api.model_create_multi
     def create(self, vals_list):
         for vals in vals_list:

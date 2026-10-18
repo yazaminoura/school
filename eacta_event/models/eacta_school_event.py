@@ -144,6 +144,8 @@ class EactaSchoolEvent(models.Model):
     def action_reset_draft(self):
         self.write({'state': 'draft'})
 
+    action_draft = action_reset_draft
+
     def action_sync_school_attendance(self):
         """Enregistre une présence dans le registre scolaire pour chaque élève ayant participé."""
         self.ensure_one()
@@ -327,6 +329,7 @@ class EactaSchoolEventRegistration(models.Model):
     paid = fields.Boolean(string='Payé', compute='_compute_paid', store=True, readonly=False)
     amount = fields.Monetary(related='event_id.fee_amount', string='Montant')
     currency_id = fields.Many2one(related='event_id.currency_id')
+    company_id = fields.Many2one(related='event_id.company_id', string='Établissement', store=True, readonly=True)
     note = fields.Char(string='Remarque')
 
     _sql_constraints = [

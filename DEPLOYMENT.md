@@ -19,35 +19,66 @@ Ce document décrit la procédure recommandée pour déployer la suite logiciell
 
 | Module | Version | Rôle |
 |---|---|---|
-| `eacta_school` | 18.0.5.0 | Module cœur : élèves, années académiques, trimestres, notes, assiduité, finances, facturation, portail parents/élèves |
-| `eacta_bibliotheque` | 18.0.2.0 | Catalogue, gestion des prêts/retours, retards et amendes |
-| `eacta_event` | 18.0.2.0 | Sorties scolaires, événements, autorisations parentales |
-| `eacta_theme` | 18.0.2.4 | Charte graphique backend et page de connexion institutionnelle |
-| `l10n_ma` *(officiel)* | 18.0 | *(Optionnel recommandé)* Plan comptable général marocain et taxes |
+| `eacta_school` | 18.0.5.0 | Module cœur : élèves, années académiques, trimestres, notes, assiduité, finances, facturation, portail parents/élèves, badges QR et transport |
+| `eacta_bibliotheque` | 18.0.3.0 | Catalogue, gestion des prêts/retours, retards et amendes |
+| `eacta_event` | 18.0.3.0 | Sorties scolaires, événements, autorisations parentales |
+| `eacta_theme` | 18.0.2.6 | Charte graphique backend et page de connexion institutionnelle |
+| `l10n_ma` *(officiel)* | 18.0 | *(Exigence recommandée)* Plan comptable général marocain, journal des ventes et taxes |
 
 ---
 
 ## 3. Procédure d'Installation Initiale (Nouvelle École)
 
-1. Cloner le dépôt dans votre répertoire d'addons :
-   ```bash
-   git clone https://github.com/yazaminoura/school.git /opt/odoo/custom-addons/school
-   ```
+### 3.1. Récupération du Code Source
+1. Cloner le dépôt dans votre répertoire d'addons personnalisés :
+   - **Linux** :
+     ```bash
+     git clone https://github.com/yazaminoura/school.git /opt/odoo/custom-addons/school
+     sudo chown -R odoo:odoo /opt/odoo/custom-addons/school
+     ```
+   - **Windows** :
+     ```powershell
+     git clone https://github.com/yazaminoura/school.git C:\Users\pc\Documents\school
+     ```
 
-2. Assurer les permissions utilisateur :
-   ```bash
-   sudo chown -R odoo:odoo /opt/odoo/custom-addons/school
-   ```
+### 3.2. Configuration du paramètre `addons_path`
+Ajoutez le chemin absolu du dossier contenant les 4 modules dans le fichier `odoo.conf` (séparé par une virgule des addons officiels) :
 
-3. Ajouter le chemin aux `addons_path` de votre fichier `odoo.conf` :
-   ```ini
-   addons_path = /opt/odoo/odoo-server/addons,/opt/odoo/custom-addons/school
-   ```
+- **Configuration sous Linux (`/etc/odoo/odoo.conf`)** :
+  ```ini
+  [options]
+  addons_path = /opt/odoo/odoo-server/addons,/opt/odoo/custom-addons/school
+  ```
 
-4. Installer les modules sur la base de données de production :
-   ```bash
-   odoo -c /etc/odoo/odoo.conf -d nrschool_prod -i eacta_school,eacta_bibliotheque,eacta_event,eacta_theme --stop-after-init
-   ```
+- **Configuration sous Windows (`odoo.conf`)** :
+  ```ini
+  [options]
+  addons_path = c:\project\odoo_project\server\odoo\addons,C:\Users\pc\Documents\school
+  ```
+
+> [!TIP]
+> En ligne de commande, vous pouvez également spécifier le paramètre avec le flag `--addons-path` :
+> `odoo-bin --addons-path="/opt/odoo/odoo-server/addons,/opt/odoo/custom-addons/school"`
+
+### 3.3. Initialisation de la Base de Données
+
+#### Mode Production (Vierge de données d'exemple)
+Pour déployer une école en production sans données fictives, activez le drapeau `--without-demo=all` :
+```bash
+odoo -c /etc/odoo/odoo.conf -d nrschool_prod -i l10n_ma,eacta_school,eacta_bibliotheque,eacta_event,eacta_theme --without-demo=all --stop-after-init
+```
+
+#### Mode Évaluation / Démonstration (Avec données d'exemple)
+Pour déployer un environnement de test pré-rempli (élèves, classes 2026-2027, enseignants, parents, emplois du temps et bibliothèque) :
+```bash
+odoo -c /etc/odoo/odoo.conf -d nrschool_demo -i l10n_ma,eacta_school,eacta_bibliotheque,eacta_event,eacta_theme --stop-after-init
+```
+
+### 3.4. Validation par les Tests Automatisés
+Avant l'ouverture aux utilisateurs finaux, exécutez la suite de tests pour valider l'intégrité de l'installation :
+```bash
+odoo -c /etc/odoo/odoo.conf -d nrschool_prod -u eacta_school,eacta_bibliotheque,eacta_event,eacta_theme --test-enable --test-tags=eacta_school,eacta_bibliotheque,eacta_event,eacta_theme --stop-after-init
+```
 
 ---
 

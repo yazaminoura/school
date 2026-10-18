@@ -1351,5 +1351,174 @@ class TestSchoolManagement(TransactionCase):
         self.assertIn(line, portal_lines)
         self.assertNotIn(other_line, portal_lines)
 
+    # =========================================================================
+    # 23. PHASE 5: GRADE WORKFLOW BATCH ACTIONS & REJECTION CONSTRAINTS
+    # =========================================================================
+    def test_23_grade_workflow_rejection_and_batch_actions(self):
+        """Vérifie le rejet d'une note soumise, le rejet direct de publication sans validation, et les actions en masse."""
+        exam = self.env['eacta.exam'].create({
+            'name': 'Examen Phase 5 Rejet & Lot',
+            'course_id': self.course_math.id,
+            'exam_type': 'quiz',
+            'date': date.today() - timedelta(days=2),
+            'academic_year_id': self.year_curr.id,
+            'term_id': self.term_1.id,
+            'class_ids': [(4, self.class_6a.id)],
+        })
+        grade_1 = self.env['eacta.course.grade'].create({
+            'exam_id': exam.id,
+            'student_id': self.student_1.id,
+            'class_id': self.class_6a.id,
+            'status': 'graded',
+            'grade': 15.0,
+        })
+        grade_2 = self.env['eacta.course.grade'].create({
+            'exam_id': exam.id,
+            'student_id': self.student_2.id,
+            'class_id': self.class_6a.id,
+            'status': 'graded',
+            'grade': 12.5,
+        })
+
+        # 1. Tentative de publication directe depuis le statut 'draft' : interdit
+        with self.assertRaises(UserError):
+            grade_1.with_user(self.user_direction).action_publish()
+
+        # 2. Soumission par l'enseignant
+        exam.grade_ids.with_user(self.user_teacher_1).action_submit()
+        self.assertTrue(all(g.state == 'submitted' for g in exam.grade_ids))
+
+        # 3. Rejet d'une note par la Direction (ex: demande de réévaluation)
+        grade_1.with_user(self.user_direction).action_reject(reason="Vérifier la question 3")
+        self.assertEqual(grade_1.state, 'draft')
+        self.assertEqual(grade_2.state, 'submitted')
+
+        # 4. Enseignant réajuste et resoumet
+        grade_1.with_user(self.user_teacher_1).write({'grade': 16.0})
+        grade_1.with_user(self.user_teacher_1).action_submit()
+        self.assertEqual(grade_1.state, 'submitted')
+
+        # 5. Validation en lot via l'examen
+        exam.with_user(self.user_direction).action_validate_grades()
+        self.assertTrue(all(g.state == 'validated' for g in exam.grade_ids))
+
+        # 6. Publication en lot via l'examen
+        exam.with_user(self.user_direction).action_publish_grades()
+        self.assertTrue(all(g.state == 'published' for g in exam.grade_ids))
+
+    # =========================================================================
+    # 24. PHASE 5: FEE INSTALLMENTS SCHEDULE & MULTI-SIBLING DISCOUNT MATRIX
+    # =========================================================================
+    def test_24_fee_installment_schedule_and_multi_sibling_discounts(self):
+        """Vérifie le calcul exact des remises de fratrie (aîné 0%, 2e 10%, 3e 20%) et l'échéancier en 4 tranches."""
+        partner_family = self.env['res.partner'].create({
+            'name': 'Famille Test Fratrie Phase 5',
+            'email': 'famille.p5@example.com',
+            'is_school_parent': True,
+        })
+        # 3 enfants classés par date de naissance
+        c1_eldest = self.env['eacta.student'].create({
+            'name': 'Aîné Famille P5',
+            'date_of_birth': date(2009, 3, 15),
+            'parent_ids': [(6, 0, [partner_family.id])],
+            'state': 'enrolled',
+        })
+        c2_second = self.env['eacta.student'].create({
+            'name': 'Cadet Famille P5',
+            'date_of_birth': date(2011, 7, 20),
+            'parent_ids': [(6, 0, [partner_family.id])],
+            'state': 'enrolled',
+        })
+        c3_youngest = self.env['eacta.student'].create({
+            'name': 'Benjamin Famille P5',
+            'date_of_birth': date(2014, 11, 5),
+            'parent_ids': [(6, 0, [partner_family.id])],
+            'state': 'enrolled',
+        })
+
+        # L'aîné est identifié strictement par sa date de naissance
+        self.assertTrue(c1_eldest._is_eldest_sibling())
+        self.assertFalse(c2_second._is_eldest_sibling())
+        self.assertFalse(c3_youngest._is_eldest_sibling())
+
+        # Génération d'un échéancier en 4 tranches de scolarité pour le cadet (base: 10 000 MAD)
+        fee_type = self.env.ref('eacta_school.fee_type_tuition')
+        wiz = self.env['eacta.fee.generate.wizard'].create({
+            'fee_type_id': fee_type.id,
+            'student_ids': [(6, 0, [c2_second.id])],
+            'amount': 10000.0,
+            'apply_sibling_discount': True,
+            'installments': 4,
+            'first_due_date': date(2026, 9, 15),
+            'description': 'Scolarité 4 Tranches',
+        })
+        wiz.action_generate()
+
+        fees = self.env['eacta.student.fee'].search([
+            ('student_id', '=', c2_second.id),
+            ('description', 'like', 'Scolarité 4 Tranches%')
+        ], order='due_date')
+        self.assertEqual(len(fees), 4)
+
+        # Base 10 000 MAD - 10% remise = 9 000 MAD au total net (amount_total), soit 2 250 MAD par tranche
+        # Brut : 10 000 MAD (2 500 MAD par tranche) avec remise de 250 MAD par tranche
+        total_amount = sum(fees.mapped('amount_total'))
+        self.assertAlmostEqual(total_amount, 9000.0, places=2)
+        for fee in fees:
+            self.assertAlmostEqual(fee.amount, 2500.0, places=2)
+            self.assertAlmostEqual(fee.discount, 250.0, places=2)
+            self.assertAlmostEqual(fee.amount_total, 2250.0, places=2)
+
+        # Espacement mensuel des échéances
+        dates = fees.mapped('due_date')
+        self.assertEqual(dates[0], date(2026, 9, 15))
+        self.assertEqual(dates[1], date(2026, 10, 15))
+        self.assertEqual(dates[2], date(2026, 11, 15))
+        self.assertEqual(dates[3], date(2026, 12, 15))
+
+    # =========================================================================
+    # 25. PHASE 5: SECURITY RECORD RULES ISOLATION MATRIX
+    # =========================================================================
+    def test_25_security_record_rules_matrix(self):
+        """Matrice complète de sécurité : Enseignant (isolement strict), Parent (ses enfants), Élève (soi-même)."""
+        # 1. Enseignant : ne voit que ses propres classes et cours
+        other_teacher_class = self.env['eacta.class'].create({
+            'name': '6ème C Isolée',
+            'academic_year_id': self.year_curr.id,
+            'level': 'secondary',
+            'teacher_id': self.user_teacher_2.id,
+        })
+        t1_classes = self.env['eacta.class'].with_user(self.user_teacher_1).search([])
+        self.assertIn(self.class_6a, t1_classes)
+        self.assertNotIn(other_teacher_class, t1_classes)
+
+        # 2. Enseignant n'a pas accès aux frais scolaires (réservé direction/comptable) -> AccessError
+        with self.assertRaises(AccessError):
+            self.env['eacta.student.fee'].with_user(self.user_teacher_1).search([])
+
+        # 3. Parent 1 ne voit pas les frais d'un élève qui ne lui est pas rattaché
+        other_student = self.student_3  # enfant de Bennani (Parent 2)
+        fee_other = self.env['eacta.student.fee'].create({
+            'student_id': other_student.id,
+            'fee_type_id': self.env.ref('eacta_school.fee_type_tuition').id,
+            'amount': 3000.0,
+            'due_date': date.today() + timedelta(days=30),
+            'academic_year_id': self.year_curr.id,
+        })
+        p1_fees = self.env['eacta.student.fee'].with_user(self.user_parent_1).search([
+            ('id', '=', fee_other.id)
+        ])
+        self.assertFalse(p1_fees)
+
+        # 4. Élève 1 (Karim) ne voit que ses propres créneaux et notes
+        k_student_user = self.user_student_1
+        self.student_1.write({'user_id': k_student_user.id})
+
+        # L'élève ne peut pas voir le profil de l'élève 2
+        s1_students = self.env['eacta.student'].with_user(k_student_user).search([
+            ('id', 'in', [self.student_1.id, self.student_2.id])
+        ])
+        self.assertEqual(s1_students, self.student_1)
+
 
 
