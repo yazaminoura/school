@@ -1,0 +1,138 @@
+<?xml version="1.0" encoding="utf-8"?>
+<odoo>
+
+    <record id="view_eacta_announcement_list" model="ir.ui.view">
+        <field name="name">eacta.announcement.list</field>
+        <field name="model">eacta.announcement</field>
+        <field name="arch" type="xml">
+            <list string="Annonces" sample="1" decoration-muted="state == 'archived'"
+                  decoration-danger="priority == 'urgent' and state == 'published'">
+                <field name="date_publish"/>
+                <field name="name"/>
+                <field name="priority" widget="badge" decoration-warning="priority == 'important'"
+                       decoration-danger="priority == 'urgent'"/>
+                <field name="audience" optional="show"/>
+                <field name="recipient_count" string="Familles"/>
+                <field name="read_rate" string="Lu (%)" widget="progressbar" optional="show"/>
+                <field name="author_id" widget="many2one_avatar_user" optional="show"/>
+                <field name="state" widget="badge" decoration-success="state == 'published'"/>
+            </list>
+        </field>
+    </record>
+
+    <record id="view_eacta_announcement_form" model="ir.ui.view">
+        <field name="name">eacta.announcement.form</field>
+        <field name="model">eacta.announcement</field>
+        <field name="arch" type="xml">
+            <form string="Annonce">
+                <header>
+                    <button name="action_publish" string="Publier et envoyer" type="object" class="btn-primary"
+                            invisible="state != 'draft'"
+                            confirm="L'annonce sera visible sur le portail et envoyée aux familles. Continuer ?"/>
+                    <button name="action_archive_announcement" string="Archiver" type="object"
+                            invisible="state != 'published'"/>
+                    <button name="action_draft" string="Remettre en brouillon" type="object"
+                            invisible="state != 'archived'"/>
+                    <field name="state" widget="statusbar"/>
+                </header>
+                <sheet>
+                    <div class="oe_button_box" name="button_box">
+                        <button name="action_view_reads" type="object" class="oe_stat_button" icon="fa-eye"
+                                invisible="state == 'draft'">
+                            <field name="read_count" widget="statinfo" string="Lectures"/>
+                        </button>
+                    </div>
+                    <div class="oe_title">
+                        <label for="name"/>
+                        <h1><field name="name" placeholder="ex : Réunion parents-professeurs du 2e trimestre"
+                                   readonly="state != 'draft'"/></h1>
+                    </div>
+                    <group>
+                        <group string="Destinataires">
+                            <field name="audience" widget="radio" readonly="state != 'draft'"/>
+                            <field name="level" invisible="audience != 'level'" required="audience == 'level'"
+                                   readonly="state != 'draft'"/>
+                            <field name="class_ids" widget="many2many_tags" invisible="audience != 'classes'"
+                                   required="audience == 'classes'" readonly="state != 'draft'"
+                                   options="{'no_create': True}"/>
+                            <field name="student_ids" widget="many2many_tags" invisible="audience != 'students'"
+                                   required="audience == 'students'" readonly="state != 'draft'"
+                                   options="{'no_create': True}"/>
+                            <field name="recipient_count"/>
+                        </group>
+                        <group string="Diffusion">
+                            <field name="priority" readonly="state != 'draft'"/>
+                            <field name="send_email" readonly="state != 'draft'"/>
+                            <field name="send_sms" readonly="state != 'draft'"/>
+                            <field name="send_whatsapp" readonly="state != 'draft'"/>
+                            <field name="date_publish"/>
+                            <field name="read_rate" widget="progressbar" invisible="state == 'draft'"/>
+                        </group>
+                    </group>
+                    <notebook>
+                        <page string="Message" name="body" icon="fa-envelope-o">
+                            <field name="body" readonly="state != 'draft'"
+                                   placeholder="Chers parents, ..."/>
+                        </page>
+                        <page string="Pièces jointes" name="attachments" icon="fa-paperclip">
+                            <field name="attachment_ids" widget="many2many_binary" readonly="state != 'draft'"/>
+                        </page>
+                        <page string="Familles" name="recipients" icon="fa-users">
+                            <field name="recipient_partner_ids" readonly="1">
+                                <list>
+                                    <field name="name"/>
+                                    <field name="email"/>
+                                    <field name="phone"/>
+                                </list>
+                            </field>
+                        </page>
+                    </notebook>
+                </sheet>
+                <chatter/>
+            </form>
+        </field>
+    </record>
+
+    <record id="view_eacta_announcement_search" model="ir.ui.view">
+        <field name="name">eacta.announcement.search</field>
+        <field name="model">eacta.announcement</field>
+        <field name="arch" type="xml">
+            <search string="Rechercher une annonce">
+                <field name="name"/>
+                <field name="class_ids"/>
+                <filter string="Brouillons" name="draft" domain="[('state', '=', 'draft')]"/>
+                <filter string="Publiées" name="published" domain="[('state', '=', 'published')]"/>
+                <separator/>
+                <filter string="Urgentes" name="urgent" domain="[('priority', '=', 'urgent')]"/>
+                <group expand="0" string="Regrouper par">
+                    <filter string="État" name="group_state" context="{'group_by': 'state'}"/>
+                    <filter string="Priorité" name="group_priority" context="{'group_by': 'priority'}"/>
+                </group>
+            </search>
+        </field>
+    </record>
+
+    <record id="action_eacta_announcement" model="ir.actions.act_window">
+        <field name="name">Annonces aux familles</field>
+        <field name="res_model">eacta.announcement</field>
+        <field name="view_mode">list,form</field>
+        <field name="help" type="html">
+            <p class="o_view_nocontent_smiling_face">Rédigez votre première annonce</p>
+            <p>Informez une classe, un cycle ou toute l'école : l'annonce est envoyée par email (et SMS / WhatsApp
+               si configurés), publiée sur le portail, et vous suivez qui l'a lue.</p>
+        </field>
+    </record>
+
+    <record id="view_eacta_announcement_read_list" model="ir.ui.view">
+        <field name="name">eacta.announcement.read.list</field>
+        <field name="model">eacta.announcement.read</field>
+        <field name="arch" type="xml">
+            <list string="Lectures" create="0" edit="0">
+                <field name="partner_id"/>
+                <field name="read_date"/>
+                <field name="announcement_id" optional="hide"/>
+            </list>
+        </field>
+    </record>
+
+</odoo>

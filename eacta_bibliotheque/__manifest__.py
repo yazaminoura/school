@@ -28,9 +28,8 @@ Bibliothèque NR School
         'views/eacta_student_library_views.xml',
         'views/library_desk_wizard_views.xml',
         'views/library_menu.xml',
-    ],
-    'demo': [
-        'demo/library_demo.xml',
+        # Données d'exemple (chargées à l'installation et à la mise à jour, une seule fois)
+        'data/library_demo.xml',
     ],
     'assets': {
         'web.assets_backend': [

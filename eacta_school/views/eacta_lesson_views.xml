@@ -1,0 +1,227 @@
+<?xml version="1.0" encoding="utf-8"?>
+<odoo>
+
+    <!-- ============================= SÉANCES ============================= -->
+    <record id="view_eacta_lesson_list" model="ir.ui.view">
+        <field name="name">eacta.lesson.list</field>
+        <field name="model">eacta.lesson</field>
+        <field name="arch" type="xml">
+            <list string="Cahier de textes" sample="1">
+                <field name="date"/>
+                <field name="class_id"/>
+                <field name="course_id"/>
+                <field name="name"/>
+                <field name="teacher_id" widget="many2one_avatar_user" optional="show"/>
+                <field name="homework_count" string="Devoirs" optional="show"/>
+            </list>
+        </field>
+    </record>
+
+    <record id="view_eacta_lesson_form" model="ir.ui.view">
+        <field name="name">eacta.lesson.form</field>
+        <field name="model">eacta.lesson</field>
+        <field name="arch" type="xml">
+            <form string="Séance">
+                <header>
+                    <button name="action_add_homework" string="Donner un devoir" type="object" class="btn-primary"/>
+                </header>
+                <sheet>
+                    <div class="oe_title">
+                        <label for="name"/>
+                        <h1><field name="name" placeholder="ex : Chapitre 3 - Les fractions"/></h1>
+                    </div>
+                    <group>
+                        <group>
+                            <field name="date"/>
+                            <field name="class_id" options="{'no_create': True}"/>
+                            <field name="class_course_ids" invisible="1"/>
+                            <field name="course_id" options="{'no_create': True}"/>
+                        </group>
+                        <group>
+                            <field name="teacher_id" widget="many2one_avatar_user" options="{'no_create': True}"/>
+                            <field name="slot_id" options="{'no_create': True}"/>
+                            <field name="academic_year_id"/>
+                        </group>
+                    </group>
+                    <notebook>
+                        <page string="Contenu" name="content" icon="fa-file-text-o">
+                            <field name="content" placeholder="Notions abordées, activités réalisées, remarques..."/>
+                        </page>
+                        <page string="Devoirs" name="homework" icon="fa-pencil">
+                            <field name="homework_ids" context="{'default_class_id': class_id, 'default_course_id': course_id, 'default_teacher_id': teacher_id, 'default_date_assigned': date}">
+                                <list editable="bottom">
+                                    <field name="name"/>
+                                    <field name="homework_type"/>
+                                    <field name="due_date"/>
+                                    <field name="state" widget="badge" decoration-success="state == 'published'"/>
+                                    <field name="class_id" column_invisible="1"/>
+                                    <field name="course_id" column_invisible="1"/>
+                                </list>
+                            </field>
+                        </page>
+                        <page string="Documents" name="documents" icon="fa-paperclip">
+                            <field name="attachment_ids" widget="many2many_binary"/>
+                        </page>
+                    </notebook>
+                </sheet>
+                <chatter/>
+            </form>
+        </field>
+    </record>
+
+    <record id="view_eacta_lesson_calendar" model="ir.ui.view">
+        <field name="name">eacta.lesson.calendar</field>
+        <field name="model">eacta.lesson</field>
+        <field name="arch" type="xml">
+            <calendar string="Cahier de textes" date_start="date" color="course_id" mode="week" quick_create="0">
+                <field name="class_id"/>
+                <field name="course_id"/>
+                <field name="teacher_id"/>
+            </calendar>
+        </field>
+    </record>
+
+    <record id="view_eacta_lesson_search" model="ir.ui.view">
+        <field name="name">eacta.lesson.search</field>
+        <field name="model">eacta.lesson</field>
+        <field name="arch" type="xml">
+            <search string="Rechercher une séance">
+                <field name="name"/>
+                <field name="class_id"/>
+                <field name="course_id"/>
+                <field name="teacher_id"/>
+                <filter string="Mes séances" name="my_lessons" domain="[('teacher_id', '=', uid)]"/>
+                <filter string="Cette semaine" name="this_week"
+                        domain="[('date', '&gt;=', (context_today() - relativedelta(days=7)).strftime('%Y-%m-%d'))]"/>
+                <group expand="0" string="Regrouper par">
+                    <filter string="Classe" name="group_class" context="{'group_by': 'class_id'}"/>
+                    <filter string="Matière" name="group_course" context="{'group_by': 'course_id'}"/>
+                    <filter string="Enseignant" name="group_teacher" context="{'group_by': 'teacher_id'}"/>
+                </group>
+            </search>
+        </field>
+    </record>
+
+    <record id="action_eacta_lesson" model="ir.actions.act_window">
+        <field name="name">Cahier de textes</field>
+        <field name="res_model">eacta.lesson</field>
+        <field name="view_mode">list,form,calendar</field>
+        <field name="context">{'search_default_my_lessons': 1}</field>
+        <field name="help" type="html">
+            <p class="o_view_nocontent_smiling_face">Notez votre première séance</p>
+            <p>Le cahier de textes garde la trace de chaque cours : notions vues, documents et devoirs donnés.</p>
+        </field>
+    </record>
+
+    <!-- ============================= DEVOIRS ============================= -->
+    <record id="view_eacta_homework_list" model="ir.ui.view">
+        <field name="name">eacta.homework.list</field>
+        <field name="model">eacta.homework</field>
+        <field name="arch" type="xml">
+            <list string="Devoirs" sample="1" decoration-muted="state == 'draft'" decoration-danger="days_left &lt; 0">
+                <field name="due_date"/>
+                <field name="class_id"/>
+                <field name="course_id"/>
+                <field name="name"/>
+                <field name="homework_type" optional="show"/>
+                <field name="teacher_id" widget="many2one_avatar_user" optional="show"/>
+                <field name="days_left" string="J-" optional="show"/>
+                <field name="state" widget="badge" decoration-success="state == 'published'"/>
+            </list>
+        </field>
+    </record>
+
+    <record id="view_eacta_homework_form" model="ir.ui.view">
+        <field name="name">eacta.homework.form</field>
+        <field name="model">eacta.homework</field>
+        <field name="arch" type="xml">
+            <form string="Devoir">
+                <header>
+                    <button name="action_publish" string="Publier aux familles" type="object" class="btn-primary"
+                            invisible="state != 'draft'"/>
+                    <button name="action_draft" string="Remettre en brouillon" type="object"
+                            invisible="state != 'published'"/>
+                    <field name="state" widget="statusbar"/>
+                </header>
+                <sheet>
+                    <div class="oe_title">
+                        <label for="name"/>
+                        <h1><field name="name" placeholder="ex : Exercices 4 à 7 page 52"/></h1>
+                    </div>
+                    <group>
+                        <group>
+                            <field name="class_id" options="{'no_create': True}"/>
+                            <field name="class_course_ids" invisible="1"/>
+                            <field name="course_id" options="{'no_create': True}"/>
+                            <field name="teacher_id" widget="many2one_avatar_user" options="{'no_create': True}"/>
+                            <field name="lesson_id" options="{'no_create': True}"/>
+                        </group>
+                        <group>
+                            <field name="homework_type"/>
+                            <field name="date_assigned"/>
+                            <field name="due_date"/>
+                            <field name="estimated_minutes"/>
+                        </group>
+                    </group>
+                    <notebook>
+                        <page string="Consignes" name="description" icon="fa-list-ol">
+                            <field name="description" placeholder="Consignes détaillées pour les élèves..."/>
+                        </page>
+                        <page string="Documents" name="documents" icon="fa-paperclip">
+                            <field name="attachment_ids" widget="many2many_binary"/>
+                        </page>
+                    </notebook>
+                </sheet>
+                <chatter/>
+            </form>
+        </field>
+    </record>
+
+    <record id="view_eacta_homework_calendar" model="ir.ui.view">
+        <field name="name">eacta.homework.calendar</field>
+        <field name="model">eacta.homework</field>
+        <field name="arch" type="xml">
+            <calendar string="Devoirs" date_start="due_date" color="course_id" mode="month" quick_create="0">
+                <field name="class_id"/>
+                <field name="course_id"/>
+                <field name="state"/>
+            </calendar>
+        </field>
+    </record>
+
+    <record id="view_eacta_homework_search" model="ir.ui.view">
+        <field name="name">eacta.homework.search</field>
+        <field name="model">eacta.homework</field>
+        <field name="arch" type="xml">
+            <search string="Rechercher un devoir">
+                <field name="name"/>
+                <field name="class_id"/>
+                <field name="course_id"/>
+                <field name="teacher_id"/>
+                <filter string="Mes devoirs" name="my_homework" domain="[('teacher_id', '=', uid)]"/>
+                <filter string="À venir" name="upcoming"
+                        domain="[('due_date', '&gt;=', context_today().strftime('%Y-%m-%d'))]"/>
+                <separator/>
+                <filter string="Brouillons" name="draft" domain="[('state', '=', 'draft')]"/>
+                <filter string="Publiés" name="published" domain="[('state', '=', 'published')]"/>
+                <group expand="0" string="Regrouper par">
+                    <filter string="Classe" name="group_class" context="{'group_by': 'class_id'}"/>
+                    <filter string="Matière" name="group_course" context="{'group_by': 'course_id'}"/>
+                    <filter string="Date de remise" name="group_due" context="{'group_by': 'due_date:week'}"/>
+                </group>
+            </search>
+        </field>
+    </record>
+
+    <record id="action_eacta_homework" model="ir.actions.act_window">
+        <field name="name">Devoirs</field>
+        <field name="res_model">eacta.homework</field>
+        <field name="view_mode">list,calendar,form</field>
+        <field name="context">{'search_default_upcoming': 1}</field>
+        <field name="help" type="html">
+            <p class="o_view_nocontent_smiling_face">Aucun devoir pour le moment</p>
+            <p>Les devoirs publiés apparaissent sur le portail des parents et des élèves.</p>
+        </field>
+    </record>
+
+</odoo>

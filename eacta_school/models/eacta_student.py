@@ -110,9 +110,9 @@ class EactaStudent(models.Model):
         ('B+', 'B+'), ('B-', 'B-'),
         ('AB+', 'AB+'), ('AB-', 'AB-'),
         ('O+', 'O+'), ('O-', 'O-'),
-    ], string='Groupe sanguin', groups="eacta_school.group_eacta_school_manager,eacta_school.group_eacta_school_secretary")
-    allergies = fields.Text(string='Allergies & Intolérances', groups="eacta_school.group_eacta_school_manager,eacta_school.group_eacta_school_secretary")
-    medical_notes = fields.Text(string='Suivi médical / PAI', groups="eacta_school.group_eacta_school_manager,eacta_school.group_eacta_school_secretary")
+    ], string='Groupe sanguin', groups="eacta_school.group_eacta_school_manager,eacta_school.group_eacta_school_secretary,eacta_school.group_eacta_school_nurse")
+    allergies = fields.Text(string='Allergies & Intolérances', groups="eacta_school.group_eacta_school_manager,eacta_school.group_eacta_school_secretary,eacta_school.group_eacta_school_nurse")
+    medical_notes = fields.Text(string='Suivi médical / PAI', groups="eacta_school.group_eacta_school_manager,eacta_school.group_eacta_school_secretary,eacta_school.group_eacta_school_nurse")
     transport_mode = fields.Selection([
         ('bus', 'Transport scolaire (Bus)'),
         ('parents', 'Déposé par les parents'),

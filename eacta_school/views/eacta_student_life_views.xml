@@ -1,0 +1,98 @@
+<?xml version="1.0" encoding="utf-8"?>
+<odoo>
+
+    <!-- Fiche élève : vie scolaire, santé, Massar -->
+    <record id="view_eacta_student_form_life" model="ir.ui.view">
+        <field name="name">eacta.student.form.life</field>
+        <field name="model">eacta.student</field>
+        <field name="inherit_id" ref="eacta_school.view_eacta_student_form"/>
+        <field name="arch" type="xml">
+            <xpath expr="//div[@name='button_box']" position="inside">
+                <button name="action_view_incidents" type="object" class="oe_stat_button" icon="fa-flag">
+                    <div class="o_field_widget o_stat_info">
+                        <span class="o_stat_value"><field name="conduct_score" widget="float" digits="[4, 1]"/>/20</span>
+                        <span class="o_stat_text">Conduite</span>
+                    </div>
+                </button>
+                <button name="action_view_infirmary_visits" type="object" class="oe_stat_button" icon="fa-medkit"
+                        groups="eacta_school.group_eacta_school_nurse">
+                    <field name="infirmary_visit_count" widget="statinfo" string="Infirmerie"/>
+                </button>
+            </xpath>
+            <xpath expr="//field[@name='enrollment_date']" position="before">
+                <field name="massar_code" placeholder="ex : J130000001"/>
+            </xpath>
+            <xpath expr="//field[@name='canteen']" position="after">
+                <field name="sport_exempted" invisible="not sport_exempted"/>
+            </xpath>
+            <xpath expr="//page[@name='health_emergency']" position="before">
+                <page string="Vie scolaire" name="school_life" icon="fa-flag">
+                    <field name="incident_ids" readonly="1">
+                        <list decoration-success="kind == 'positive'" decoration-muted="state == 'cancelled'">
+                            <field name="date"/>
+                            <field name="type_id"/>
+                            <field name="kind" column_invisible="1"/>
+                            <field name="points"/>
+                            <field name="description"/>
+                            <field name="sanction_count" string="Sanctions"/>
+                            <field name="state" widget="badge"/>
+                        </list>
+                    </field>
+                </page>
+            </xpath>
+            <xpath expr="//page[@name='health_emergency']" position="inside">
+                <group string="Certificats médicaux">
+                    <field name="medical_certificate_ids" nolabel="1" colspan="2"
+                           groups="eacta_school.group_eacta_school_nurse,eacta_school.group_eacta_school_secretary">
+                        <list editable="bottom">
+                            <field name="certificate_type"/>
+                            <field name="date_from"/>
+                            <field name="date_to"/>
+                            <field name="doctor_name"/>
+                            <field name="attachment_filename" column_invisible="1"/>
+                            <field name="attachment" filename="attachment_filename" widget="binary"/>
+                            <field name="is_valid" string="En cours"/>
+                        </list>
+                    </field>
+                </group>
+                <group string="Vaccinations" groups="eacta_school.group_eacta_school_nurse">
+                    <field name="vaccination_ids" nolabel="1" colspan="2">
+                        <list editable="bottom">
+                            <field name="vaccine"/>
+                            <field name="dose"/>
+                            <field name="date"/>
+                            <field name="next_due_date"/>
+                        </list>
+                    </field>
+                </group>
+            </xpath>
+        </field>
+    </record>
+
+    <!-- Fiche classe : cahier de textes -->
+    <record id="view_eacta_class_form_life" model="ir.ui.view">
+        <field name="name">eacta.class.form.life</field>
+        <field name="model">eacta.class</field>
+        <field name="inherit_id" ref="eacta_school.view_eacta_class_form"/>
+        <field name="arch" type="xml">
+            <xpath expr="//div[@name='button_box']" position="inside">
+                <button name="action_view_lessons" type="object" class="oe_stat_button" icon="fa-book"
+                        string="Cahier de textes"/>
+            </xpath>
+        </field>
+    </record>
+
+    <!-- Liste des élèves : code Massar -->
+    <record id="view_eacta_student_search_massar" model="ir.ui.view">
+        <field name="name">eacta.student.search.massar</field>
+        <field name="model">eacta.student</field>
+        <field name="inherit_id" ref="eacta_school.view_eacta_student_search"/>
+        <field name="arch" type="xml">
+            <xpath expr="//search" position="inside">
+                <field name="massar_code"/>
+                <filter string="Sans code Massar" name="no_massar" domain="[('massar_code', '=', False)]"/>
+            </xpath>
+        </field>
+    </record>
+
+</odoo>

@@ -1,5 +1,12 @@
 <?xml version="1.0" encoding="utf-8"?>
 <odoo>
+    <!-- Réutilise les enregistrements déjà présents (même nom, code, ISBN...) au lieu de les dupliquer -->
+    <data>
+        <function model="eacta.student" name="_sample_data_adopt">
+            <value>eacta_bibliotheque</value>
+            <value>eacta_bibliotheque/data/library_demo.xml</value>
+        </function>
+    </data>
     <data noupdate="1">
 
         <record id="demo_cat_novel" model="library.book.category"><field name="name">Romans</field><field name="color">1</field></record>
@@ -63,6 +70,83 @@
             <field name="shelf_location">J-05</field><field name="total_quantity">4</field>
         </record>
 
+        <record id="demo_cat_comics" model="library.book.category"><field name="name">Bandes dessinées</field><field name="color">9</field></record>
+        <record id="demo_cat_arabic" model="library.book.category"><field name="name">Littérature arabe</field><field name="color">2</field></record>
+        <record id="demo_book_boite_merveilles" model="library.book">
+            <field name="name">La Boîte à merveilles</field><field name="author">Ahmed Sefrioui</field>
+            <field name="isbn">9789954000123</field><field name="category_id" ref="demo_cat_novel"/>
+            <field name="shelf_location">R-11</field><field name="total_quantity">3</field>
+        </record>
+        <record id="demo_book_jour_roi" model="library.book">
+            <field name="name">Le Jour du Roi</field><field name="author">Abdellah Taïa</field>
+            <field name="isbn">9782020956134</field><field name="category_id" ref="demo_cat_novel"/>
+            <field name="shelf_location">R-12</field><field name="total_quantity">2</field>
+        </record>
+        <record id="demo_book_ayyam" model="library.book">
+            <field name="name">الأيام</field><field name="author">طه حسين</field>
+            <field name="isbn">9789953881013</field><field name="category_id" ref="demo_cat_arabic"/>
+            <field name="shelf_location">A-01</field><field name="total_quantity">3</field><field name="language">ar</field>
+        </record>
+        <record id="demo_book_kalila" model="library.book">
+            <field name="name">كليلة ودمنة</field><field name="author">ابن المقفع</field>
+            <field name="isbn">9789953290044</field><field name="category_id" ref="demo_cat_arabic"/>
+            <field name="shelf_location">A-02</field><field name="total_quantity">4</field><field name="language">ar</field>
+        </record>
+        <record id="demo_book_asterix" model="library.book">
+            <field name="name">Astérix le Gaulois</field><field name="author">René Goscinny, Albert Uderzo</field>
+            <field name="isbn">9782012101333</field><field name="category_id" ref="demo_cat_comics"/>
+            <field name="shelf_location">BD-01</field><field name="total_quantity">3</field>
+        </record>
+        <record id="demo_book_tintin" model="library.book">
+            <field name="name">Tintin au pays de l'or noir</field><field name="author">Hergé</field>
+            <field name="isbn">9782203001145</field><field name="category_id" ref="demo_cat_comics"/>
+            <field name="shelf_location">BD-02</field><field name="total_quantity">2</field>
+        </record>
+        <record id="demo_book_petit_nicolas" model="library.book">
+            <field name="name">Le Petit Nicolas</field><field name="author">René Goscinny, Jean-Jacques Sempé</field>
+            <field name="isbn">9782070612765</field><field name="category_id" ref="demo_cat_youth"/>
+            <field name="shelf_location">J-07</field><field name="total_quantity">4</field>
+        </record>
+        <record id="demo_book_jules_verne" model="library.book">
+            <field name="name">Le Tour du monde en 80 jours</field><field name="author">Jules Verne</field>
+            <field name="isbn">9782253012689</field><field name="category_id" ref="demo_cat_youth"/>
+            <field name="shelf_location">J-09</field><field name="total_quantity">3</field>
+        </record>
+        <record id="demo_book_physique" model="library.book">
+            <field name="name">Physique-Chimie 3e</field><field name="author">Nathan</field>
+            <field name="isbn">9782091729701</field><field name="category_id" ref="demo_cat_science"/>
+            <field name="shelf_location">S-04</field><field name="total_quantity">6</field><field name="loan_duration_days">30</field>
+        </record>
+        <record id="demo_book_svt" model="library.book">
+            <field name="name">SVT - Sciences de la vie et de la Terre 4e</field><field name="author">Belin Éducation</field>
+            <field name="isbn">9782410012415</field><field name="category_id" ref="demo_cat_science"/>
+            <field name="shelf_location">S-05</field><field name="total_quantity">5</field><field name="loan_duration_days">30</field>
+        </record>
+        <record id="demo_book_atlas" model="library.book">
+            <field name="name">Atlas du Maroc</field><field name="author">Éditions Marsam</field>
+            <field name="isbn">9789954213448</field><field name="category_id" ref="demo_cat_history"/>
+            <field name="shelf_location">H-05</field><field name="total_quantity">2</field>
+        </record>
+        <record id="demo_book_ibn_battuta" model="library.book">
+            <field name="name">Les Voyages d'Ibn Battûta</field><field name="author">Ibn Battûta</field>
+            <field name="isbn">9782742706501</field><field name="category_id" ref="demo_cat_history"/>
+            <field name="shelf_location">H-06</field><field name="total_quantity">2</field>
+        </record>
+        <record id="demo_book_oxford" model="library.book">
+            <field name="name">Oxford Pocket Dictionary</field><field name="author">Oxford University Press</field>
+            <field name="isbn">9780194398398</field><field name="category_id" ref="demo_cat_lang"/>
+            <field name="shelf_location">L-03</field><field name="total_quantity">5</field><field name="language">en</field>
+        </record>
+        <record id="demo_book_espanol" model="library.book">
+            <field name="name">Español en marcha 1</field><field name="author">SGEL</field>
+            <field name="isbn">9788497783712</field><field name="category_id" ref="demo_cat_lang"/>
+            <field name="shelf_location">L-05</field><field name="total_quantity">3</field><field name="language">es</field>
+        </record>
+
+    </data>
+
+    <!-- Générateurs (hors noupdate) : relancés à chaque mise à jour, ils ne s'exécutent qu'une fois -->
+    <data>
         <function model="library.loan" name="_generate_demo_loans"/>
     </data>
 </odoo>

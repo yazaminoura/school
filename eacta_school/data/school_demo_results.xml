@@ -1,5 +1,12 @@
 <?xml version="1.0" encoding="utf-8"?>
 <odoo>
+    <!-- Réutilise les enregistrements déjà présents (même nom, code, ISBN...) au lieu de les dupliquer -->
+    <data>
+        <function model="eacta.student" name="_sample_data_adopt">
+            <value>eacta_school</value>
+            <value>eacta_school/data/school_demo_results.xml</value>
+        </function>
+    </data>
     <data noupdate="1">
 
         <record id="demo_teacher_amina" model="res.users">
@@ -26,8 +33,11 @@
             <field name="groups_id" eval="[(4, ref('base.group_user')), (4, ref('eacta_school.group_eacta_school_user'))]"/>
         </record>
 
+    </data>
+
+    <!-- Générateurs (hors noupdate) : relancés à chaque mise à jour, ils ne s'exécutent qu'une fois -->
+    <data>
         <!-- Affecte cours / enseignants, crée examens et notes de démonstration -->
         <function model="eacta.exam" name="_eacta_generate_demo_results"/>
-
     </data>
 </odoo>

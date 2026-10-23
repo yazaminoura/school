@@ -1,0 +1,79 @@
+<?xml version="1.0" encoding="utf-8"?>
+<odoo>
+    <!-- Réutilise les enregistrements déjà présents (même nom, code, ISBN...) au lieu de les dupliquer -->
+    <data>
+        <function model="eacta.student" name="_sample_data_adopt">
+            <value>eacta_school</value>
+            <value>eacta_school/data/school_demo_life.xml</value>
+        </function>
+    </data>
+    <data noupdate="1">
+
+        <!-- Lignes de transport supplémentaires -->
+        <record id="demo_transport_line_2" model="eacta.transport.line">
+            <field name="name">Ligne 2 - Agdal / Hay Riad</field>
+            <field name="code">L2</field>
+            <field name="vehicle_name">Renault Master - 48213-A-1</field>
+            <field name="driver_name">Abdelaziz Berrada</field>
+            <field name="driver_phone">+212 662 000222</field>
+            <field name="capacity">22</field>
+            <field name="note">Départ Agdal 07h20, retour 17h30 (mercredi 13h00).</field>
+        </record>
+        <record id="demo_transport_stop_2_1" model="eacta.transport.stop">
+            <field name="name">Arrêt Place Ibn Yassine</field>
+            <field name="line_id" ref="demo_transport_line_2"/>
+            <field name="sequence">1</field>
+            <field name="time_morning">07:20</field>
+            <field name="time_evening">17:30</field>
+            <field name="location">Agdal, face à la pharmacie</field>
+        </record>
+        <record id="demo_transport_stop_2_2" model="eacta.transport.stop">
+            <field name="name">Arrêt Avenue Annakhil</field>
+            <field name="line_id" ref="demo_transport_line_2"/>
+            <field name="sequence">2</field>
+            <field name="time_morning">07:35</field>
+            <field name="time_evening">17:15</field>
+            <field name="location">Hay Riad, centre commercial</field>
+        </record>
+        <record id="demo_transport_stop_2_3" model="eacta.transport.stop">
+            <field name="name">Arrêt Mahaj Riad</field>
+            <field name="line_id" ref="demo_transport_line_2"/>
+            <field name="sequence">3</field>
+            <field name="time_morning">07:50</field>
+            <field name="time_evening">17:00</field>
+        </record>
+
+        <record id="demo_transport_line_3" model="eacta.transport.line">
+            <field name="name">Ligne 3 - Salé / Témara</field>
+            <field name="code">L3</field>
+            <field name="vehicle_name">Iveco Daily - 30517-A-6</field>
+            <field name="driver_name">Mustapha Chraibi</field>
+            <field name="driver_phone">+212 662 000333</field>
+            <field name="capacity">16</field>
+        </record>
+        <record id="demo_transport_stop_3_1" model="eacta.transport.stop">
+            <field name="name">Arrêt Bab Lamrissa</field>
+            <field name="line_id" ref="demo_transport_line_3"/>
+            <field name="sequence">1</field>
+            <field name="time_morning">07:05</field>
+            <field name="time_evening">17:45</field>
+            <field name="location">Salé, médina</field>
+        </record>
+        <record id="demo_transport_stop_3_2" model="eacta.transport.stop">
+            <field name="name">Arrêt Témara Centre</field>
+            <field name="line_id" ref="demo_transport_line_3"/>
+            <field name="sequence">2</field>
+            <field name="time_morning">07:30</field>
+            <field name="time_evening">17:20</field>
+        </record>
+
+    </data>
+
+    <!-- Générateurs (hors noupdate) : relancés à chaque mise à jour, ils ne s'exécutent qu'une fois -->
+    <data>
+        <!-- Transport, cantine, assiduité des dernières semaines et bulletins du trimestre -->
+        <function model="eacta.student" name="_generate_demo_life"/>
+        <!-- Cahier de textes, vie scolaire, annonces, santé, cantine, Massar et personnel -->
+        <function model="eacta.student" name="_generate_demo_extras"/>
+    </data>
+</odoo>

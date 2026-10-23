@@ -1,5 +1,12 @@
 <?xml version="1.0" encoding="utf-8"?>
 <odoo>
+    <!-- Réutilise les enregistrements déjà présents (même nom, code, ISBN...) au lieu de les dupliquer -->
+    <data>
+        <function model="eacta.student" name="_sample_data_adopt">
+            <value>eacta_school</value>
+            <value>eacta_school/data/school_demo_courses_students.xml</value>
+        </function>
+    </data>
     <data noupdate="1">
         <!-- Course Category -->
         <record id="eacta_school.category_default" model="eacta.course.category">
@@ -118,8 +125,8 @@
         <!-- Transport scolaire de démonstration -->
         <record id="demo_transport_line_1" model="eacta.transport.line">
             <field name="name">Ligne 1 - Centre Ville / Hassan</field>
-            <field name="vehicle_name">Mercedes Sprinter</field>
-            <field name="license_plate">12345-A-1</field>
+            <field name="code">L1</field>
+            <field name="vehicle_name">Mercedes Sprinter - 12345-A-1</field>
             <field name="driver_name">Karim Tazi</field>
             <field name="driver_phone">+212 662 000111</field>
             <field name="capacity">18</field>
@@ -129,16 +136,16 @@
             <field name="name">Arrêt Gare Rabat-Ville</field>
             <field name="line_id" ref="demo_transport_line_1"/>
             <field name="sequence">1</field>
-            <field name="morning_time">7.45</field>
-            <field name="evening_time">16.45</field>
+            <field name="time_morning">07:45</field>
+            <field name="time_evening">16:45</field>
         </record>
 
         <record id="demo_transport_stop_2" model="eacta.transport.stop">
             <field name="name">Arrêt Bab Rouah</field>
             <field name="line_id" ref="demo_transport_line_1"/>
             <field name="sequence">2</field>
-            <field name="morning_time">8.00</field>
-            <field name="evening_time">16.30</field>
+            <field name="time_morning">08:00</field>
+            <field name="time_evening">16:30</field>
         </record>
 
         <!-- Existing Students (25) -->

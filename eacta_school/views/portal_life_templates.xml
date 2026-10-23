@@ -1,0 +1,236 @@
+<?xml version="1.0" encoding="utf-8"?>
+<odoo>
+
+    <!-- Fil d'Ariane des nouvelles pages -->
+    <template id="portal_breadcrumbs_school_life" name="Fil d'ariane Vie scolaire" inherit_id="portal.portal_breadcrumbs" priority="31">
+        <xpath expr="//ol[hasclass('o_portal_submenu')]" position="inside">
+            <li t-if="page_name in ('school_announcements', 'school_announcement', 'school_canteen', 'student_homework', 'student_life')"
+                class="breadcrumb-item"><a href="/my/school">Espace Scolaire</a></li>
+            <li t-if="student and page_name in ('student_homework', 'student_life')" class="breadcrumb-item">
+                <a t-attf-href="/my/school/student/#{student.id}"><t t-out="student.name"/></a>
+            </li>
+            <li t-if="page_name == 'school_announcement'" class="breadcrumb-item">
+                <a href="/my/school/announcements">Annonces</a>
+            </li>
+            <li t-if="page_name == 'school_announcements'" class="breadcrumb-item active">Annonces</li>
+            <li t-if="page_name == 'school_announcement'" class="breadcrumb-item active"><t t-out="announcement.name"/></li>
+            <li t-if="page_name == 'school_canteen'" class="breadcrumb-item active">Menus de la cantine</li>
+            <li t-if="page_name == 'student_homework'" class="breadcrumb-item active">Devoirs</li>
+            <li t-if="page_name == 'student_life'" class="breadcrumb-item active">Vie scolaire</li>
+        </xpath>
+    </template>
+
+    <!-- Accueil de l'espace scolaire : dernières annonces et raccourcis -->
+    <template id="portal_my_school_life" name="Espace Scolaire - Annonces" inherit_id="eacta_school.portal_my_school">
+        <xpath expr="//div[hasclass('container')]/div[1]" position="after">
+            <div class="d-flex flex-wrap gap-2 mb-4">
+                <a href="/my/school/announcements" class="btn btn-outline-primary btn-sm">
+                    <i class="fa fa-bullhorn me-1"/> Annonces de l'école
+                </a>
+                <a href="/my/school/canteen" class="btn btn-outline-primary btn-sm">
+                    <i class="fa fa-cutlery me-1"/> Menus de la cantine
+                </a>
+            </div>
+            <div t-if="announcements" class="card shadow-sm border-0 mb-4">
+                <div class="card-header bg-white fw-bold"><i class="fa fa-bullhorn me-2 text-primary"/>Dernières annonces</div>
+                <ul class="list-group list-group-flush">
+                    <li t-foreach="announcements" t-as="ann" class="list-group-item d-flex align-items-center gap-2">
+                        <span t-if="ann.priority == 'urgent'" class="badge bg-danger">Urgent</span>
+                        <span t-elif="ann.priority == 'important'" class="badge bg-warning text-dark">Important</span>
+                        <a t-attf-href="/my/school/announcement/#{ann.id}"
+                           t-attf-class="flex-grow-1 text-decoration-none #{'fw-bold' if ann.id not in read_announcement_ids else 'text-muted'}">
+                            <t t-out="ann.name"/>
+                        </a>
+                        <small class="text-muted" t-out="ann.date_publish" t-options="{'widget': 'date'}"/>
+                    </li>
+                </ul>
+            </div>
+        </xpath>
+    </template>
+
+    <!-- Cartes supplémentaires sur le tableau de bord de l'élève -->
+    <template id="portal_student_detail_life" name="Tableau de bord élève - Devoirs et vie scolaire" inherit_id="eacta_school.portal_student_detail">
+        <xpath expr="//div[hasclass('row')][hasclass('g-3')]" position="inside">
+            <div class="col-sm-6 col-lg-3">
+                <a t-attf-href="/my/school/student/#{student.id}/homework" class="text-decoration-none">
+                    <div class="card h-100 shadow-sm border-0 p-3 text-center">
+                        <i class="fa fa-pencil fa-2x text-info mb-2"></i>
+                        <h5 class="card-title text-dark mb-1">Devoirs</h5>
+                        <p class="text-muted small mb-0">Travail à faire à la maison</p>
+                    </div>
+                </a>
+            </div>
+            <div class="col-sm-6 col-lg-3">
+                <a t-attf-href="/my/school/student/#{student.id}/life" class="text-decoration-none">
+                    <div class="card h-100 shadow-sm border-0 p-3 text-center">
+                        <i class="fa fa-flag fa-2x text-secondary mb-2"></i>
+                        <h5 class="card-title text-dark mb-1">Vie scolaire</h5>
+                        <span class="badge bg-secondary-subtle text-secondary mb-0">
+                            Conduite : <t t-out="'%.1f' % student.conduct_score"/>/20
+                        </span>
+                    </div>
+                </a>
+            </div>
+        </xpath>
+    </template>
+
+    <!-- Liste des annonces -->
+    <template id="portal_announcements" name="Annonces de l'école">
+        <t t-call="portal.portal_layout">
+            <div class="container py-4">
+                <h3 class="text-primary mb-3"><i class="fa fa-bullhorn me-2"></i>Annonces de l'école</h3>
+                <div t-if="not announcements" class="alert alert-info text-center py-4">Aucune annonce pour le moment.</div>
+                <div t-foreach="announcements" t-as="ann" class="card shadow-sm border-0 mb-3">
+                    <div class="card-body">
+                        <div class="d-flex align-items-center gap-2 mb-1">
+                            <span t-if="ann.priority == 'urgent'" class="badge bg-danger">Urgent</span>
+                            <span t-elif="ann.priority == 'important'" class="badge bg-warning text-dark">Important</span>
+                            <span t-if="ann.id not in read_announcement_ids" class="badge bg-primary">Nouveau</span>
+                            <small class="text-muted ms-auto" t-out="ann.date_publish" t-options="{'widget': 'date'}"/>
+                        </div>
+                        <h5 class="mb-2">
+                            <a t-attf-href="/my/school/announcement/#{ann.id}" class="text-decoration-none" t-out="ann.name"/>
+                        </h5>
+                        <a t-attf-href="/my/school/announcement/#{ann.id}" class="btn btn-sm btn-outline-primary">Lire</a>
+                    </div>
+                </div>
+            </div>
+        </t>
+    </template>
+
+    <!-- Détail d'une annonce -->
+    <template id="portal_announcement_detail" name="Annonce">
+        <t t-call="portal.portal_layout">
+            <div class="container py-4">
+                <div class="card shadow-sm border-0">
+                    <div class="card-body p-4">
+                        <div class="d-flex align-items-center gap-2 mb-2">
+                            <span t-if="announcement.priority == 'urgent'" class="badge bg-danger">Urgent</span>
+                            <span t-elif="announcement.priority == 'important'" class="badge bg-warning text-dark">Important</span>
+                            <small class="text-muted ms-auto">Publiée le <t t-out="announcement.date_publish" t-options="{'widget': 'datetime'}"/></small>
+                        </div>
+                        <h3 class="mb-3" t-out="announcement.name"/>
+                        <div t-out="announcement.body"/>
+                        <div t-if="announcement.sudo().attachment_ids" class="mt-4">
+                            <h6>Pièces jointes</h6>
+                            <ul class="list-unstyled">
+                                <li t-foreach="announcement.sudo().attachment_ids" t-as="att">
+                                    <a t-attf-href="/web/content/#{att.id}?download=true&amp;access_token=#{att.sudo().generate_access_token()[0]}">
+                                        <i class="fa fa-paperclip me-1"/><t t-out="att.name"/>
+                                    </a>
+                                </li>
+                            </ul>
+                        </div>
+                    </div>
+                </div>
+                <a href="/my/school/announcements" class="btn btn-outline-secondary btn-sm mt-3">Retour aux annonces</a>
+            </div>
+        </t>
+    </template>
+
+    <!-- Menus de la cantine -->
+    <template id="portal_canteen" name="Menus de la cantine">
+        <t t-call="portal.portal_layout">
+            <div class="container py-4">
+                <h3 class="text-primary mb-3"><i class="fa fa-cutlery me-2"></i>Menus de la cantine</h3>
+                <div t-if="not menus" class="alert alert-info text-center py-4">Les menus des deux prochaines semaines ne sont pas encore publiés.</div>
+                <div class="row g-3">
+                    <div t-foreach="menus" t-as="menu" class="col-md-6 col-lg-4">
+                        <div class="card h-100 shadow-sm border-0">
+                            <div class="card-header bg-white">
+                                <strong t-out="menu.weekday"/> <span t-out="menu.date" t-options="{'widget': 'date'}"/>
+                                <span class="badge bg-light text-dark ms-1" t-out="dict(menu._fields['meal'].selection).get(menu.meal)"/>
+                            </div>
+                            <div class="card-body">
+                                <div t-if="menu.starter"><small class="text-muted">Entrée</small><div t-out="menu.starter"/></div>
+                                <div class="mt-2"><small class="text-muted">Plat</small><div class="fw-bold" t-out="menu.main_course"/></div>
+                                <div t-if="menu.vegetarian_option" class="mt-2"><small class="text-muted">Option végétarienne</small><div t-out="menu.vegetarian_option"/></div>
+                                <div t-if="menu.dessert" class="mt-2"><small class="text-muted">Dessert</small><div t-out="menu.dessert"/></div>
+                                <div t-if="menu.allergens" class="mt-2 small text-danger"><i class="fa fa-exclamation-triangle me-1"/>Allergènes : <t t-out="menu.allergens"/></div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </t>
+    </template>
+
+    <!-- Devoirs de l'élève -->
+    <template id="portal_student_homework" name="Devoirs de l'élève">
+        <t t-call="portal.portal_layout">
+            <div class="container py-4">
+                <div class="d-flex justify-content-between align-items-center mb-3">
+                    <h3 class="text-primary mb-0"><i class="fa fa-pencil me-2"></i>Devoirs : <t t-out="student.name"/></h3>
+                    <a t-attf-href="/my/school/student/#{student.id}" class="btn btn-outline-secondary btn-sm">Retour</a>
+                </div>
+                <h5 class="mt-3">À faire</h5>
+                <div t-if="not upcoming" class="alert alert-success">Aucun devoir à rendre pour le moment.</div>
+                <div t-foreach="upcoming" t-as="hw" class="card shadow-sm border-0 mb-2">
+                    <div class="card-body">
+                        <div class="d-flex flex-wrap align-items-center gap-2">
+                            <span class="badge bg-primary-subtle text-primary" t-out="hw.course_id.name"/>
+                            <strong t-out="hw.name"/>
+                            <span t-attf-class="badge ms-auto #{'bg-danger' if hw.days_left &lt;= 1 else 'bg-light text-dark'}">
+                                Pour le <t t-out="hw.due_date" t-options="{'widget': 'date'}"/>
+                            </span>
+                        </div>
+                        <div t-if="hw.description" class="mt-2 small" t-out="hw.description"/>
+                        <div t-if="hw.sudo().attachment_ids" class="mt-2">
+                            <a t-foreach="hw.sudo().attachment_ids" t-as="att" class="me-3 small"
+                               t-attf-href="/web/content/#{att.id}?download=true&amp;access_token=#{att.sudo().generate_access_token()[0]}">
+                                <i class="fa fa-paperclip me-1"/><t t-out="att.name"/>
+                            </a>
+                        </div>
+                    </div>
+                </div>
+                <h5 t-if="past" class="mt-4">Devoirs passés</h5>
+                <table t-if="past" class="table table-sm">
+                    <tbody>
+                        <tr t-foreach="past" t-as="hw">
+                            <td class="text-muted" t-out="hw.due_date" t-options="{'widget': 'date'}"/>
+                            <td t-out="hw.course_id.name"/>
+                            <td t-out="hw.name"/>
+                        </tr>
+                    </tbody>
+                </table>
+            </div>
+        </t>
+    </template>
+
+    <!-- Vie scolaire de l'élève -->
+    <template id="portal_student_life" name="Vie scolaire de l'élève">
+        <t t-call="portal.portal_layout">
+            <div class="container py-4">
+                <div class="d-flex justify-content-between align-items-center mb-3">
+                    <h3 class="text-primary mb-0"><i class="fa fa-flag me-2"></i>Vie scolaire : <t t-out="student.name"/></h3>
+                    <a t-attf-href="/my/school/student/#{student.id}" class="btn btn-outline-secondary btn-sm">Retour</a>
+                </div>
+                <div class="card bg-light border-0 text-center p-3 mb-4">
+                    <h2 class="mb-0"><t t-out="'%.1f' % student.conduct_score"/> / 20</h2>
+                    <small class="text-muted">Note de conduite de l'année</small>
+                </div>
+                <div t-if="not incidents" class="alert alert-success text-center py-4">Aucun fait de vie scolaire enregistré.</div>
+                <table t-if="incidents" class="table table-hover align-middle">
+                    <thead>
+                        <tr><th>Date</th><th>Fait</th><th>Détail</th><th>Mesure</th></tr>
+                    </thead>
+                    <tbody>
+                        <tr t-foreach="incidents" t-as="inc">
+                            <td t-out="inc.date" t-options="{'widget': 'date'}"/>
+                            <td>
+                                <span t-attf-class="badge #{'bg-success' if inc.kind == 'positive' else 'bg-warning text-dark'}" t-out="inc.type_id.name"/>
+                            </td>
+                            <td class="small" t-out="inc.description"/>
+                            <td class="small">
+                                <t t-foreach="inc.sanction_ids" t-as="sanction">
+                                    <div t-out="dict(sanction._fields['sanction_type'].selection).get(sanction.sanction_type)"/>
+                                </t>
+                            </td>
+                        </tr>
+                    </tbody>
+                </table>
+            </div>
+        </t>
+    </template>
+
+</odoo>

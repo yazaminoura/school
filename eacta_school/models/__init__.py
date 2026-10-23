@@ -15,3 +15,11 @@ from . import eacta_timetable
 from . import eacta_fee
 from . import eacta_notification
 from . import eacta_transport
+from . import eacta_lesson
+from . import eacta_discipline
+from . import eacta_announcement
+from . import eacta_health
+from . import eacta_canteen
+from . import eacta_massar
+from . import eacta_staff
+from . import eacta_demo

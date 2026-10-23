@@ -1,5 +1,12 @@
 <?xml version="1.0" encoding="utf-8"?>
 <odoo>
+    <!-- Réutilise les enregistrements déjà présents (même nom, code, ISBN...) au lieu de les dupliquer -->
+    <data>
+        <function model="eacta.student" name="_sample_data_adopt">
+            <value>eacta_school</value>
+            <value>eacta_school/data/school_demo_classes.xml</value>
+        </function>
+    </data>
     <data noupdate="1">
         <!-- Academic Years -->
         <record id="academic_year_2023_2024" model="eacta.academic.year">
@@ -18,14 +25,15 @@
             <field name="name">2026-2027</field>
             <field name="date_start">2026-09-01</field>
             <field name="date_end">2027-06-30</field>
-            <field name="state">open</field>
+            <!-- Ouverte par le générateur seulement si aucune autre année n'est ouverte -->
+            <field name="state">draft</field>
         </record>
 
         <!-- Terms for 2026-2027 -->
         <record id="term_1_2026" model="eacta.term">
             <field name="name">1er Trimestre</field>
             <field name="sequence">1</field>
-            <field name="year_id" ref="academic_year_2026_2027"/>
+            <field name="academic_year_id" ref="academic_year_2026_2027"/>
             <field name="date_start">2026-09-01</field>
             <field name="date_end">2026-11-30</field>
             <field name="weight">1.0</field>
@@ -33,7 +41,7 @@
         <record id="term_2_2026" model="eacta.term">
             <field name="name">2ème Trimestre</field>
             <field name="sequence">2</field>
-            <field name="year_id" ref="academic_year_2026_2027"/>
+            <field name="academic_year_id" ref="academic_year_2026_2027"/>
             <field name="date_start">2026-12-01</field>
             <field name="date_end">2027-02-28</field>
             <field name="weight">1.0</field>
@@ -41,7 +49,7 @@
         <record id="term_3_2026" model="eacta.term">
             <field name="name">3ème Trimestre</field>
             <field name="sequence">3</field>
-            <field name="year_id" ref="academic_year_2026_2027"/>
+            <field name="academic_year_id" ref="academic_year_2026_2027"/>
             <field name="date_start">2027-03-01</field>
             <field name="date_end">2027-06-30</field>
             <field name="weight">1.0</field>

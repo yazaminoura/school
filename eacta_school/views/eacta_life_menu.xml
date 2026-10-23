@@ -1,0 +1,61 @@
+<?xml version="1.0" encoding="utf-8"?>
+<odoo>
+
+    <!-- Pédagogie : cahier de textes et devoirs -->
+    <menuitem id="menu_eacta_lesson" name="Cahier de textes" parent="menu_eacta_school_pedagogie"
+              action="action_eacta_lesson" sequence="7"/>
+    <menuitem id="menu_eacta_homework" name="Devoirs" parent="menu_eacta_school_pedagogie"
+              action="action_eacta_homework" sequence="8"/>
+
+    <!-- Vie scolaire -->
+    <menuitem id="menu_eacta_school_life" name="Vie scolaire" parent="menu_eacta_school_root" sequence="15"/>
+    <menuitem id="menu_eacta_discipline_incident" name="Incidents &amp; comportements" parent="menu_eacta_school_life"
+              action="action_eacta_discipline_incident" sequence="10"/>
+    <menuitem id="menu_eacta_discipline_sanction" name="Sanctions" parent="menu_eacta_school_life"
+              action="action_eacta_discipline_sanction" sequence="20"
+              groups="eacta_school.group_eacta_school_secretary"/>
+    <menuitem id="menu_eacta_announcement" name="Annonces aux familles" parent="menu_eacta_school_life"
+              action="action_eacta_announcement" sequence="30"
+              groups="eacta_school.group_eacta_school_secretary"/>
+
+    <!-- Santé -->
+    <menuitem id="menu_eacta_school_health" name="Santé" parent="menu_eacta_school_root" sequence="30"
+              groups="eacta_school.group_eacta_school_nurse,eacta_school.group_eacta_school_secretary"/>
+    <menuitem id="menu_eacta_infirmary_visit" name="Passages à l'infirmerie" parent="menu_eacta_school_health"
+              action="action_eacta_infirmary_visit" sequence="10" groups="eacta_school.group_eacta_school_nurse"/>
+    <menuitem id="menu_eacta_vaccination" name="Vaccinations" parent="menu_eacta_school_health"
+              action="action_eacta_vaccination" sequence="20" groups="eacta_school.group_eacta_school_nurse"/>
+    <menuitem id="menu_eacta_medical_certificate" name="Certificats médicaux" parent="menu_eacta_school_health"
+              action="action_eacta_medical_certificate" sequence="30"/>
+
+    <!-- Cantine -->
+    <menuitem id="menu_eacta_school_canteen" name="Cantine" parent="menu_eacta_school_root" sequence="35"
+              groups="eacta_school.group_eacta_school_secretary,eacta_school.group_eacta_school_finance"/>
+    <menuitem id="menu_eacta_canteen_count" name="Effectif du jour" parent="menu_eacta_school_canteen"
+              action="action_eacta_canteen_count_wizard" sequence="5"
+              groups="eacta_school.group_eacta_school_secretary"/>
+    <menuitem id="menu_eacta_canteen_menu" name="Menus" parent="menu_eacta_school_canteen"
+              action="action_eacta_canteen_menu" sequence="10"/>
+    <menuitem id="menu_eacta_canteen_subscription" name="Abonnements" parent="menu_eacta_school_canteen"
+              action="action_eacta_canteen_subscription" sequence="20"/>
+
+    <!-- Personnel & paie -->
+    <menuitem id="menu_eacta_school_staff" name="Personnel" parent="menu_eacta_school_root" sequence="45"
+              groups="eacta_school.group_eacta_school_finance"/>
+    <menuitem id="menu_eacta_staff_contract" name="Contrats" parent="menu_eacta_school_staff"
+              action="action_eacta_staff_contract" sequence="10"/>
+    <menuitem id="menu_eacta_payslip" name="Bulletins de paie" parent="menu_eacta_school_staff"
+              action="action_eacta_payslip" sequence="20"/>
+    <menuitem id="menu_eacta_payslip_generate" name="Générer les bulletins du mois" parent="menu_eacta_school_staff"
+              action="action_eacta_payslip_generate_wizard" sequence="30"/>
+
+    <!-- Export Massar -->
+    <menuitem id="menu_eacta_massar_export" name="Export Massar" parent="menu_eacta_school_scolarite"
+              action="action_eacta_massar_export_wizard" sequence="95"
+              groups="eacta_school.group_eacta_school_secretary"/>
+
+    <!-- Configuration -->
+    <menuitem id="menu_eacta_discipline_incident_type" name="Types d'incident" parent="menu_eacta_school_config"
+              action="action_eacta_discipline_incident_type" sequence="45"/>
+
+</odoo>

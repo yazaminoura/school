@@ -3,6 +3,7 @@ from datetime import timedelta
 
 from odoo import api, fields, models
 from odoo.exceptions import UserError
+from .sample_data import sample_data_step
 
 EXAM_TYPES = [
     ('quiz', 'Contrôle continu'),
@@ -207,6 +208,8 @@ class EactaExam(models.Model):
     @api.model
     def _eacta_generate_demo_results(self):
         """Lie cours et classes de démo, puis génère examens et notes (déterministe)."""
+        if not sample_data_step(self.env, 'results', 'eacta.exam'):
+            return
         self = self.with_context(tracking_disable=True, mail_create_nolog=True, mail_notrack=True)
         rng = random.Random(2026)
         ref = lambda xmlid: self.env.ref(f'eacta_school.{xmlid}', raise_if_not_found=False)
@@ -230,7 +233,8 @@ class EactaExam(models.Model):
         classes = self.env['eacta.class'].search([('id', 'in', [
             c.id for c in (ref(x) for x in ('class_1a_2023', 'class_1b_2023', 'class_2a_2023', 'class_2b_2023',
                                             'class_3a_2024', 'class_3b_2024', 'class_4a_2024', 'class_4b_2024',
-                                            'class_6a_2026', 'class_6b_2026')) if c
+                                            'class_5a_2026', 'class_5b_2026', 'class_6a_2026',
+                                            'class_6b_2026')) if c
         ])])
         today = fields.Date.context_today(self)
         for n, klass in enumerate(classes):
@@ -255,14 +259,17 @@ class EactaExam(models.Model):
             for course in klass.course_ids:
                 difficulty = rng.uniform(-1.5, 1.2)
                 for label, exam_type, date in sessions:
+                    exam_date = fields.Date.to_date(date)
                     exam = self.create({
                         'name': f'{label} - {course.name}',
                         'course_id': course.id,
                         'class_ids': [(6, 0, klass.ids)],
                         'exam_type': exam_type,
-                        'date': fields.Date.to_date(date),
-                        'state': 'done',
+                        'date': exam_date,
+                        'state': 'done' if exam_date <= today else 'draft',
                     })
+                    if exam_date > today:
+                        continue  # examen à venir : planifié, sans notes
                     vals_list = []
                     for student in klass.student_ids:
                         if rng.random() < 0.03:

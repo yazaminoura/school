@@ -1,0 +1,56 @@
+<?xml version="1.0" encoding="utf-8"?>
+<odoo>
+
+    <record id="view_eacta_massar_export_wizard_form" model="ir.ui.view">
+        <field name="name">eacta.massar.export.wizard.form</field>
+        <field name="model">eacta.massar.export.wizard</field>
+        <field name="arch" type="xml">
+            <form string="Export Massar">
+                <field name="state" invisible="1"/>
+                <div invisible="state != 'draft'">
+                    <p class="text-muted">
+                        Génère un classeur Excel par classe (et par matière pour les notes), avec le code Massar,
+                        le nom et le prénom de chaque élève, prêt à être reporté dans Massar.
+                    </p>
+                    <group>
+                        <group>
+                            <field name="export_type" widget="radio"/>
+                            <field name="academic_year_id" options="{'no_create': True}"/>
+                            <field name="term_id" invisible="export_type != 'grades'" options="{'no_create': True}"
+                                   placeholder="Vide = moyenne annuelle"/>
+                        </group>
+                        <group>
+                            <field name="class_ids" widget="many2many_tags" options="{'no_create': True}"
+                                   placeholder="Toutes les classes de l'année"/>
+                            <field name="course_ids" widget="many2many_tags" invisible="export_type != 'grades'"
+                                   options="{'no_create': True}"/>
+                        </group>
+                    </group>
+                    <div class="alert alert-warning" role="alert" invisible="not missing_code_count">
+                        <i class="fa fa-exclamation-triangle me-1"/>
+                        <field name="missing_code_count" class="oe_inline"/> élève(s) n'ont pas encore de code
+                        Massar : leur ligne sera surlignée dans le fichier.
+                    </div>
+                </div>
+                <div invisible="state != 'done'">
+                    <p>Le fichier est prêt :</p>
+                    <field name="file_name" invisible="1"/>
+                    <field name="file_data" filename="file_name" readonly="1"/>
+                </div>
+                <footer>
+                    <button name="action_export" string="Générer le fichier" type="object" class="btn-primary"
+                            invisible="state != 'draft'"/>
+                    <button string="Fermer" class="btn-secondary" special="cancel"/>
+                </footer>
+            </form>
+        </field>
+    </record>
+
+    <record id="action_eacta_massar_export_wizard" model="ir.actions.act_window">
+        <field name="name">Export Massar</field>
+        <field name="res_model">eacta.massar.export.wizard</field>
+        <field name="view_mode">form</field>
+        <field name="target">new</field>
+    </record>
+
+</odoo>

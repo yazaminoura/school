@@ -1,5 +1,7 @@
+from datetime import timedelta
+
 import werkzeug
-from odoo import http, _
+from odoo import fields, http, _
 from odoo.http import request
 from odoo.exceptions import AccessError, UserError, MissingError
 from odoo.addons.portal.controllers.portal import CustomerPortal
@@ -39,12 +41,107 @@ class SchoolCustomerPortal(CustomerPortal):
     def portal_my_school(self, **kwargs):
         # Strictement sans sudo()
         students = request.env['eacta.student'].search([])
+        announcements = request.env['eacta.announcement'].search([], order='date_publish desc', limit=3)
+        read_ids = request.env['eacta.announcement.read'].sudo().search([
+            ('announcement_id', 'in', announcements.ids), ('partner_id', '=', request.env.user.partner_id.id),
+        ]).announcement_id.ids
         values = self._prepare_portal_layout_values()
         values.update({
             'students': students,
+            'announcements': announcements,
+            'read_announcement_ids': read_ids,
             'page_name': 'school_dashboard',
         })
         return request.render('eacta_school.portal_my_school', values)
+
+    # -------------------------------------------------------------------------
+    # ANNONCES DE L'ÉTABLISSEMENT
+    # -------------------------------------------------------------------------
+    @http.route(['/my/school/announcements'], type='http', auth='user', website=True)
+    def portal_announcements(self, **kwargs):
+        # Les règles d'enregistrement ne laissent voir que les annonces publiées destinées à la famille
+        announcements = request.env['eacta.announcement'].search([], order='date_publish desc')
+        read_ids = request.env['eacta.announcement.read'].sudo().search([
+            ('announcement_id', 'in', announcements.ids), ('partner_id', '=', request.env.user.partner_id.id),
+        ]).announcement_id.ids
+        values = self._prepare_portal_layout_values()
+        values.update({
+            'announcements': announcements,
+            'read_announcement_ids': read_ids,
+            'page_name': 'school_announcements',
+        })
+        return request.render('eacta_school.portal_announcements', values)
+
+    @http.route(['/my/school/announcement/<int:announcement_id>'], type='http', auth='user', website=True)
+    def portal_announcement_detail(self, announcement_id, **kwargs):
+        announcement = request.env['eacta.announcement'].browse(announcement_id)
+        if not announcement.exists():
+            raise werkzeug.exceptions.NotFound()
+        try:
+            announcement.check_access('read')
+            _name = announcement.name
+        except (AccessError, UserError):
+            raise werkzeug.exceptions.Forbidden()
+        announcement._mark_read(request.env.user.partner_id)
+        values = self._prepare_portal_layout_values()
+        values.update({
+            'announcement': announcement,
+            'page_name': 'school_announcement',
+        })
+        return request.render('eacta_school.portal_announcement_detail', values)
+
+    # -------------------------------------------------------------------------
+    # MENUS DE LA CANTINE
+    # -------------------------------------------------------------------------
+    @http.route(['/my/school/canteen'], type='http', auth='user', website=True)
+    def portal_canteen(self, **kwargs):
+        today = fields.Date.context_today(request.env.user)
+        menus = request.env['eacta.canteen.menu'].search([
+            ('date', '>=', today), ('date', '<=', today + timedelta(days=13)),
+        ], order='date, meal')
+        values = self._prepare_portal_layout_values()
+        values.update({
+            'menus': menus,
+            'page_name': 'school_canteen',
+        })
+        return request.render('eacta_school.portal_canteen', values)
+
+    # -------------------------------------------------------------------------
+    # DEVOIRS DE L'ÉLÈVE
+    # -------------------------------------------------------------------------
+    @http.route(['/my/school/student/<int:student_id>/homework'], type='http', auth='user', website=True)
+    def portal_student_homework(self, student_id, **kwargs):
+        student = self._get_student_or_forbidden(student_id)
+        today = fields.Date.context_today(request.env.user)
+        Homework = request.env['eacta.homework']
+        domain = [('class_id', '=', student.current_class_id.id)] if student.current_class_id else [('id', '=', 0)]
+        upcoming = Homework.search(domain + [('due_date', '>=', today)], order='due_date asc')
+        past = Homework.search(domain + [('due_date', '<', today)], order='due_date desc', limit=20)
+        values = self._prepare_portal_layout_values()
+        values.update({
+            'student': student,
+            'upcoming': upcoming,
+            'past': past,
+            'page_name': 'student_homework',
+        })
+        return request.render('eacta_school.portal_student_homework', values)
+
+    # -------------------------------------------------------------------------
+    # VIE SCOLAIRE DE L'ÉLÈVE
+    # -------------------------------------------------------------------------
+    @http.route(['/my/school/student/<int:student_id>/life'], type='http', auth='user', website=True)
+    def portal_student_life(self, student_id, **kwargs):
+        student = self._get_student_or_forbidden(student_id)
+        incidents = request.env['eacta.discipline.incident'].search([
+            ('student_id', '=', student.id),
+        ], order='date desc')
+        values = self._prepare_portal_layout_values()
+        values.update({
+            'student': student,
+            'incidents': incidents,
+            'page_name': 'student_life',
+        })
+        return request.render('eacta_school.portal_student_life', values)
 
     # -------------------------------------------------------------------------
     # 2. VUE DÉTAILLÉE D'UN ÉLÈVE

@@ -2,6 +2,7 @@ from datetime import datetime, time, timedelta
 
 from odoo import api, fields, models
 from odoo.exceptions import UserError, ValidationError
+from odoo.addons.eacta_school.models.sample_data import sample_data_step, sample_records
 
 EVENT_TYPES = [
     ('outing', 'Sortie pédagogique'),
@@ -265,8 +266,11 @@ class EactaSchoolEvent(models.Model):
 
     @api.model
     def _generate_demo_events(self):
+        if not sample_data_step(self.env, 'events', 'eacta.school.event'):
+            return
         self = self.with_context(tracking_disable=True, mail_create_nolog=True, mail_notrack=True)
-        classes = self.env['eacta.class'].search([], order='year desc, name')
+        # Même ordre que « year desc, name » : nom croissant, puis année décroissante (tri stable)
+        classes = sample_records(self.env, 'eacta.class').sorted('name').sorted(lambda c: c.year or '', reverse=True)
         if not classes:
             return
         today = fields.Date.context_today(self)
@@ -276,6 +280,13 @@ class EactaSchoolEvent(models.Model):
             ('Réunion parents-professeurs du 1er trimestre', 'meeting', 5, 'Salle polyvalente', 0, 0.0, classes, 'confirmed'),
             ('Cérémonie de fin d\'année', 'ceremony', 45, 'Amphithéâtre', 300, 0.0, classes, 'draft'),
             ('Atelier robotique', 'conference', -15, 'Laboratoire', 24, 30.0, classes[2:3], 'done'),
+            ('Voyage culturel à Marrakech', 'trip', 32, 'Marrakech', 45, 1200.0, classes[:2], 'confirmed'),
+            ('Semaine des sciences', 'cultural', 18, 'Laboratoire & CDI', 60, 0.0, classes[:4], 'confirmed'),
+            ('Cross solidaire', 'sport', -30, 'Forêt de la Maâmora', 0, 20.0, classes[:4], 'done'),
+            ('Conférence : bien utiliser Internet', 'conference', -8, 'Amphithéâtre', 80, 0.0, classes[2:4], 'done'),
+            ('Sortie au Jardin d\'essais botaniques', 'outing', 9, 'Rabat', 30, 25.0, classes[3:4], 'confirmed'),
+            ('Journée du théâtre', 'cultural', 25, 'Salle polyvalente', 0, 0.0, classes[:3], 'draft'),
+            ('Réunion parents-professeurs du 2e trimestre', 'meeting', 70, 'Salle polyvalente', 0, 0.0, classes, 'draft'),
         ]
         for name, etype, offset, place, cap, fee, klasses, state in demos:
             start = datetime.combine(today + timedelta(days=offset), time(9, 0))

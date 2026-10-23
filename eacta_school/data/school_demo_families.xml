@@ -1,0 +1,35 @@
+<?xml version="1.0" encoding="utf-8"?>
+<odoo>
+    <!-- Réutilise les enregistrements déjà présents (même nom, code, ISBN...) au lieu de les dupliquer -->
+    <data>
+        <function model="eacta.student" name="_sample_data_adopt">
+            <value>eacta_school</value>
+            <value>eacta_school/data/school_demo_families.xml</value>
+        </function>
+    </data>
+    <data noupdate="1">
+
+        <!-- Classes supplémentaires de l'année en cours (accueillent les élèves de 2024-2025) -->
+        <record id="eacta_school.class_5a_2026" model="eacta.class">
+            <field name="name">Classe 5A</field>
+            <field name="level">secondary</field>
+            <field name="capacity">25</field>
+            <field name="academic_year_id" ref="academic_year_2026_2027"/>
+            <field name="year">2026-2027</field>
+        </record>
+        <record id="eacta_school.class_5b_2026" model="eacta.class">
+            <field name="name">Classe 5B</field>
+            <field name="level">secondary</field>
+            <field name="capacity">25</field>
+            <field name="academic_year_id" ref="academic_year_2026_2027"/>
+            <field name="year">2026-2027</field>
+        </record>
+
+    </data>
+
+    <!-- Générateurs (hors noupdate) : relancés à chaque mise à jour, ils ne s'exécutent qu'une fois -->
+    <data>
+        <!-- Rentrée 2026-2027 et familles (parents partagés entre frères et sœurs) -->
+        <function model="eacta.student" name="_generate_demo_families"/>
+    </data>
+</odoo>

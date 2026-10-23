@@ -376,5 +376,92 @@
             <field name="groups" eval="[(4, ref('base.group_portal'))]"/>
         </record>
 
+        <!-- Cahier de textes, devoirs, vie scolaire, annonces -->
+        <record id="rule_school_teacher_lesson" model="ir.rule">
+            <field name="name">NR School (Enseignant) : ses séances et celles de ses classes</field>
+            <field name="model_id" ref="model_eacta_lesson"/>
+            <field name="domain_force">['|', ('teacher_id', '=', user.id), ('class_id.teacher_id', '=', user.id)]</field>
+            <field name="groups" eval="[(4, ref('eacta_school.group_eacta_school_teacher'))]"/>
+        </record>
+
+        <record id="rule_school_staff_lesson" model="ir.rule">
+            <field name="name">NR School (Secrétariat / Direction) : tout le cahier de textes</field>
+            <field name="model_id" ref="model_eacta_lesson"/>
+            <field name="domain_force">[(1, '=', 1)]</field>
+            <field name="groups" eval="[(4, ref('eacta_school.group_eacta_school_secretary'))]"/>
+        </record>
+
+        <record id="rule_school_teacher_homework" model="ir.rule">
+            <field name="name">NR School (Enseignant) : ses devoirs et ceux de ses classes</field>
+            <field name="model_id" ref="model_eacta_homework"/>
+            <field name="domain_force">['|', ('teacher_id', '=', user.id), ('class_id.teacher_id', '=', user.id)]</field>
+            <field name="groups" eval="[(4, ref('eacta_school.group_eacta_school_teacher'))]"/>
+        </record>
+
+        <record id="rule_school_staff_homework" model="ir.rule">
+            <field name="name">NR School (Secrétariat / Direction) : tous les devoirs</field>
+            <field name="model_id" ref="model_eacta_homework"/>
+            <field name="domain_force">[(1, '=', 1)]</field>
+            <field name="groups" eval="[(4, ref('eacta_school.group_eacta_school_secretary'))]"/>
+        </record>
+
+        <record id="rule_school_portal_homework" model="ir.rule">
+            <field name="name">NR School (Portail) : devoirs publiés de la classe de ses enfants</field>
+            <field name="model_id" ref="model_eacta_homework"/>
+            <field name="domain_force">['&amp;', ('state', '=', 'published'), '|', '|', ('class_id.student_ids.parent_ids', 'in', [user.partner_id.id]), ('class_id.student_ids.user_id', '=', user.id), ('class_id.student_ids.partner_id', '=', user.partner_id.id)]</field>
+            <field name="perm_read" eval="True"/>
+            <field name="perm_write" eval="False"/>
+            <field name="perm_create" eval="False"/>
+            <field name="perm_unlink" eval="False"/>
+            <field name="groups" eval="[(4, ref('base.group_portal'))]"/>
+        </record>
+
+        <record id="rule_school_teacher_incident" model="ir.rule">
+            <field name="name">NR School (Enseignant) : incidents signalés ou de ses classes</field>
+            <field name="model_id" ref="model_eacta_discipline_incident"/>
+            <field name="domain_force">['|', ('reported_by', '=', user.id), ('class_id.teacher_id', '=', user.id)]</field>
+            <field name="groups" eval="[(4, ref('eacta_school.group_eacta_school_teacher'))]"/>
+        </record>
+
+        <record id="rule_school_staff_incident" model="ir.rule">
+            <field name="name">NR School (Secrétariat / Direction) : toute la vie scolaire</field>
+            <field name="model_id" ref="model_eacta_discipline_incident"/>
+            <field name="domain_force">[(1, '=', 1)]</field>
+            <field name="groups" eval="[(4, ref('eacta_school.group_eacta_school_secretary'))]"/>
+        </record>
+
+        <record id="rule_school_portal_incident" model="ir.rule">
+            <field name="name">NR School (Portail) : vie scolaire validée de ses enfants</field>
+            <field name="model_id" ref="model_eacta_discipline_incident"/>
+            <field name="domain_force">['&amp;', ('state', 'in', ('confirmed', 'closed')), '|', '|', ('student_id.parent_ids', 'in', [user.partner_id.id]), ('student_id.user_id', '=', user.id), ('student_id.partner_id', '=', user.partner_id.id)]</field>
+            <field name="perm_read" eval="True"/>
+            <field name="perm_write" eval="False"/>
+            <field name="perm_create" eval="False"/>
+            <field name="perm_unlink" eval="False"/>
+            <field name="groups" eval="[(4, ref('base.group_portal'))]"/>
+        </record>
+
+        <record id="rule_school_portal_sanction" model="ir.rule">
+            <field name="name">NR School (Portail) : sanctions de ses enfants</field>
+            <field name="model_id" ref="model_eacta_discipline_sanction"/>
+            <field name="domain_force">['|', '|', ('student_id.parent_ids', 'in', [user.partner_id.id]), ('student_id.user_id', '=', user.id), ('student_id.partner_id', '=', user.partner_id.id)]</field>
+            <field name="perm_read" eval="True"/>
+            <field name="perm_write" eval="False"/>
+            <field name="perm_create" eval="False"/>
+            <field name="perm_unlink" eval="False"/>
+            <field name="groups" eval="[(4, ref('base.group_portal'))]"/>
+        </record>
+
+        <record id="rule_school_portal_announcement" model="ir.rule">
+            <field name="name">NR School (Portail) : annonces publiées qui lui sont destinées</field>
+            <field name="model_id" ref="model_eacta_announcement"/>
+            <field name="domain_force">[('state', '=', 'published'), ('recipient_partner_ids', 'in', [user.partner_id.id])]</field>
+            <field name="perm_read" eval="True"/>
+            <field name="perm_write" eval="False"/>
+            <field name="perm_create" eval="False"/>
+            <field name="perm_unlink" eval="False"/>
+            <field name="groups" eval="[(4, ref('base.group_portal'))]"/>
+        </record>
+
     </data>
 </odoo>

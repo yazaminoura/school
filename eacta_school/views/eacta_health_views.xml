@@ -1,0 +1,178 @@
+<?xml version="1.0" encoding="utf-8"?>
+<odoo>
+
+    <!-- ============================= PASSAGES ============================= -->
+    <record id="view_eacta_infirmary_visit_list" model="ir.ui.view">
+        <field name="name">eacta.infirmary.visit.list</field>
+        <field name="model">eacta.infirmary.visit</field>
+        <field name="arch" type="xml">
+            <list string="Infirmerie" sample="1" decoration-danger="outcome in ('sent_home', 'hospital')"
+                  decoration-warning="follow_up">
+                <field name="visit_datetime"/>
+                <field name="name" optional="hide"/>
+                <field name="student_id" widget="many2one_avatar"/>
+                <field name="class_id"/>
+                <field name="reason"/>
+                <field name="temperature" optional="show"/>
+                <field name="outcome" widget="badge" decoration-success="outcome == 'back_to_class'"
+                       decoration-danger="outcome in ('sent_home', 'hospital')"/>
+                <field name="parent_notified" string="Parents" optional="show"/>
+                <field name="follow_up" optional="show"/>
+                <field name="nurse_id" widget="many2one_avatar_user" optional="hide"/>
+            </list>
+        </field>
+    </record>
+
+    <record id="view_eacta_infirmary_visit_form" model="ir.ui.view">
+        <field name="name">eacta.infirmary.visit.form</field>
+        <field name="model">eacta.infirmary.visit</field>
+        <field name="arch" type="xml">
+            <form string="Passage à l'infirmerie">
+                <header>
+                    <button name="action_notify_parents" string="Prévenir les parents" type="object"
+                            class="btn-primary" invisible="parent_notified"/>
+                </header>
+                <sheet>
+                    <field name="student_image" widget="image" class="oe_avatar"/>
+                    <div class="oe_title">
+                        <h1><field name="name" readonly="1"/></h1>
+                    </div>
+                    <group>
+                        <group string="Élève">
+                            <field name="student_id" widget="many2one_avatar" options="{'no_create': True}"/>
+                            <field name="class_id" options="{'no_create': True}"/>
+                            <field name="visit_datetime"/>
+                            <field name="duration_minutes"/>
+                        </group>
+                        <group string="Bilan">
+                            <field name="reason"/>
+                            <field name="temperature"/>
+                            <field name="outcome"/>
+                            <field name="parent_notified"/>
+                            <field name="follow_up"/>
+                            <field name="nurse_id"/>
+                        </group>
+                    </group>
+                    <div class="alert alert-warning" role="alert" invisible="not allergies and not medical_notes">
+                        <strong><i class="fa fa-exclamation-triangle me-1"/>Informations médicales</strong>
+                        <div invisible="not allergies">Allergies : <field name="allergies" readonly="1" class="oe_inline"/></div>
+                        <div invisible="not medical_notes">PAI / suivi : <field name="medical_notes" readonly="1" class="oe_inline"/></div>
+                    </div>
+                    <group>
+                        <field name="symptoms" placeholder="Ce que l'élève décrit, ce que vous constatez..."/>
+                        <field name="treatment" placeholder="Soins apportés..."/>
+                        <field name="medication_given"/>
+                    </group>
+                </sheet>
+                <chatter/>
+            </form>
+        </field>
+    </record>
+
+    <record id="view_eacta_infirmary_visit_pivot" model="ir.ui.view">
+        <field name="name">eacta.infirmary.visit.pivot</field>
+        <field name="model">eacta.infirmary.visit</field>
+        <field name="arch" type="xml">
+            <pivot string="Analyse de l'infirmerie" sample="1">
+                <field name="reason" type="row"/>
+                <field name="visit_datetime" interval="month" type="col"/>
+            </pivot>
+        </field>
+    </record>
+
+    <record id="view_eacta_infirmary_visit_search" model="ir.ui.view">
+        <field name="name">eacta.infirmary.visit.search</field>
+        <field name="model">eacta.infirmary.visit</field>
+        <field name="arch" type="xml">
+            <search string="Rechercher un passage">
+                <field name="student_id"/>
+                <field name="class_id"/>
+                <field name="reason"/>
+                <filter string="Aujourd'hui" name="today"
+                        domain="[('visit_datetime', '&gt;=', context_today().strftime('%Y-%m-%d 00:00:00'))]"/>
+                <filter string="Suivi nécessaire" name="follow_up" domain="[('follow_up', '=', True)]"/>
+                <filter string="Parents non prévenus" name="not_notified" domain="[('parent_notified', '=', False)]"/>
+                <group expand="0" string="Regrouper par">
+                    <filter string="Classe" name="group_class" context="{'group_by': 'class_id'}"/>
+                    <filter string="Motif" name="group_reason" context="{'group_by': 'reason'}"/>
+                    <filter string="Jour" name="group_day" context="{'group_by': 'visit_datetime:day'}"/>
+                </group>
+            </search>
+        </field>
+    </record>
+
+    <record id="action_eacta_infirmary_visit" model="ir.actions.act_window">
+        <field name="name">Passages à l'infirmerie</field>
+        <field name="res_model">eacta.infirmary.visit</field>
+        <field name="view_mode">list,form,pivot</field>
+        <field name="help" type="html">
+            <p class="o_view_nocontent_smiling_face">Aucun passage enregistré</p>
+            <p>Notez chaque passage : motif, soins, suite donnée. Les allergies et le PAI de l'élève s'affichent
+               automatiquement.</p>
+        </field>
+    </record>
+
+    <!-- ============================= VACCINATIONS ============================= -->
+    <record id="view_eacta_vaccination_list" model="ir.ui.view">
+        <field name="name">eacta.vaccination.list</field>
+        <field name="model">eacta.vaccination</field>
+        <field name="arch" type="xml">
+            <list string="Vaccinations" editable="bottom">
+                <field name="student_id" widget="many2one_avatar"/>
+                <field name="vaccine"/>
+                <field name="dose"/>
+                <field name="date"/>
+                <field name="next_due_date"/>
+                <field name="note" optional="show"/>
+            </list>
+        </field>
+    </record>
+
+    <record id="view_eacta_vaccination_search" model="ir.ui.view">
+        <field name="name">eacta.vaccination.search</field>
+        <field name="model">eacta.vaccination</field>
+        <field name="arch" type="xml">
+            <search string="Rechercher une vaccination">
+                <field name="student_id"/>
+                <field name="vaccine"/>
+                <filter string="Rappel dans les 30 jours" name="due_soon"
+                        domain="[('next_due_date', '&lt;=', (context_today() + relativedelta(days=30)).strftime('%Y-%m-%d'))]"/>
+                <group expand="0" string="Regrouper par">
+                    <filter string="Vaccin" name="group_vaccine" context="{'group_by': 'vaccine'}"/>
+                </group>
+            </search>
+        </field>
+    </record>
+
+    <record id="action_eacta_vaccination" model="ir.actions.act_window">
+        <field name="name">Vaccinations</field>
+        <field name="res_model">eacta.vaccination</field>
+        <field name="view_mode">list</field>
+    </record>
+
+    <!-- ============================= CERTIFICATS ============================= -->
+    <record id="view_eacta_medical_certificate_list" model="ir.ui.view">
+        <field name="name">eacta.medical.certificate.list</field>
+        <field name="model">eacta.medical.certificate</field>
+        <field name="arch" type="xml">
+            <list string="Certificats médicaux" editable="bottom" decoration-muted="not is_valid">
+                <field name="student_id" widget="many2one_avatar"/>
+                <field name="certificate_type"/>
+                <field name="date_from"/>
+                <field name="date_to"/>
+                <field name="doctor_name" optional="show"/>
+                <field name="attachment_filename" column_invisible="1"/>
+                <field name="attachment" filename="attachment_filename" widget="binary"/>
+                <field name="is_valid" string="En cours"/>
+                <field name="note" optional="hide"/>
+            </list>
+        </field>
+    </record>
+
+    <record id="action_eacta_medical_certificate" model="ir.actions.act_window">
+        <field name="name">Certificats médicaux</field>
+        <field name="res_model">eacta.medical.certificate</field>
+        <field name="view_mode">list</field>
+    </record>
+
+</odoo>

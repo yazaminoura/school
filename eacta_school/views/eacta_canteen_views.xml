@@ -1,0 +1,183 @@
+<?xml version="1.0" encoding="utf-8"?>
+<odoo>
+
+    <!-- ============================= MENUS ============================= -->
+    <record id="view_eacta_canteen_menu_list" model="ir.ui.view">
+        <field name="name">eacta.canteen.menu.list</field>
+        <field name="model">eacta.canteen.menu</field>
+        <field name="arch" type="xml">
+            <list string="Menus de la cantine" editable="bottom" sample="1">
+                <field name="date"/>
+                <field name="weekday"/>
+                <field name="meal"/>
+                <field name="starter"/>
+                <field name="main_course"/>
+                <field name="vegetarian_option" optional="show"/>
+                <field name="dessert"/>
+                <field name="allergens" optional="show"/>
+                <field name="note" optional="hide"/>
+            </list>
+        </field>
+    </record>
+
+    <record id="view_eacta_canteen_menu_calendar" model="ir.ui.view">
+        <field name="name">eacta.canteen.menu.calendar</field>
+        <field name="model">eacta.canteen.menu</field>
+        <field name="arch" type="xml">
+            <calendar string="Menus" date_start="date" mode="week" color="meal" quick_create="0">
+                <field name="main_course"/>
+                <field name="dessert"/>
+            </calendar>
+        </field>
+    </record>
+
+    <record id="view_eacta_canteen_menu_search" model="ir.ui.view">
+        <field name="name">eacta.canteen.menu.search</field>
+        <field name="model">eacta.canteen.menu</field>
+        <field name="arch" type="xml">
+            <search string="Rechercher un menu">
+                <field name="main_course"/>
+                <filter string="À venir" name="upcoming"
+                        domain="[('date', '&gt;=', context_today().strftime('%Y-%m-%d'))]"/>
+            </search>
+        </field>
+    </record>
+
+    <record id="action_eacta_canteen_menu" model="ir.actions.act_window">
+        <field name="name">Menus</field>
+        <field name="res_model">eacta.canteen.menu</field>
+        <field name="view_mode">list,calendar</field>
+        <field name="context">{'search_default_upcoming': 1}</field>
+        <field name="help" type="html">
+            <p class="o_view_nocontent_smiling_face">Saisissez les menus de la semaine</p>
+            <p>Les menus sont publiés sur le portail des familles.</p>
+        </field>
+    </record>
+
+    <!-- ============================= ABONNEMENTS ============================= -->
+    <record id="view_eacta_canteen_subscription_list" model="ir.ui.view">
+        <field name="name">eacta.canteen.subscription.list</field>
+        <field name="model">eacta.canteen.subscription</field>
+        <field name="arch" type="xml">
+            <list string="Abonnements cantine" sample="1" decoration-muted="state != 'active'">
+                <field name="student_id" widget="many2one_avatar"/>
+                <field name="class_id"/>
+                <field name="plan"/>
+                <field name="date_start"/>
+                <field name="date_end" optional="show"/>
+                <field name="monthly_price" sum="Total mensuel"/>
+                <field name="currency_id" column_invisible="1"/>
+                <field name="diet_note" optional="show"/>
+                <field name="state" widget="badge" decoration-success="state == 'active'"
+                       decoration-warning="state == 'suspended'"/>
+            </list>
+        </field>
+    </record>
+
+    <record id="view_eacta_canteen_subscription_form" model="ir.ui.view">
+        <field name="name">eacta.canteen.subscription.form</field>
+        <field name="model">eacta.canteen.subscription</field>
+        <field name="arch" type="xml">
+            <form string="Abonnement cantine">
+                <header>
+                    <button name="action_generate_month_fee" string="Facturer le mois" type="object"
+                            class="btn-primary" invisible="state != 'active' or monthly_price == 0"
+                            groups="eacta_school.group_eacta_school_finance,eacta_school.group_eacta_school_manager"/>
+                    <button name="action_suspend" string="Suspendre" type="object" invisible="state != 'active'"/>
+                    <button name="action_resume" string="Réactiver" type="object" invisible="state != 'suspended'"/>
+                    <button name="action_end" string="Terminer" type="object" invisible="state == 'ended'"/>
+                    <field name="state" widget="statusbar"/>
+                </header>
+                <sheet>
+                    <div class="oe_button_box" name="button_box">
+                        <button name="action_view_fees" type="object" class="oe_stat_button" icon="fa-money"
+                                groups="eacta_school.group_eacta_school_finance,eacta_school.group_eacta_school_manager">
+                            <field name="fee_count" widget="statinfo" string="Frais"/>
+                        </button>
+                    </div>
+                    <group>
+                        <group>
+                            <field name="student_id" widget="many2one_avatar" options="{'no_create': True}"/>
+                            <field name="class_id"/>
+                            <field name="academic_year_id" options="{'no_create': True}"/>
+                            <field name="diet_note"/>
+                        </group>
+                        <group>
+                            <field name="plan"/>
+                            <field name="monthly_price"/>
+                            <field name="currency_id" invisible="1"/>
+                            <field name="date_start"/>
+                            <field name="date_end"/>
+                        </group>
+                    </group>
+                </sheet>
+                <chatter/>
+            </form>
+        </field>
+    </record>
+
+    <record id="view_eacta_canteen_subscription_search" model="ir.ui.view">
+        <field name="name">eacta.canteen.subscription.search</field>
+        <field name="model">eacta.canteen.subscription</field>
+        <field name="arch" type="xml">
+            <search string="Rechercher un abonnement">
+                <field name="student_id"/>
+                <field name="class_id"/>
+                <filter string="Actifs" name="active_subs" domain="[('state', '=', 'active')]"/>
+                <filter string="Avec régime" name="with_diet" domain="[('diet_note', '!=', False)]"/>
+                <group expand="0" string="Regrouper par">
+                    <filter string="Classe" name="group_class" context="{'group_by': 'class_id'}"/>
+                    <filter string="Formule" name="group_plan" context="{'group_by': 'plan'}"/>
+                </group>
+            </search>
+        </field>
+    </record>
+
+    <record id="action_eacta_canteen_subscription" model="ir.actions.act_window">
+        <field name="name">Abonnements cantine</field>
+        <field name="res_model">eacta.canteen.subscription</field>
+        <field name="view_mode">list,form</field>
+        <field name="context">{'search_default_active_subs': 1}</field>
+    </record>
+
+    <!-- ============================= EFFECTIF DU JOUR ============================= -->
+    <record id="view_eacta_canteen_count_wizard_form" model="ir.ui.view">
+        <field name="name">eacta.canteen.count.wizard.form</field>
+        <field name="model">eacta.canteen.count.wizard</field>
+        <field name="arch" type="xml">
+            <form string="Effectif cantine du jour">
+                <group>
+                    <group>
+                        <field name="date"/>
+                        <field name="menu_id" readonly="1"/>
+                    </group>
+                    <group>
+                        <field name="total_expected" readonly="1" class="fs-3 fw-bold"/>
+                    </group>
+                </group>
+                <field name="line_ids" readonly="1">
+                    <list>
+                        <field name="class_id"/>
+                        <field name="subscribed" sum="Inscrits"/>
+                        <field name="absent" sum="Absents"/>
+                        <field name="expected" sum="Repas"/>
+                    </list>
+                </field>
+                <group string="Régimes particuliers" invisible="not diet_summary">
+                    <field name="diet_summary" nolabel="1" colspan="2" readonly="1"/>
+                </group>
+                <footer>
+                    <button string="Fermer" class="btn-secondary" special="cancel"/>
+                </footer>
+            </form>
+        </field>
+    </record>
+
+    <record id="action_eacta_canteen_count_wizard" model="ir.actions.act_window">
+        <field name="name">Effectif du jour</field>
+        <field name="res_model">eacta.canteen.count.wizard</field>
+        <field name="view_mode">form</field>
+        <field name="target">new</field>
+    </record>
+
+</odoo>

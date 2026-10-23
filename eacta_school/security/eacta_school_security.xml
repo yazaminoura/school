@@ -35,6 +35,13 @@
             <field name="implied_ids" eval="[(4, ref('group_eacta_school_user'))]"/>
         </record>
 
+        <!-- Groupe Infirmerie -->
+        <record id="group_eacta_school_nurse" model="res.groups">
+            <field name="name">Infirmerie</field>
+            <field name="category_id" ref="module_category_eacta_school"/>
+            <field name="implied_ids" eval="[(4, ref('group_eacta_school_user'))]"/>
+        </record>
+
         <!-- Groupe Direction / Direction Pédagogique -->
         <record id="group_eacta_school_direction" model="res.groups">
             <field name="name">Direction</field>
@@ -46,7 +53,7 @@
         <record id="group_eacta_school_manager" model="res.groups">
             <field name="name">Administration (Manager)</field>
             <field name="category_id" ref="module_category_eacta_school"/>
-            <field name="implied_ids" eval="[(4, ref('group_eacta_school_direction')), (4, ref('group_eacta_school_finance'))]"/>
+            <field name="implied_ids" eval="[(4, ref('group_eacta_school_direction')), (4, ref('group_eacta_school_finance')), (4, ref('group_eacta_school_nurse'))]"/>
             <field name="users" eval="[(4, ref('base.user_root')), (4, ref('base.user_admin'))]"/>
         </record>
 

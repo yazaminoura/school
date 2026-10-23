@@ -1,6 +1,8 @@
 <?xml version="1.0" encoding="utf-8"?>
 <odoo>
-    <data noupdate="1">
+
+    <!-- Générateurs (hors noupdate) : relancés à chaque mise à jour, ils ne s'exécutent qu'une fois -->
+    <data>
         <function model="eacta.school.event" name="_generate_demo_events"/>
     </data>
 </odoo>

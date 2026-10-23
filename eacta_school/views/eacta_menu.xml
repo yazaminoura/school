@@ -8,7 +8,7 @@
 
     <menuitem id="menu_eacta_school_root"
               name="NR School"
-              sequence="50"
+              sequence="0"
               action="action_eacta_school_dashboard"
               web_icon="eacta_school,static/src/img/nr_school_icon.png"
               groups="eacta_school.group_eacta_school_user"/>

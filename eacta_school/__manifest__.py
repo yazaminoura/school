@@ -1,6 +1,6 @@
 {
     'name': 'NR School',
-    'version': '18.0.5.0',
+    'version': '18.0.6.0',
     'summary': 'Gestion scolaire : élèves, classes, cours, examens, notes, assiduité et attestations',
     'description': """
 NR School - Gestion scolaire
@@ -27,6 +27,7 @@ NR School - Gestion scolaire
         'data/eacta_school_config_data.xml',
         'data/eacta_school_finance_data.xml',
         'data/eacta_school_attendance_data.xml',
+        'data/eacta_school_life_data.xml',
         'reports/report_assets.xml',
         'reports/student_report.xml',
         'reports/student_certificate_report.xml',
@@ -53,14 +54,25 @@ NR School - Gestion scolaire
         'wizard/eacta_promotion_wizard_views.xml',
         'wizard/eacta_attendance_wizard_views.xml',
         'wizard/eacta_class_deliberation_wizard_views.xml',
+        'views/eacta_lesson_views.xml',
+        'views/eacta_discipline_views.xml',
+        'views/eacta_announcement_views.xml',
+        'views/eacta_health_views.xml',
+        'views/eacta_canteen_views.xml',
+        'views/eacta_massar_views.xml',
+        'views/eacta_staff_views.xml',
+        'views/eacta_student_life_views.xml',
         'views/portal_templates.xml',
+        'views/portal_life_templates.xml',
         'views/eacta_menu.xml',
-    ],
-    'demo': [
-        'demo/school_demo_classes.xml',
-        'demo/school_demo_courses_students.xml',
-        'demo/school_demo_results.xml',
-        'demo/school_demo_admin.xml',
+        'views/eacta_life_menu.xml',
+        # Données d'exemple (chargées à l'installation et à la mise à jour, une seule fois)
+        'data/school_demo_classes.xml',
+        'data/school_demo_courses_students.xml',
+        'data/school_demo_families.xml',
+        'data/school_demo_results.xml',
+        'data/school_demo_admin.xml',
+        'data/school_demo_life.xml',
     ],
     'assets': {
         'web.assets_backend': [

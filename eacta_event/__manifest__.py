@@ -22,9 +22,8 @@
         'security/event_rules.xml',
         'reports/event_reports.xml',
         'views/eacta_school_event.xml',
-    ],
-    'demo': [
-        'demo/event_demo.xml',
+        # Données d'exemple (chargées à l'installation et à la mise à jour, une seule fois)
+        'data/event_demo.xml',
     ],
     'assets': {
         'web.assets_backend': [

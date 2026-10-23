@@ -1,0 +1,302 @@
+<?xml version="1.0" encoding="utf-8"?>
+<odoo>
+
+    <!-- ============================= CONTRATS ============================= -->
+    <record id="view_eacta_staff_contract_list" model="ir.ui.view">
+        <field name="name">eacta.staff.contract.list</field>
+        <field name="model">eacta.staff.contract</field>
+        <field name="arch" type="xml">
+            <list string="Personnel" sample="1" decoration-muted="state == 'ended'">
+                <field name="name"/>
+                <field name="job"/>
+                <field name="contract_type"/>
+                <field name="date_start" optional="show"/>
+                <field name="monthly_wage" sum="Masse salariale" optional="show"/>
+                <field name="hourly_rate" optional="show"/>
+                <field name="weekly_hours" optional="show"/>
+                <field name="currency_id" column_invisible="1"/>
+                <field name="state" widget="badge" decoration-success="state == 'running'"/>
+            </list>
+        </field>
+    </record>
+
+    <record id="view_eacta_staff_contract_form" model="ir.ui.view">
+        <field name="name">eacta.staff.contract.form</field>
+        <field name="model">eacta.staff.contract</field>
+        <field name="arch" type="xml">
+            <form string="Contrat">
+                <header>
+                    <button name="action_start" string="Démarrer le contrat" type="object" class="btn-primary"
+                            invisible="state != 'draft'"/>
+                    <button name="action_end" string="Terminer le contrat" type="object"
+                            invisible="state != 'running'"
+                            confirm="Mettre fin à ce contrat aujourd'hui ?"/>
+                    <field name="state" widget="statusbar"/>
+                </header>
+                <sheet>
+                    <div class="oe_button_box" name="button_box">
+                        <button name="action_view_payslips" type="object" class="oe_stat_button" icon="fa-file-text-o">
+                            <field name="payslip_count" widget="statinfo" string="Bulletins"/>
+                        </button>
+                    </div>
+                    <div class="oe_title">
+                        <label for="name"/>
+                        <h1><field name="name" placeholder="Prénom et nom"/></h1>
+                    </div>
+                    <group>
+                        <group string="Poste">
+                            <field name="job"/>
+                            <field name="user_id" options="{'no_create': True}"/>
+                            <field name="contract_type"/>
+                            <field name="date_start"/>
+                            <field name="date_end"/>
+                        </group>
+                        <group string="Rémunération">
+                            <field name="monthly_wage" invisible="contract_type == 'vacataire'"/>
+                            <field name="hourly_rate" invisible="contract_type != 'vacataire'"/>
+                            <field name="weekly_hours" invisible="not user_id"/>
+                            <field name="currency_id" invisible="1"/>
+                        </group>
+                    </group>
+                    <group string="Informations administratives">
+                        <group>
+                            <field name="cin"/>
+                            <field name="cnss_number"/>
+                        </group>
+                        <group>
+                            <field name="bank_account"/>
+                            <field name="phone" widget="phone"/>
+                        </group>
+                    </group>
+                </sheet>
+                <chatter/>
+            </form>
+        </field>
+    </record>
+
+    <record id="view_eacta_staff_contract_search" model="ir.ui.view">
+        <field name="name">eacta.staff.contract.search</field>
+        <field name="model">eacta.staff.contract</field>
+        <field name="arch" type="xml">
+            <search string="Rechercher dans le personnel">
+                <field name="name"/>
+                <field name="cin"/>
+                <filter string="En cours" name="running" domain="[('state', '=', 'running')]"/>
+                <filter string="Vacataires" name="vacataire" domain="[('contract_type', '=', 'vacataire')]"/>
+                <group expand="0" string="Regrouper par">
+                    <filter string="Fonction" name="group_job" context="{'group_by': 'job'}"/>
+                    <filter string="Type de contrat" name="group_type" context="{'group_by': 'contract_type'}"/>
+                </group>
+            </search>
+        </field>
+    </record>
+
+    <record id="action_eacta_staff_contract" model="ir.actions.act_window">
+        <field name="name">Personnel</field>
+        <field name="res_model">eacta.staff.contract</field>
+        <field name="view_mode">list,form</field>
+        <field name="context">{'search_default_running': 1}</field>
+        <field name="help" type="html">
+            <p class="o_view_nocontent_smiling_face">Ajoutez votre premier contrat</p>
+            <p>Enseignants, administration, chauffeurs, cantine... Les heures des vacataires sont calculées depuis
+               l'emploi du temps.</p>
+        </field>
+    </record>
+
+    <!-- ============================= BULLETINS ============================= -->
+    <record id="view_eacta_payslip_list" model="ir.ui.view">
+        <field name="name">eacta.payslip.list</field>
+        <field name="model">eacta.payslip</field>
+        <field name="arch" type="xml">
+            <list string="Bulletins de paie" sample="1">
+                <field name="name" optional="show"/>
+                <field name="date_from"/>
+                <field name="employee_name"/>
+                <field name="job" optional="show"/>
+                <field name="worked_hours" optional="hide"/>
+                <field name="gross" sum="Total brut"/>
+                <field name="cnss_amount" sum="Total CNSS" optional="show"/>
+                <field name="amo_amount" sum="Total AMO" optional="show"/>
+                <field name="income_tax" sum="Total IR" optional="show"/>
+                <field name="net" sum="Total net"/>
+                <field name="currency_id" column_invisible="1"/>
+                <field name="state" widget="badge" decoration-info="state == 'confirmed'"
+                       decoration-success="state == 'paid'"/>
+            </list>
+        </field>
+    </record>
+
+    <record id="view_eacta_payslip_form" model="ir.ui.view">
+        <field name="name">eacta.payslip.form</field>
+        <field name="model">eacta.payslip</field>
+        <field name="arch" type="xml">
+            <form string="Bulletin de paie">
+                <header>
+                    <button name="action_confirm" string="Valider" type="object" class="btn-primary"
+                            invisible="state != 'draft'"/>
+                    <button name="action_mark_paid" string="Marquer payé" type="object" class="btn-primary"
+                            invisible="state != 'confirmed'"/>
+                    <button name="action_print" string="Imprimer" type="object" invisible="state == 'draft'"/>
+                    <button name="action_draft" string="Remettre en brouillon" type="object"
+                            invisible="state != 'confirmed'"/>
+                    <field name="state" widget="statusbar"/>
+                </header>
+                <sheet>
+                    <div class="oe_title">
+                        <h1><field name="name" readonly="1"/></h1>
+                    </div>
+                    <group>
+                        <group>
+                            <field name="contract_id" options="{'no_create': True}" readonly="state != 'draft'"/>
+                            <field name="job"/>
+                            <field name="contract_type"/>
+                            <field name="date_from" readonly="state != 'draft'"/>
+                            <field name="date_to" readonly="state != 'draft'"/>
+                            <field name="worked_hours" invisible="contract_type != 'vacataire'"
+                                   readonly="state != 'draft'"/>
+                        </group>
+                        <group>
+                            <field name="base_amount"/>
+                            <field name="bonus" readonly="state != 'draft'"/>
+                            <field name="overtime_amount" readonly="state != 'draft'"/>
+                            <field name="gross" class="fw-bold"/>
+                            <field name="cnss_amount"/>
+                            <field name="amo_amount"/>
+                            <field name="income_tax" readonly="state != 'draft'"/>
+                            <field name="other_deductions" readonly="state != 'draft'"/>
+                            <field name="net" class="fs-4 fw-bold"/>
+                            <field name="currency_id" invisible="1"/>
+                            <field name="payment_date" invisible="state != 'paid'"/>
+                        </group>
+                    </group>
+                    <field name="note" placeholder="Remarques (absences, avances...)"/>
+                </sheet>
+                <chatter/>
+            </form>
+        </field>
+    </record>
+
+    <record id="view_eacta_payslip_search" model="ir.ui.view">
+        <field name="name">eacta.payslip.search</field>
+        <field name="model">eacta.payslip</field>
+        <field name="arch" type="xml">
+            <search string="Rechercher un bulletin">
+                <field name="employee_name"/>
+                <field name="contract_id"/>
+                <filter string="Brouillons" name="draft" domain="[('state', '=', 'draft')]"/>
+                <filter string="À payer" name="to_pay" domain="[('state', '=', 'confirmed')]"/>
+                <filter string="Payés" name="paid" domain="[('state', '=', 'paid')]"/>
+                <group expand="0" string="Regrouper par">
+                    <filter string="Mois" name="group_month" context="{'group_by': 'date_from:month'}"/>
+                    <filter string="Fonction" name="group_job" context="{'group_by': 'job'}"/>
+                </group>
+            </search>
+        </field>
+    </record>
+
+    <record id="action_eacta_payslip" model="ir.actions.act_window">
+        <field name="name">Bulletins de paie</field>
+        <field name="res_model">eacta.payslip</field>
+        <field name="view_mode">list,form</field>
+        <field name="context">{'search_default_group_month': 1}</field>
+    </record>
+
+    <record id="view_eacta_payslip_generate_wizard_form" model="ir.ui.view">
+        <field name="name">eacta.payslip.generate.wizard.form</field>
+        <field name="model">eacta.payslip.generate.wizard</field>
+        <field name="arch" type="xml">
+            <form string="Générer les bulletins du mois">
+                <group>
+                    <field name="month"/>
+                    <field name="contract_ids" widget="many2many_tags" options="{'no_create': True}"
+                           placeholder="Tous les contrats en cours"/>
+                </group>
+                <p class="text-muted">
+                    Un bulletin brouillon est créé pour chaque contrat (sauf s'il existe déjà pour ce mois).
+                    Les heures des vacataires sont estimées depuis l'emploi du temps et restent modifiables.
+                </p>
+                <footer>
+                    <button name="action_generate" string="Générer" type="object" class="btn-primary"/>
+                    <button string="Annuler" class="btn-secondary" special="cancel"/>
+                </footer>
+            </form>
+        </field>
+    </record>
+
+    <record id="action_eacta_payslip_generate_wizard" model="ir.actions.act_window">
+        <field name="name">Générer les bulletins</field>
+        <field name="res_model">eacta.payslip.generate.wizard</field>
+        <field name="view_mode">form</field>
+        <field name="target">new</field>
+    </record>
+
+    <!-- ============================= RAPPORT ============================= -->
+    <template id="report_payslip_document">
+        <t t-call="web.external_layout">
+            <t t-call="eacta_school.eacta_school_report_assets"/>
+            <div class="page eacta_report">
+                <div class="eacta_report_title">
+                    <h2>Bulletin de paie</h2>
+                    <div class="eacta_report_sub">
+                        Période du <span t-field="o.date_from"/> au <span t-field="o.date_to"/> - <span t-field="o.name"/>
+                    </div>
+                </div>
+                <div class="eacta_identity">
+                    <div>
+                        <div class="eacta_label">Employé</div>
+                        <div class="eacta_value" t-field="o.employee_name"/>
+                        <div class="text-muted"><span t-field="o.job"/> - <span t-field="o.contract_type"/></div>
+                    </div>
+                    <div>
+                        <div class="eacta_label">CIN / CNSS</div>
+                        <div class="eacta_value"><t t-out="o.contract_id.cin or '-'"/> / <t t-out="o.contract_id.cnss_number or '-'"/></div>
+                    </div>
+                </div>
+                <table class="eacta_table">
+                    <thead>
+                        <tr><th>Rubrique</th><th class="text-end">Montant</th></tr>
+                    </thead>
+                    <tbody>
+                        <tr>
+                            <td>Salaire de base
+                                <t t-if="o.contract_type == 'vacataire'">(<t t-out="'%g' % o.worked_hours"/> h)</t>
+                            </td>
+                            <td class="text-end"><span t-field="o.base_amount"/></td>
+                        </tr>
+                        <tr t-if="o.bonus"><td>Primes</td><td class="text-end"><span t-field="o.bonus"/></td></tr>
+                        <tr t-if="o.overtime_amount"><td>Heures supplémentaires</td><td class="text-end"><span t-field="o.overtime_amount"/></td></tr>
+                        <tr><td><strong>Salaire brut</strong></td><td class="text-end"><strong><span t-field="o.gross"/></strong></td></tr>
+                        <tr><td>CNSS (part salariale)</td><td class="text-end">- <span t-field="o.cnss_amount"/></td></tr>
+                        <tr><td>AMO (part salariale)</td><td class="text-end">- <span t-field="o.amo_amount"/></td></tr>
+                        <tr t-if="o.income_tax"><td>Impôt sur le revenu</td><td class="text-end">- <span t-field="o.income_tax"/></td></tr>
+                        <tr t-if="o.other_deductions"><td>Autres retenues</td><td class="text-end">- <span t-field="o.other_deductions"/></td></tr>
+                    </tbody>
+                    <tfoot>
+                        <tr><td><strong>Net à payer</strong></td><td class="text-end"><strong><span t-field="o.net"/></strong></td></tr>
+                    </tfoot>
+                </table>
+                <p t-if="o.payment_date" class="mt-3">Payé le <span t-field="o.payment_date"/>.</p>
+            </div>
+        </t>
+    </template>
+
+    <template id="report_payslip">
+        <t t-call="web.html_container">
+            <t t-foreach="docs" t-as="o">
+                <t t-call="eacta_school.report_payslip_document"/>
+            </t>
+        </t>
+    </template>
+
+    <record id="action_report_payslip" model="ir.actions.report">
+        <field name="name">Bulletin de paie</field>
+        <field name="model">eacta.payslip</field>
+        <field name="report_type">qweb-pdf</field>
+        <field name="report_name">eacta_school.report_payslip</field>
+        <field name="report_file">eacta_school.report_payslip</field>
+        <field name="print_report_name">'Bulletin de paie - %s' % (object.name)</field>
+        <field name="binding_model_id" ref="model_eacta_payslip"/>
+        <field name="binding_type">report</field>
+    </record>
+
+</odoo>

@@ -8,7 +8,7 @@
 
 | Module | Version | Rôle & Description |
 |---|---|---|
-| [`eacta_school`](file:///c:/Users/pc/Documents/school/eacta_school) | **18.0.5.0** | **Cœur académique & administratif** : années scolaires, trimestres, élèves, classes, cours, coefficients, examens, workflow de notes (Brouillon &rarr; Soumis &rarr; Validé &rarr; Publié), bulletins scolaires PDF (format officiel marocain), PV de délibération du conseil de classe, assiduité, facturation (`account.move`, devises MAD), remises fratrie, rappels d'impayés, portail parents/élèves (`/my/school`), badges QR code et pointage mobile (`/school/attendance/scan`), et transport scolaire. |
+| [`eacta_school`](file:///c:/Users/pc/Documents/school/eacta_school) | **18.0.6.0** | **Cœur académique & administratif** : années scolaires, trimestres, élèves, classes, cours, coefficients, examens, workflow de notes (Brouillon &rarr; Soumis &rarr; Validé &rarr; Publié), bulletins scolaires PDF (format officiel marocain), PV de délibération du conseil de classe, assiduité, facturation (`account.move`, devises MAD), remises fratrie, rappels d'impayés, portail parents/élèves (`/my/school`), badges QR code et pointage mobile (`/school/attendance/scan`), transport scolaire, cahier de textes et devoirs, vie scolaire (incidents, sanctions, note de conduite), annonces aux familles, infirmerie, cantine, export Massar et paie du personnel. |
 | [`eacta_bibliotheque`](file:///c:/Users/pc/Documents/school/eacta_bibliotheque) | **18.0.3.0** | **Bibliothèque scolaire (CDI)** : catalogue d'ouvrages, exemplaires avec codes-barres, gestion des prêts et retours pour élèves et enseignants, prolongation, déclaration de perte, amendes de retard opt-in et relances planifiées. |
 | [`eacta_event`](file:///c:/Users/pc/Documents/school/eacta_event) | **18.0.3.0** | **Événements & Activités périscolaires** : sorties pédagogiques, voyages, cérémonies, inscriptions collectives par classe, contrôle des capacités, autorisations parentales et feuilles de présence. |
 | [`eacta_theme`](file:///c:/Users/pc/Documents/school/eacta_theme) | **18.0.2.6** | **Charte graphique & Expérience utilisateur** : interface backend modernisée aux couleurs de l'école, page de connexion institutionnelle personnalisable, palettes de couleurs prédéfinies et styles adaptatifs. |
@@ -33,6 +33,15 @@
 - **Espace dédié `/my/school`** : Portail web responsive sécurisé permettant aux familles de consulter l'emploi du temps, l'assiduité, les notes publiées, télécharger les bulletins PDF officiels et régler leurs factures en ligne.
 - **Alertes automatiques d'absence/retard** : Notification immédiate par email aux parents dès qu'un retard ou une absence est constaté, avec option d'opt-out dans le profil parent et architecture extensible pour canaux SMS et WhatsApp.
 - **Sécurité stricte sans contournement `sudo()`** : Isolation étanche basée sur les règles d'enregistrement Odoo (`ir.rule`). Un parent ne peut accéder qu'à ses propres enfants ; un élève ne peut voir que ses propres données.
+
+### 📝 Vie Scolaire, Santé, Cantine & Personnel
+- **Cahier de textes & devoirs** : chaque séance (notions, documents) et les devoirs donnés ; les devoirs publiés apparaissent sur le portail des familles.
+- **Vie scolaire** : incidents et comportements positifs, sanctions (avertissement, blâme, retenue, exclusion), note de conduite sur 20 calculée automatiquement, parents informés par email pour les faits graves.
+- **Annonces aux familles** : par classe, cycle, élèves ou toute l'école, envoi email (SMS / WhatsApp via les extensions existantes), publication sur le portail et suivi des lectures.
+- **Infirmerie** (groupe *Infirmerie*) : passages avec motif, température, soins et suite donnée, rappel des allergies et du PAI, vaccinations et certificats médicaux (dispense d'EPS).
+- **Cantine** : menus publiés sur le portail, abonnements facturés dans les frais de scolarité, effectif du jour par classe tenant compte des absences et des régimes particuliers.
+- **Export Massar** : classeur Excel par classe (et par matière pour les notes) avec le code Massar de chaque élève. Le format est à valider avec le modèle d'import Massar de votre établissement.
+- **Personnel & paie** : contrats (CDI, CDD, vacataires), heures des vacataires calculées depuis l'emploi du temps, bulletins mensuels avec CNSS (4,48 %, plafond 6 000 DH) et AMO (2,26 %) paramétrables ; l'IR est saisi par le service comptable.
 
 ### 🚌 Opérations Quotidiennes & Logistique
 - **Détection des conflits d'emploi du temps** : Vérification en temps réel des chevauchements d'horaires pour les enseignants, les salles et les classes, avec export des plannings au standard universel **iCalendar (.ics)** (compatible Google Calendar, Apple Calendar, Outlook).
@@ -89,19 +98,29 @@ addons_path = c:\project\odoo_project\server\odoo\addons,C:\Users\pc\Documents\s
 
 ### Étape 3 : Installation des Modules
 
-#### Option A : Installation en Mode Démonstration (Évaluation & Formation)
-Pour tester immédiatement avec un jeu de données réaliste (classes 2026-2027, enseignants, élèves, parents, emplois du temps et bibliothèque) :
+#### Option A : Installation avec les données d'exemple (Évaluation & Formation)
+Les données d'exemple (classes 2026-2027, enseignants, élèves, familles, notes, assiduité, frais, cahier de textes,
+vie scolaire, cantine, infirmerie, personnel, bibliothèque et événements) se trouvent dans les dossiers `data/` :
+elles sont chargées à l'installation **et** à la mise à jour d'une base existante, une seule fois. Les enregistrements
+déjà présents (même année, même code de cours, même ISBN...) sont réutilisés au lieu d'être dupliqués.
 
 ```bash
 python odoo-bin -c odoo.conf -d school_demo -i eacta_school,eacta_bibliotheque,eacta_event,eacta_theme --stop-after-init
 ```
 
-#### Option B : Installation en Mode Production (Sans Données de Démo)
-Pour une mise en service réelle dans une école avec base vierge :
+#### Option B : Installation en Mode Production (Sans données d'exemple)
+Pour une base réelle, désactivez les générateurs d'exemples **avant** l'installation, depuis le shell Odoo :
 
 ```bash
-python odoo-bin -c odoo.conf -d school_prod -i eacta_school,eacta_bibliotheque,eacta_event,eacta_theme --without-demo=all --stop-after-init
+python odoo-bin shell -c odoo.conf -d school_prod
 ```
+
+```python
+env['ir.config_parameter'].set_param('eacta_school.sample_data_disabled', 'True'); env.cr.commit()
+```
+
+Puis installez les modules normalement. Les fiches de base des exemples (années, classes, cours, élèves) restent
+créées : supprimez-les ou archivez-les avant la mise en service.
 
 ---
 

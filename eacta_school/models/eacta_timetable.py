@@ -2,6 +2,7 @@ from dateutil.relativedelta import relativedelta
 
 from odoo import api, fields, models
 from odoo.exceptions import ValidationError
+from .sample_data import sample_data_step
 
 WEEKDAYS = [
     ('0', 'Lundi'),
@@ -276,8 +277,12 @@ class EactaTimetableSlot(models.Model):
     @api.model
     def _generate_demo_admin(self):
         """Emploi du temps et frais de démonstration pour les classes de démo (déterministe)."""
+        if not sample_data_step(self.env, 'admin', 'eacta.timetable.slot'):
+            return
         self = self.with_context(tracking_disable=True, mail_create_nolog=True, mail_notrack=True)
-        classes = self.env['eacta.class'].search([], order='year desc, name', limit=4)
+        sample_ids = [c.id for c in (self.env.ref(f'eacta_school.{x}', raise_if_not_found=False) for x in (
+            'class_5a_2026', 'class_5b_2026', 'class_6a_2026', 'class_6b_2026')) if c]
+        classes = self.env['eacta.class'].browse(sample_ids)
         all_courses = self.env['eacta.course'].search([])
         if not classes or not all_courses:
             return

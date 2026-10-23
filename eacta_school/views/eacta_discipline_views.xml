@@ -1,0 +1,238 @@
+<?xml version="1.0" encoding="utf-8"?>
+<odoo>
+
+    <!-- ============================= INCIDENTS ============================= -->
+    <record id="view_eacta_discipline_incident_list" model="ir.ui.view">
+        <field name="name">eacta.discipline.incident.list</field>
+        <field name="model">eacta.discipline.incident</field>
+        <field name="arch" type="xml">
+            <list string="Vie scolaire" sample="1" decoration-muted="state == 'cancelled'"
+                  decoration-success="kind == 'positive'" decoration-danger="severity == 'serious' and kind == 'negative'">
+                <field name="date"/>
+                <field name="name" optional="show"/>
+                <field name="student_id" widget="many2one_avatar"/>
+                <field name="class_id"/>
+                <field name="type_id"/>
+                <field name="kind" column_invisible="1"/>
+                <field name="severity" widget="badge" optional="show"
+                       decoration-warning="severity == 'major'" decoration-danger="severity == 'serious'"/>
+                <field name="points" optional="show"/>
+                <field name="reported_by" widget="many2one_avatar_user" optional="show"/>
+                <field name="sanction_count" string="Sanctions" optional="show"/>
+                <field name="parent_notified" string="Parents informés" optional="hide"/>
+                <field name="state" widget="badge" decoration-info="state == 'draft'"
+                       decoration-success="state in ('confirmed', 'closed')"/>
+            </list>
+        </field>
+    </record>
+
+    <record id="view_eacta_discipline_incident_form" model="ir.ui.view">
+        <field name="name">eacta.discipline.incident.form</field>
+        <field name="model">eacta.discipline.incident</field>
+        <field name="arch" type="xml">
+            <form string="Incident de vie scolaire">
+                <header>
+                    <button name="action_confirm" string="Valider" type="object" class="btn-primary"
+                            invisible="state != 'draft'"
+                            groups="eacta_school.group_eacta_school_direction,eacta_school.group_eacta_school_secretary"/>
+                    <button name="action_add_sanction" string="Ajouter une sanction" type="object"
+                            invisible="state != 'confirmed' or kind == 'positive'"
+                            groups="eacta_school.group_eacta_school_direction"/>
+                    <button name="action_notify_parents" string="Informer les parents" type="object"
+                            invisible="state not in ('confirmed', 'closed')"
+                            groups="eacta_school.group_eacta_school_direction,eacta_school.group_eacta_school_secretary"/>
+                    <button name="action_close" string="Clôturer" type="object"
+                            invisible="state != 'confirmed'"
+                            groups="eacta_school.group_eacta_school_direction"/>
+                    <button name="action_cancel" string="Annuler" type="object"
+                            invisible="state in ('cancelled', 'closed')"
+                            groups="eacta_school.group_eacta_school_direction"/>
+                    <button name="action_draft" string="Remettre en signalé" type="object"
+                            invisible="state != 'cancelled'"
+                            groups="eacta_school.group_eacta_school_direction"/>
+                    <field name="state" widget="statusbar" statusbar_visible="draft,confirmed,closed"/>
+                </header>
+                <sheet>
+                    <field name="student_image" widget="image" class="oe_avatar"/>
+                    <div class="oe_title">
+                        <h1><field name="name" readonly="1"/></h1>
+                    </div>
+                    <group>
+                        <group string="Élève">
+                            <field name="student_id" widget="many2one_avatar" options="{'no_create': True}"/>
+                            <field name="class_id" options="{'no_create': True}"/>
+                            <field name="date"/>
+                            <field name="location"/>
+                            <field name="course_id" options="{'no_create': True}"/>
+                        </group>
+                        <group string="Qualification">
+                            <field name="type_id" options="{'no_create': True}"/>
+                            <field name="kind"/>
+                            <field name="severity" invisible="kind == 'positive'"/>
+                            <field name="points"/>
+                            <field name="reported_by"/>
+                            <field name="parent_notified"/>
+                        </group>
+                    </group>
+                    <group string="Faits">
+                        <field name="description" nolabel="1" colspan="2"
+                               placeholder="Décrivez précisément les faits, les personnes présentes, l'heure..."/>
+                    </group>
+                    <notebook invisible="kind == 'positive'">
+                        <page string="Sanctions" name="sanctions" icon="fa-gavel">
+                            <field name="sanction_ids" readonly="state not in ('confirmed', 'closed')">
+                                <list editable="bottom">
+                                    <field name="sanction_type"/>
+                                    <field name="date"/>
+                                    <field name="date_from"/>
+                                    <field name="date_to"/>
+                                    <field name="duration_days" string="Jours"/>
+                                    <field name="decided_by" widget="many2one_avatar_user"/>
+                                    <field name="note"/>
+                                </list>
+                            </field>
+                        </page>
+                    </notebook>
+                </sheet>
+                <chatter/>
+            </form>
+        </field>
+    </record>
+
+    <record id="view_eacta_discipline_incident_pivot" model="ir.ui.view">
+        <field name="name">eacta.discipline.incident.pivot</field>
+        <field name="model">eacta.discipline.incident</field>
+        <field name="arch" type="xml">
+            <pivot string="Analyse de la vie scolaire" sample="1">
+                <field name="class_id" type="row"/>
+                <field name="type_id" type="col"/>
+            </pivot>
+        </field>
+    </record>
+
+    <record id="view_eacta_discipline_incident_graph" model="ir.ui.view">
+        <field name="name">eacta.discipline.incident.graph</field>
+        <field name="model">eacta.discipline.incident</field>
+        <field name="arch" type="xml">
+            <graph string="Incidents par mois" type="bar" sample="1">
+                <field name="date" interval="month"/>
+                <field name="kind"/>
+            </graph>
+        </field>
+    </record>
+
+    <record id="view_eacta_discipline_incident_search" model="ir.ui.view">
+        <field name="name">eacta.discipline.incident.search</field>
+        <field name="model">eacta.discipline.incident</field>
+        <field name="arch" type="xml">
+            <search string="Rechercher dans la vie scolaire">
+                <field name="student_id"/>
+                <field name="class_id"/>
+                <field name="type_id"/>
+                <field name="reported_by"/>
+                <filter string="À valider" name="to_confirm" domain="[('state', '=', 'draft')]"/>
+                <filter string="Validés" name="confirmed" domain="[('state', 'in', ('confirmed', 'closed'))]"/>
+                <separator/>
+                <filter string="Incidents" name="negative" domain="[('kind', '=', 'negative')]"/>
+                <filter string="Comportements positifs" name="positive" domain="[('kind', '=', 'positive')]"/>
+                <filter string="Graves" name="serious" domain="[('severity', 'in', ('major', 'serious')), ('kind', '=', 'negative')]"/>
+                <separator/>
+                <filter string="Ce mois" name="this_month"
+                        domain="[('date', '&gt;=', (context_today().replace(day=1)).strftime('%Y-%m-%d'))]"/>
+                <group expand="0" string="Regrouper par">
+                    <filter string="Classe" name="group_class" context="{'group_by': 'class_id'}"/>
+                    <filter string="Élève" name="group_student" context="{'group_by': 'student_id'}"/>
+                    <filter string="Type" name="group_type" context="{'group_by': 'type_id'}"/>
+                    <filter string="Mois" name="group_month" context="{'group_by': 'date:month'}"/>
+                </group>
+            </search>
+        </field>
+    </record>
+
+    <record id="action_eacta_discipline_incident" model="ir.actions.act_window">
+        <field name="name">Vie scolaire</field>
+        <field name="res_model">eacta.discipline.incident</field>
+        <field name="view_mode">list,form,pivot,graph</field>
+        <field name="help" type="html">
+            <p class="o_view_nocontent_smiling_face">Aucun incident signalé</p>
+            <p>Signalez un incident ou un comportement exemplaire : la note de conduite de l'élève est calculée
+               automatiquement et les parents sont informés pour les faits graves.</p>
+        </field>
+    </record>
+
+    <!-- ============================= SANCTIONS ============================= -->
+    <record id="view_eacta_discipline_sanction_list" model="ir.ui.view">
+        <field name="name">eacta.discipline.sanction.list</field>
+        <field name="model">eacta.discipline.sanction</field>
+        <field name="arch" type="xml">
+            <list string="Sanctions" create="0">
+                <field name="date"/>
+                <field name="student_id" widget="many2one_avatar"/>
+                <field name="class_id"/>
+                <field name="sanction_type" widget="badge"/>
+                <field name="date_from" optional="show"/>
+                <field name="date_to" optional="show"/>
+                <field name="duration_days" string="Jours" optional="show"/>
+                <field name="incident_id" optional="show"/>
+                <field name="decided_by" widget="many2one_avatar_user" optional="hide"/>
+            </list>
+        </field>
+    </record>
+
+    <record id="view_eacta_discipline_sanction_form" model="ir.ui.view">
+        <field name="name">eacta.discipline.sanction.form</field>
+        <field name="model">eacta.discipline.sanction</field>
+        <field name="arch" type="xml">
+            <form string="Sanction">
+                <sheet>
+                    <group>
+                        <group>
+                            <field name="incident_id" options="{'no_create': True}"/>
+                            <field name="student_id"/>
+                            <field name="sanction_type"/>
+                            <field name="date"/>
+                        </group>
+                        <group>
+                            <field name="date_from"/>
+                            <field name="date_to"/>
+                            <field name="duration_days"/>
+                            <field name="decided_by" widget="many2one_avatar_user"/>
+                        </group>
+                    </group>
+                    <field name="note" placeholder="Motif, conditions de réintégration..."/>
+                </sheet>
+                <chatter/>
+            </form>
+        </field>
+    </record>
+
+    <record id="action_eacta_discipline_sanction" model="ir.actions.act_window">
+        <field name="name">Sanctions</field>
+        <field name="res_model">eacta.discipline.sanction</field>
+        <field name="view_mode">list,form</field>
+    </record>
+
+    <!-- ============================= TYPES ============================= -->
+    <record id="view_eacta_discipline_incident_type_list" model="ir.ui.view">
+        <field name="name">eacta.discipline.incident.type.list</field>
+        <field name="model">eacta.discipline.incident.type</field>
+        <field name="arch" type="xml">
+            <list string="Types d'incident" editable="bottom">
+                <field name="sequence" widget="handle"/>
+                <field name="name"/>
+                <field name="kind"/>
+                <field name="severity"/>
+                <field name="default_points"/>
+                <field name="active" widget="boolean_toggle"/>
+            </list>
+        </field>
+    </record>
+
+    <record id="action_eacta_discipline_incident_type" model="ir.actions.act_window">
+        <field name="name">Types d'incident</field>
+        <field name="res_model">eacta.discipline.incident.type</field>
+        <field name="view_mode">list</field>
+        <field name="context">{'active_test': False}</field>
+    </record>
+
+</odoo>

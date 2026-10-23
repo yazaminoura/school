@@ -1,0 +1,154 @@
+<?xml version="1.0" encoding="utf-8"?>
+<odoo>
+    <data noupdate="1">
+
+        <!-- ============================= SÉQUENCES ============================= -->
+        <record id="seq_eacta_discipline_incident" model="ir.sequence">
+            <field name="name">Incidents de vie scolaire</field>
+            <field name="code">eacta.discipline.incident</field>
+            <field name="prefix">VS/%(year)s/</field>
+            <field name="padding">4</field>
+        </record>
+        <record id="seq_eacta_infirmary_visit" model="ir.sequence">
+            <field name="name">Passages à l'infirmerie</field>
+            <field name="code">eacta.infirmary.visit</field>
+            <field name="prefix">INF/%(year)s/</field>
+            <field name="padding">4</field>
+        </record>
+        <record id="seq_eacta_payslip" model="ir.sequence">
+            <field name="name">Bulletins de paie</field>
+            <field name="code">eacta.payslip</field>
+            <field name="prefix">PAIE/%(year)s/%(month)s/</field>
+            <field name="padding">3</field>
+        </record>
+
+        <!-- ============================= TYPES D'INCIDENT ============================= -->
+        <record id="incident_type_lateness" model="eacta.discipline.incident.type">
+            <field name="name">Retards répétés</field>
+            <field name="sequence">1</field>
+            <field name="severity">minor</field>
+            <field name="default_points">-0.5</field>
+        </record>
+        <record id="incident_type_disruption" model="eacta.discipline.incident.type">
+            <field name="name">Perturbation du cours</field>
+            <field name="sequence">2</field>
+            <field name="severity">minor</field>
+            <field name="default_points">-1</field>
+        </record>
+        <record id="incident_type_homework" model="eacta.discipline.incident.type">
+            <field name="name">Travail non fait / oubli de matériel</field>
+            <field name="sequence">3</field>
+            <field name="severity">minor</field>
+            <field name="default_points">-0.5</field>
+        </record>
+        <record id="incident_type_phone" model="eacta.discipline.incident.type">
+            <field name="name">Téléphone en classe</field>
+            <field name="sequence">4</field>
+            <field name="severity">minor</field>
+            <field name="default_points">-1</field>
+        </record>
+        <record id="incident_type_insolence" model="eacta.discipline.incident.type">
+            <field name="name">Insolence envers un adulte</field>
+            <field name="sequence">5</field>
+            <field name="severity">major</field>
+            <field name="default_points">-2</field>
+        </record>
+        <record id="incident_type_cheating" model="eacta.discipline.incident.type">
+            <field name="name">Fraude à un contrôle</field>
+            <field name="sequence">6</field>
+            <field name="severity">major</field>
+            <field name="default_points">-3</field>
+        </record>
+        <record id="incident_type_violence" model="eacta.discipline.incident.type">
+            <field name="name">Violence / bagarre</field>
+            <field name="sequence">7</field>
+            <field name="severity">serious</field>
+            <field name="default_points">-4</field>
+        </record>
+        <record id="incident_type_damage" model="eacta.discipline.incident.type">
+            <field name="name">Dégradation de matériel</field>
+            <field name="sequence">8</field>
+            <field name="severity">major</field>
+            <field name="default_points">-2</field>
+        </record>
+        <record id="incident_type_help" model="eacta.discipline.incident.type">
+            <field name="name">Entraide / aide à un camarade</field>
+            <field name="kind">positive</field>
+            <field name="sequence">20</field>
+            <field name="severity">minor</field>
+            <field name="default_points">1</field>
+        </record>
+        <record id="incident_type_engagement" model="eacta.discipline.incident.type">
+            <field name="name">Engagement dans la vie de l'école</field>
+            <field name="kind">positive</field>
+            <field name="sequence">21</field>
+            <field name="severity">minor</field>
+            <field name="default_points">1</field>
+        </record>
+
+        <!-- ============================= MODÈLES D'EMAIL ============================= -->
+        <record id="email_template_discipline_incident" model="mail.template">
+            <field name="name">Vie scolaire : information aux parents</field>
+            <field name="model_id" ref="eacta_school.model_eacta_discipline_incident"/>
+            <field name="subject">Vie scolaire : {{ object.student_id.name }} - {{ object.type_id.name }}</field>
+            <field name="email_from">{{ (object.company_id.email_formatted or user.email_formatted) }}</field>
+            <field name="body_html" type="html">
+<div style="font-family: 'Segoe UI', Helvetica, Arial, sans-serif; font-size: 14px; color: #2C3E50; max-width: 600px; margin: 0 auto;">
+    <p>Madame, Monsieur,</p>
+    <p>Nous souhaitons vous informer d'un fait concernant votre enfant
+        <strong t-out="object.student_id.name"/> (<t t-out="object.class_id.name or ''"/>),
+        survenu le <strong t-out="object.date"/> :</p>
+    <p style="padding: 12px; background: #F8FAFC; border-left: 4px solid #8E1B3A;">
+        <strong t-out="object.type_id.name"/><br/>
+        <t t-out="object.description"/>
+    </p>
+    <p t-if="object.sanction_ids">Mesure décidée :
+        <t t-foreach="object.sanction_ids" t-as="sanction">
+            <strong t-out="dict(sanction._fields['sanction_type'].selection).get(sanction.sanction_type)"/>
+            <t t-if="sanction.date_from"> du <t t-out="sanction.date_from"/> au <t t-out="sanction.date_to"/></t>.
+        </t>
+    </p>
+    <p>Nous restons à votre disposition pour en discuter. Vous pouvez contacter la vie scolaire
+        ou consulter le portail famille.</p>
+    <p>Cordialement,<br/><t t-out="object.company_id.name"/></p>
+</div>
+            </field>
+            <field name="auto_delete" eval="True"/>
+        </record>
+
+        <record id="email_template_infirmary_visit" model="mail.template">
+            <field name="name">Infirmerie : information aux parents</field>
+            <field name="model_id" ref="eacta_school.model_eacta_infirmary_visit"/>
+            <field name="subject">Infirmerie : passage de {{ object.student_id.name }}</field>
+            <field name="email_from">{{ (object.company_id.email_formatted or user.email_formatted) }}</field>
+            <field name="body_html" type="html">
+<div style="font-family: 'Segoe UI', Helvetica, Arial, sans-serif; font-size: 14px; color: #2C3E50; max-width: 600px; margin: 0 auto;">
+    <p>Madame, Monsieur,</p>
+    <p>Votre enfant <strong t-out="object.student_id.name"/> est passé(e) à l'infirmerie de l'école
+        le <strong t-out="format_datetime(object.visit_datetime, dt_format='dd/MM/yyyy à HH:mm')"/>.</p>
+    <ul>
+        <li>Motif : <strong t-out="dict(object._fields['reason'].selection).get(object.reason)"/></li>
+        <li t-if="object.temperature">Température : <t t-out="object.temperature"/> °C</li>
+        <li t-if="object.treatment">Soins : <t t-out="object.treatment"/></li>
+        <li>Suite donnée : <strong t-out="dict(object._fields['outcome'].selection).get(object.outcome)"/></li>
+    </ul>
+    <p>N'hésitez pas à contacter l'infirmerie pour toute question.</p>
+    <p>Cordialement,<br/><t t-out="object.company_id.name"/></p>
+</div>
+            </field>
+            <field name="auto_delete" eval="True"/>
+        </record>
+
+        <!-- ============================= ACTIONS PLANIFIÉES ============================= -->
+        <record id="ir_cron_canteen_monthly_fees" model="ir.cron">
+            <field name="name">NR School : Facturation mensuelle de la cantine</field>
+            <field name="model_id" ref="model_eacta_canteen_subscription"/>
+            <field name="state">code</field>
+            <field name="code">model._cron_generate_canteen_fees()</field>
+            <field name="interval_number">1</field>
+            <field name="interval_type">months</field>
+            <field name="active" eval="False"/>
+        </record>
+
+    </data>
+</odoo>

@@ -2,6 +2,7 @@ from datetime import timedelta
 
 from odoo import api, fields, models
 from odoo.exceptions import UserError, ValidationError
+from odoo.addons.eacta_school.models.sample_data import sample_data_step, sample_records
 
 PARAM_DEFAULTS = {
     'enable_overdue_fines': False,
@@ -346,26 +347,33 @@ class LibraryLoan(models.Model):
     @api.model
     def _generate_demo_loans(self):
         """Emprunts de démonstration : en cours, en retard et rendus (déterministe)."""
+        if not sample_data_step(self.env, 'library_loans', 'library.loan'):
+            return
         self = self.with_context(tracking_disable=True, mail_create_nolog=True, mail_notrack=True)
-        students = self.env['eacta.student'].search([], limit=24, order='id')
-        books = self.env['library.book'].search([], order='id')
+        students = sample_records(self.env, 'eacta.student').sorted('id')[:24]
+        books = sample_records(self.env, 'library.book', 'eacta_bibliotheque').sorted('id')
         if not students or not books:
             return
         today = fields.Date.context_today(self)
         plans = [  # (jours depuis l'emprunt, rendu ?)
             (3, False), (9, False), (20, False), (26, False), (40, True), (35, True),
             (16, False), (1, False), (60, True), (28, False), (12, True), (5, False),
+            (2, False), (7, False), (11, False), (18, False), (22, False), (30, True),
+            (45, True), (50, True), (8, True), (14, False), (24, False), (33, False),
+            (4, False), (6, False), (19, True), (27, False), (38, True), (10, False),
         ]
+        teachers = sample_records(self.env, 'res.users').filtered('is_teacher').sorted('id')[:3]
         for i, (age, returned) in enumerate(plans):
-            book = books[i % len(books)]
+            book = books[(i * 7) % len(books)]
             copy = book.barcode_ids.filtered(lambda c: c.state == 'available')[:1]
-            student = students[(i * 5) % len(students)]
             if not copy:
                 continue
+            borrower = {'borrower_type': 'student', 'student_id': students[(i * 5) % len(students)].id}
+            if teachers and i % 9 == 4:
+                borrower = {'borrower_type': 'teacher', 'teacher_id': teachers[(i // 9) % len(teachers)].id}
             checkout = today - timedelta(days=age)
             loan = self.create({
-                'borrower_type': 'student',
-                'student_id': student.id,
+                **borrower,
                 'book_id': book.id,
                 'barcode_id': copy.id,
                 'checkout_date': checkout,
