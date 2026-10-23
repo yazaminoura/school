@@ -158,12 +158,12 @@ class SchoolCustomerPortal(CustomerPortal):
         except (AccessError, UserError):
             raise werkzeug.exceptions.Forbidden()
 
-        report_ref = 'eacta_school.action_report_student_card'
-        report = request.env.ref(report_ref, raise_if_not_found=False)
-        if not report:
+        # Le bulletin officiel porte sur eacta.student.result (et non eacta.student)
+        report_ref = 'eacta_school.action_report_student_result'
+        if not request.env.ref(report_ref, raise_if_not_found=False):
             raise werkzeug.exceptions.NotFound()
 
-        pdf_content, _ = report._render_qweb_pdf(result.ids)
+        pdf_content, _content_type = request.env['ir.actions.report']._render_qweb_pdf(report_ref, result.ids)
         term_name = result.term_id.name or result.term_key or 'periode'
         clean_filename = f"Bulletin_{student.name}_{term_name}.pdf".replace(' ', '_')
         pdfhttpheaders = [
@@ -224,11 +224,10 @@ class SchoolCustomerPortal(CustomerPortal):
             raise werkzeug.exceptions.Forbidden()
 
         report_ref = 'account.account_invoices'
-        report = request.env.ref(report_ref, raise_if_not_found=False)
-        if not report:
+        if not request.env.ref(report_ref, raise_if_not_found=False):
             raise werkzeug.exceptions.NotFound()
 
-        pdf_content, _ = report._render_qweb_pdf(move.ids)
+        pdf_content, _content_type = request.env['ir.actions.report']._render_qweb_pdf(report_ref, move.ids)
         clean_filename = f"Facture_{move.name or move.id}.pdf".replace('/', '_').replace(' ', '_')
         pdfhttpheaders = [
             ('Content-Type', 'application/pdf'),

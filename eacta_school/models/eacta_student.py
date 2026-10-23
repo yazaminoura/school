@@ -320,7 +320,7 @@ class EactaStudent(models.Model):
             elif student.average >= 12:
                 student.honor_mention = 'encouragements'
             elif student.average >= 10:
-                student.honor_mention = 'tableau_honneur'
+                student.honor_mention = 'none'
             elif student.average >= 8:
                 student.honor_mention = 'avertissement'
             else:
@@ -630,14 +630,16 @@ class EactaStudent(models.Model):
         today = fields.Date.context_today(self)
         open_fees = Fee.search([('state', 'in', ('unpaid', 'partial'))])
         month_start = today.replace(day=1)
-        collected = sum(self.env['eacta.fee.payment'].search([('date', '>=', month_start)]).mapped('amount'))
+        month_payments = self.env['eacta.fee.payment'].search([('date', '>=', month_start)])
+        collected = sum(month_payments.filtered(lambda p: p.payment_type == 'payment').mapped('amount')) \
+            - sum(month_payments.filtered(lambda p: p.payment_type == 'refund').mapped('amount'))
         return {
             'finance': True,
             'fees_due': round(sum(open_fees.mapped('amount_due')), 2),
             'fees_overdue': round(sum(open_fees.filtered(lambda f: f.due_date and f.due_date < today)
                                       .mapped('amount_due')), 2),
             'fees_collected_month': round(collected, 2),
-            'currency': self.env.company.currency_id.symbol or '',
+            'currency': open_fees[:1].currency_id.symbol or self.env.company.currency_id.symbol or '',
         }
 
     @api.model

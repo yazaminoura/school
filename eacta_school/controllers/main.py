@@ -64,9 +64,11 @@ class SchoolMainController(http.Controller):
             if not student:
                 error_message = "Jeton QR code invalide ou élève introuvable."
             else:
-                today = fields.Date.today()
+                # Heure locale de l'utilisateur (fuseau tz), et non UTC
+                local_now = fields.Datetime.context_timestamp(request.env.user, fields.Datetime.now())
+                today = local_now.date()
                 # Détermination du créneau : matin (avant 13h) ou après-midi
-                current_hour = fields.Datetime.now().hour
+                current_hour = local_now.hour
                 session = 'morning' if current_hour < 13 else 'afternoon'
 
                 # Vérifier si un enregistrement d'assiduité existe déjà pour aujourd'hui
@@ -100,7 +102,7 @@ class SchoolMainController(http.Controller):
                         'code': student.code or '',
                         'class_name': student.current_class_id.name if student.current_class_id else 'Non assigné',
                         'image_url': f"/web/image/eacta.student/{student.id}/image_128",
-                        'timestamp': fields.Datetime.now().strftime("%H:%M:%S"),
+                        'timestamp': local_now.strftime("%H:%M:%S"),
                         'session': session,
                     }
 
@@ -118,6 +120,6 @@ class SchoolMainController(http.Controller):
             'student_data': student_data,
             'attendance_created': attendance_created,
             'error_message': error_message,
-            'today': fields.Date.today(),
+            'today': fields.Date.context_today(request.env.user),
         }
         return request.render('eacta_school.attendance_scan_page', values)

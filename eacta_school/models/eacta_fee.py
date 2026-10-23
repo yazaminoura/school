@@ -1,7 +1,11 @@
+import logging
+
 from dateutil.relativedelta import relativedelta
 
 from odoo import api, fields, models
 from odoo.exceptions import UserError, ValidationError
+
+_logger = logging.getLogger(__name__)
 
 PAYMENT_METHODS = [
     ('cash', 'Espèces'),
@@ -309,6 +313,23 @@ class EactaStudentFee(models.Model):
                 # Log non-fatal error in chatter
                 fee.message_post(body=f"Création de la facture client différée : {str(e)}")
 
+    def _add_late_fee_to_invoice(self, penalty):
+        """Répercute la pénalité sur la facture client pour garder frais et comptabilité alignés."""
+        self.ensure_one()
+        if not self.move_id:
+            return
+        if self.move_id.state == 'draft':
+            self.move_id.write({'invoice_line_ids': [(0, 0, {
+                'name': f"Pénalité de retard - {self.name}",
+                'quantity': 1.0,
+                'price_unit': penalty,
+            })]})
+        else:
+            self.message_post(
+                body=f"La facture {self.move_id.name} est déjà validée : la pénalité de {penalty:.2f} "
+                     f"{self.currency_id.symbol or ''} doit être facturée séparément (note de débit)."
+            )
+
     @api.model
     def _cron_check_overdue_fees(self):
         """Action planifiée : identifie les frais en retard, applique les pénalités et notifie les parents."""
@@ -342,18 +363,20 @@ class EactaStudentFee(models.Model):
                 fee.message_post(
                     body=f"Pénalité de retard appliquée : +{penalty:.2f} {fee.currency_id.symbol or ''} (Échéance dépassée le {fee.due_date})."
                 )
+                fee._add_late_fee_to_invoice(penalty)
 
             # 2. Relance email au parent si configurée (avec intervalle minimum pour éviter les doublons)
             parent = fee.parent_id or (fee.student_id.parent_ids[:1] if fee.student_id else False)
             parent_email = parent.email if parent else False
             days_since_last = (today - fee.last_reminder_date).days if fee.last_reminder_date else 9999
 
-            if send_reminder and parent_email and days_since_last >= min_interval_days:
-                if template:
-                    try:
-                        template.send_mail(fee.id, force_send=True)
-                    except Exception as e:
-                        fee.message_post(body=f"Échec de l'envoi du mail de relance : {str(e)}")
+            if send_reminder and parent_email and days_since_last >= min_interval_days and template:
+                try:
+                    template.send_mail(fee.id, force_send=True)
+                except Exception as e:
+                    # Pas de compteur ni de date : la relance sera retentée au prochain passage
+                    fee.message_post(body=f"Échec de l'envoi du mail de relance : {str(e)}")
+                    continue
                 fee.last_reminder_date = today
                 fee.reminder_count += 1
                 fee.message_post(
@@ -480,7 +503,7 @@ class EactaFeePayment(models.Model):
                     try:
                         fee.move_id.action_post()
                     except Exception:
-                        pass
+                        _logger.warning("Validation de la facture %s impossible", fee.move_id.display_name, exc_info=True)
                 journal = self.env['account.journal'].search([
                     ('type', 'in', ('bank', 'cash')),
                     ('company_id', '=', fee.company_id.id),
@@ -500,7 +523,7 @@ class EactaFeePayment(models.Model):
                     'ref': f"{payment.name} - {fee.name}",
                 })
             except Exception:
-                pass
+                _logger.warning("Synchronisation comptable du paiement %s impossible", payment.name, exc_info=True)
 
     def action_print_receipt(self):
         return self.env.ref('eacta_school.action_report_fee_receipt').report_action(self)
