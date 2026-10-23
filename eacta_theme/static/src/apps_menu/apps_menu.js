@@ -1,6 +1,8 @@
 /** @odoo-module **/
 
 import { useState } from "@odoo/owl";
+import { useService } from "@web/core/utils/hooks";
+import { user } from "@web/core/user";
 import { patch } from "@web/core/utils/patch";
 import { NavBar } from "@web/webclient/navbar/navbar";
 
@@ -24,6 +26,9 @@ patch(NavBar.prototype, {
         if (typeof window !== "undefined" && window.innerWidth >= 768 && this.nrSidebar.collapsed) {
             document.body.classList.add("o_sidebar_collapsed");
         }
+        // Menu arborescent (style actaERP) : applications dépliables, filtre, élément actif
+        this.nrTree = useState({ filter: "", expanded: {}, activeId: null });
+        this.nrCompanyService = useService("company");
         this.nrToggleSidebar = this.nrToggleSidebar.bind(this);
         this.nrOnAppsMenuStateChanged = this.nrOnAppsMenuStateChanged.bind(this);
         this.onNavBarDropdownItemSelection = this.onNavBarDropdownItemSelection.bind(this);
@@ -91,6 +96,168 @@ patch(NavBar.prototype, {
                 this.onNavBarDropdownItemSelection(first);
             }
         }
+    },
+
+    // ------------------------------------------------------------------
+    // Menu arborescent de la barre latérale
+    // ------------------------------------------------------------------
+
+    /**
+     * Arbre affiché : une entrée par application, avec ses lignes aplaties.
+     * Une section qui a des enfants devient un titre (« EXPÉDITIONS »),
+     * une section sans enfant devient un lien direct.
+     */
+    get nrSideTree() {
+        const query = normalize(this.nrTree.filter).trim();
+        const tree = [];
+        for (const app of this.apps) {
+            const appTree = this.menuService.getMenuAsTree(app.id);
+            const appMatches = query && normalize(app.name).includes(query);
+            const rows = [];
+            for (const section of appTree.childrenTree || []) {
+                this._nrFlatten(section, 0, rows, query && !appMatches ? query : "");
+            }
+            if (query && !appMatches && !rows.length) {
+                continue;
+            }
+            tree.push({
+                app,
+                rows,
+                expanded: query ? true : this.nrIsAppExpanded(app),
+                isCurrent: this.menuService.getCurrentApp()?.id === app.id,
+            });
+        }
+        return tree;
+    },
+
+    _nrFlatten(menu, depth, rows, query, parentMatches = false) {
+        const children = menu.childrenTree || [];
+        const matches = !query || parentMatches || normalize(menu.name).includes(query);
+        if (children.length) {
+            const childRows = [];
+            for (const child of children) {
+                this._nrFlatten(child, depth + 1, childRows, query, matches && !!query);
+            }
+            if (childRows.length) {
+                rows.push({ menu, depth, isHeader: true });
+                rows.push(...childRows);
+            }
+        } else if (matches) {
+            rows.push({ menu, depth, isHeader: false });
+        }
+    },
+
+    nrIsAppExpanded(app) {
+        if (app.id in this.nrTree.expanded) {
+            return this.nrTree.expanded[app.id];
+        }
+        return this.menuService.getCurrentApp()?.id === app.id;
+    },
+
+    nrOnAppClick(app) {
+        if (this.nrSidebar.collapsed) {
+            this.nrToggleSidebar();
+            this.nrTree.expanded[app.id] = true;
+            return;
+        }
+        const appTree = this.menuService.getMenuAsTree(app.id);
+        if (!(appTree.childrenTree || []).length) {
+            this.nrOnSideItemClick(app);
+            return;
+        }
+        this.nrTree.expanded[app.id] = !this.nrIsAppExpanded(app);
+    },
+
+    nrOnSideItemClick(menu) {
+        this.nrTree.activeId = menu.id;
+        this.onNavBarDropdownItemSelection(menu);
+    },
+
+    nrOnLinkClick(ev, menu) {
+        // Ctrl/Cmd/Maj + clic : laisser le navigateur ouvrir un nouvel onglet
+        if (ev.ctrlKey || ev.metaKey || ev.shiftKey) {
+            return;
+        }
+        ev.preventDefault();
+        this.nrOnSideItemClick(menu);
+    },
+
+    nrOnFilterKeydown(ev) {
+        if (ev.key === "Escape") {
+            this.nrTree.filter = "";
+        } else if (ev.key === "Enter") {
+            const first = this.nrSideTree.flatMap((entry) => entry.rows).find((row) => !row.isHeader);
+            if (first) {
+                ev.preventDefault();
+                this.nrOnSideItemClick(first.menu);
+            }
+        }
+    },
+
+    get nrUser() {
+        const name = user.name || "";
+        return {
+            name,
+            initial: name.trim().charAt(0).toUpperCase() || "?",
+            company: this.nrCompanyService?.currentCompany?.name || "",
+        };
+    },
+
+    nrGetAppIcon(app) {
+        const name = normalize(app?.name);
+        const xmlid = (app?.xmlid || "").toLowerCase();
+        if (xmlid.includes("eacta_school") || name.includes("school") || name.includes("ecole")) return "fa-graduation-cap";
+        if (xmlid.includes("library") || name.includes("biblioth")) return "fa-book";
+        if (xmlid.includes("event") || name.includes("evenement")) return "fa-calendar";
+        if (name.includes("discuss") || name.includes("discussion")) return "fa-comments-o";
+        if (name.includes("factur") || name.includes("invoic") || name.includes("compta")) return "fa-file-text-o";
+        if (name.includes("contact")) return "fa-address-book-o";
+        if (name.includes("calendrier") || name.includes("calendar")) return "fa-calendar-o";
+        if (name.includes("activit") || name.includes("to-do") || name.includes("todo")) return "fa-check-square-o";
+        if (name.includes("employ")) return "fa-users";
+        if (name.includes("site web") || name.includes("website")) return "fa-globe";
+        if (name.includes("tableau") || name.includes("dashboard")) return "fa-th-large";
+        if (name.includes("parametre") || name.includes("settings") || name.includes("theme")) return "fa-cog";
+        if (name.includes("application") || name.includes("apps")) return "fa-th";
+        return null;
+    },
+
+    /**
+     * Icône d'une entrée du menu arborescent, d'après son nom (sans accents).
+     * Les règles les plus précises passent en premier.
+     */
+    nrGetSideItemIcon(menu) {
+        const name = normalize(menu?.name);
+        const rules = [
+            ["tableau de bord", "fa-th-large"], ["dashboard", "fa-th-large"],
+            ["generer", "fa-magic"], ["analyse", "fa-bar-chart"], ["categorie", "fa-tags"],
+            ["type", "fa-list-ul"],
+            ["scanner", "fa-qrcode"], ["faire l'appel", "fa-check-square-o"], ["appel", "fa-check-square-o"],
+            ["assiduite", "fa-calendar-check-o"], ["absence", "fa-calendar-check-o"],
+            ["passage de fin", "fa-level-up"], ["promotion", "fa-level-up"],
+            ["parent", "fa-user-plus"], ["eleve", "fa-user"], ["classe", "fa-users"],
+            ["cahier de textes", "fa-book"], ["devoir", "fa-pencil"],
+            ["emploi du temps", "fa-calendar"], ["creneau", "fa-clock-o"],
+            ["bulletin de paie", "fa-file-text"], ["bulletins de paie", "fa-file-text"],
+            ["bulletin", "fa-file-text-o"], ["deliberation", "fa-gavel"], ["examen", "fa-pencil-square-o"],
+            ["note", "fa-star-o"], ["cours", "fa-book"],
+            ["incident", "fa-flag"], ["sanction", "fa-gavel"], ["annonce", "fa-bullhorn"],
+            ["infirmerie", "fa-medkit"], ["vaccin", "fa-eyedropper"], ["certificat", "fa-file-text-o"],
+            ["effectif", "fa-cutlery"], ["menu", "fa-cutlery"], ["abonnement", "fa-id-card-o"],
+            ["contrat", "fa-id-badge"], ["massar", "fa-upload"],
+            ["paiement", "fa-credit-card"], ["frais", "fa-money"],
+                        ["ligne", "fa-bus"], ["arret", "fa-map-marker"], ["transport", "fa-bus"],
+            ["pret", "fa-exchange"], ["emprunt", "fa-exchange"], ["retour", "fa-undo"],
+            ["exemplaire", "fa-barcode"], ["livre", "fa-bookmark"], ["catalogue", "fa-bookmark"],
+            ["lecteur", "fa-users"], ["comptoir", "fa-desktop"],
+            ["evenement", "fa-calendar"], ["inscription", "fa-id-badge"], ["autorisation", "fa-check-circle-o"],
+            ["annee", "fa-calendar-o"], ["trimestre", "fa-calendar-o"], ["periode", "fa-calendar-o"],
+            ["niveau", "fa-sitemap"], ["enseignant", "fa-user-circle-o"],
+            ["style", "fa-paint-brush"], ["theme", "fa-paint-brush"],
+            ["parametre", "fa-cog"], ["configuration", "fa-cog"], ["reglage", "fa-cog"],
+        ];
+        const match = rules.find(([key]) => name.includes(key));
+        return match ? match[1] : "fa-circle-o";
     },
 
     nrGetSectionIcon(section) {

@@ -3,7 +3,7 @@
 // ==========================================================================
 
 :root {
-    --eacta-sidebar-width: 240px;
+    --eacta-sidebar-width: 270px;
     --eacta-sidebar-collapsed-width: 68px;
 }
 
@@ -13,6 +13,7 @@ body.o_sidebar_collapsed {
 
 // --------------------------------------------------------------------------
 // 1. Mise en page globale (Client Web & Sidebar sur Desktop)
+//    Barre latérale claire avec menu arborescent (style actaERP)
 // --------------------------------------------------------------------------
 @media (min-width: 768px) {
     .o_web_client {
@@ -47,27 +48,42 @@ body.o_sidebar_collapsed {
     }
 
     .o_main_navbar {
+        --eacta-side-fg: #1f2937;
+        --eacta-side-muted: #64748b;
+        --eacta-side-line: #e5e7eb;
+        --eacta-side-hover: #f1f5f9;
+        --eacta-side-active-bg: color-mix(in srgb, var(--eacta-primary, #8E1B3A) 9%, white);
+        --eacta-side-active-fg: var(--eacta-primary, #8E1B3A);
+
         width: 100% !important;
         height: 100vh !important;
         max-height: 100vh !important;
         display: flex !important;
         flex-direction: column !important;
-        background: var(--eacta-navbar-bg) !important;
+        background: #ffffff !important;
+        color: var(--eacta-side-fg) !important;
         border-bottom: 0 !important;
-        border-right: 2px solid var(--eacta-navbar-border) !important;
-        box-shadow: 4px 0 24px rgba(15, 23, 42, .18) !important;
+        border-right: 1px solid var(--eacta-side-line) !important;
+        box-shadow: none !important;
         padding: 0 !important;
         overflow: hidden !important;
+
+        // L'arbre remplace le lanceur d'applications, le titre et les sections
+        .o_navbar_apps_menu,
+        .o_menu_brand,
+        .o_menu_sections {
+            display: none !important;
+        }
     }
 
-    // En-tête de la barre latérale (Logo + Titre + Bouton Réduire)
+    // En-tête : logo + nom + bouton réduire
     .o_nr_sidebar_brand_bar {
-        padding: 0.95rem 0.85rem 0.8rem;
-        border-bottom: 1px solid rgba(255, 255, 255, 0.12);
+        flex: 0 0 auto;
+        padding: 0.85rem 0.85rem 0.75rem 1rem;
+        border-bottom: 1px solid var(--eacta-side-line);
         display: flex;
         align-items: center;
         gap: 0.6rem;
-        background: rgba(0, 0, 0, 0.14);
         position: relative;
 
         .o_nr_sidebar_brand_link {
@@ -81,318 +97,369 @@ body.o_sidebar_collapsed {
         .o_nr_sidebar_logo {
             width: 34px;
             height: 34px;
-            border-radius: 9px;
             object-fit: contain;
-            background: #ffffff;
-            padding: 2px;
-            box-shadow: 0 2px 6px rgba(0, 0, 0, 0.22);
             flex-shrink: 0;
         }
 
         .o_nr_sidebar_brand_title {
-            font-size: 1.12rem;
+            font-size: 1.1rem;
             font-weight: 800;
-            color: #ffffff;
-            letter-spacing: 0.02em;
+            color: var(--eacta-primary, #8E1B3A);
             white-space: nowrap;
             overflow: hidden;
             text-overflow: ellipsis;
         }
 
         .o_nr_sidebar_toggle_btn {
-            background: rgba(255, 255, 255, 0.14);
-            border: 1px solid rgba(255, 255, 255, 0.18);
-            border-radius: 8px;
-            color: #ffffff;
-            width: 28px;
-            height: 28px;
+            background: transparent;
+            border: 1px solid transparent;
+            border-radius: 6px;
+            color: var(--eacta-side-muted);
+            width: 30px;
+            height: 30px;
             display: flex;
             align-items: center;
             justify-content: center;
             cursor: pointer;
-            transition: all 0.15s ease;
             flex-shrink: 0;
+            transition: background 0.15s ease, color 0.15s ease;
 
             &:hover {
-                background: rgba(255, 255, 255, 0.28);
-                transform: scale(1.05);
+                background: var(--eacta-side-hover);
+                color: var(--eacta-side-fg);
             }
         }
     }
 
-    // Bouton de lancement des applications
-    .o_navbar_apps_menu {
-        padding: 0.65rem 0.75rem 0.4rem;
-        width: 100%;
+    // Filtre des menus
+    .o_nr_side_filter {
+        flex: 0 0 auto;
+        position: relative;
+        align-items: center;
+        margin: 0.75rem 0.6rem 0.4rem;
 
-        .dropdown {
+        > .fa-filter {
+            position: absolute;
+            left: 0.8rem;
+            color: var(--eacta-side-muted);
+            pointer-events: none;
+        }
+
+        input.o_input {
             width: 100%;
+            height: 38px;
+            padding: 0 2rem 0 2.2rem;
+            border: 1px solid var(--eacta-side-line) !important;
+            border-radius: 8px;
+            background: #ffffff;
+            color: var(--eacta-side-fg);
+            font-size: 0.9rem;
+            box-shadow: none !important;
+
+            &::placeholder { color: var(--eacta-side-muted); }
+            &:focus { border-color: var(--eacta-side-active-fg) !important; }
         }
 
-        .o_nr_apps_btn {
-            width: 100%;
-            height: 40px;
-            display: flex;
-            align-items: center;
-            gap: 0.6rem;
-            padding: 0 0.85rem;
-            background: rgba(255, 255, 255, 0.14);
-            border: 1px solid rgba(255, 255, 255, 0.22);
-            border-radius: 10px;
-            color: #ffffff;
-            font-weight: 700;
-            font-size: 0.88rem;
-            letter-spacing: 0.01em;
-            transition: all 0.15s ease;
-            box-shadow: 0 2px 6px rgba(0, 0, 0, 0.08);
+        .o_nr_side_filter_clear {
+            position: absolute;
+            right: 0.4rem;
+            border: 0;
+            background: transparent;
+            color: var(--eacta-side-muted);
+            padding: 0.2rem 0.35rem;
 
-            .o_nr_apps_btn_icon {
-                font-size: 1.1rem;
-                color: var(--eacta-secondary, #E0A630);
-            }
-
-            &:hover, &:focus {
-                background: rgba(255, 255, 255, 0.24);
-                border-color: rgba(255, 255, 255, 0.42);
-                transform: translateY(-1px);
-            }
+            &:hover { color: var(--eacta-side-fg); }
         }
     }
 
-    // Titre de l'application active
-    .o_main_navbar .o_menu_brand {
-        display: block !important;
-        padding: 0.35rem 0.95rem 0.5rem !important;
-        font-size: 0.72rem !important;
-        font-weight: 800 !important;
-        text-transform: uppercase !important;
-        letter-spacing: 0.1em !important;
-        color: rgba(255, 255, 255, 0.65) !important;
-        border-bottom: 1px solid rgba(255, 255, 255, 0.08) !important;
-        margin: 0 !important;
-        height: auto !important;
-        line-height: normal !important;
-    }
+    // Arbre des menus
+    .o_nr_side_tree {
+        flex: 1 1 auto;
+        min-height: 0;
+        overflow-y: auto;
+        overflow-x: hidden;
+        padding: 0.2rem 0.6rem 0.75rem;
 
-    // Sections du menu (navigation verticale)
-    .o_main_navbar .o_menu_sections {
-        flex: 1 1 auto !important;
-        width: 100% !important;
-        display: flex !important;
-        flex-direction: column !important;
-        overflow-y: auto !important;
-        overflow-x: hidden !important;
-        padding: 0.5rem 0.6rem !important;
-        gap: 0.25rem !important;
-
-        &::-webkit-scrollbar {
-            width: 4px;
-        }
+        &::-webkit-scrollbar { width: 6px; }
         &::-webkit-scrollbar-thumb {
-            background: rgba(255, 255, 255, 0.2);
+            background: #cbd5e1;
+            border-radius: 6px;
+        }
+    }
+
+    .o_nr_side_app_btn {
+        width: 100%;
+        height: 38px;
+        display: flex;
+        align-items: center;
+        gap: 0.75rem;
+        padding: 0 0.6rem;
+        border: 0;
+        border-radius: 8px;
+        background: transparent;
+        color: var(--eacta-side-fg);
+        font-size: 0.95rem;
+        font-weight: 500;
+        text-align: left;
+        transition: background 0.15s ease;
+
+        &:hover { background: var(--eacta-side-hover); }
+    }
+
+    .o_nr_side_app_icon {
+        width: 22px;
+        flex: 0 0 22px;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        color: #374151;
+        font-size: 1.05rem;
+
+        img {
+            width: 20px;
+            height: 20px;
+            object-fit: contain;
             border-radius: 4px;
         }
+    }
 
-        .dropdown, .o_nav_entry {
-            width: 100% !important;
-            margin: 0 !important;
+    .o_nr_side_app_initial {
+        width: 20px;
+        height: 20px;
+        border-radius: 5px;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        font-size: 0.75rem;
+        font-weight: 700;
+        color: #ffffff;
+        background: var(--eacta-primary, #8E1B3A);
+    }
+
+    .o_nr_side_app_name {
+        flex: 1 1 auto;
+        min-width: 0;
+        white-space: nowrap;
+        overflow: hidden;
+        text-overflow: ellipsis;
+    }
+
+    .o_nr_side_chevron {
+        color: var(--eacta-side-muted);
+        font-size: 1rem;
+        width: 14px;
+        text-align: center;
+    }
+
+    .o_nr_side_app.o_current > .o_nr_side_app_btn {
+        font-weight: 600;
+
+        .o_nr_side_app_icon { color: var(--eacta-side-active-fg); }
+    }
+
+    .o_nr_side_rows {
+        padding: 0.15rem 0 0.4rem;
+    }
+
+    // Titre de groupe (« EXPÉDITIONS », « CONFIGURATION »…)
+    .o_nr_side_header {
+        padding: 0.7rem 0.6rem 0.3rem;
+        font-size: 0.7rem;
+        font-weight: 700;
+        letter-spacing: 0.12em;
+        text-transform: uppercase;
+        color: var(--eacta-side-muted);
+        white-space: nowrap;
+        overflow: hidden;
+        text-overflow: ellipsis;
+    }
+
+    .o_nr_side_item {
+        display: flex;
+        align-items: center;
+        gap: 0.6rem;
+        padding-top: 0.42rem;
+        padding-bottom: 0.42rem;
+        padding-right: 0.6rem;
+        border-radius: 8px;
+        color: #334155;
+        font-size: 0.92rem;
+        text-decoration: none;
+        white-space: nowrap;
+        overflow: hidden;
+        text-overflow: ellipsis;
+        transition: background 0.15s ease, color 0.15s ease;
+
+        .o_nr_side_item_icon {
+            width: 16px;
+            flex: 0 0 16px;
+            text-align: center;
+            font-size: 0.92rem;
+            color: #94a3b8;
+            transition: color 0.15s ease;
         }
 
-        .o_nr_section_entry, .o_nr_section_btn {
-            display: flex !important;
-            align-items: center !important;
-            width: 100% !important;
-            height: 40px !important;
-            padding: 0 0.75rem !important;
-            border-radius: 10px !important;
-            border: 0 !important;
-            background: transparent !important;
-            color: rgba(255, 255, 255, 0.9) !important;
-            font-size: 0.9rem !important;
-            font-weight: 600 !important;
-            text-decoration: none !important;
-            transition: all 0.15s ease !important;
-
-            .o_nr_section_icon {
-                font-size: 1rem !important;
-                width: 22px !important;
-                text-align: center !important;
-                flex-shrink: 0 !important;
-                color: rgba(255, 255, 255, 0.85) !important;
-                margin-right: 0.65rem !important;
-            }
-
-            .o_nr_section_label {
-                white-space: nowrap !important;
-                overflow: hidden !important;
-                text-overflow: ellipsis !important;
-                flex-grow: 1 !important;
-            }
-
-            .o_nr_chevron {
-                font-size: 0.8rem !important;
-                opacity: 0.65 !important;
-                transition: transform 0.2s ease !important;
-            }
-
-            &:hover, &:focus {
-                background: rgba(255, 255, 255, 0.16) !important;
-                color: #ffffff !important;
-                transform: translateX(3px) !important;
-
-                .o_nr_section_icon {
-                    color: var(--eacta-secondary, #E0A630) !important;
-                }
-            }
-
-            &.active, &.show {
-                background: rgba(255, 255, 255, 0.22) !important;
-                color: #ffffff !important;
-                font-weight: 700 !important;
-
-                .o_nr_section_icon {
-                    color: var(--eacta-secondary, #E0A630) !important;
-                }
-
-                .o_nr_chevron {
-                    transform: rotate(90deg) !important;
-                }
-            }
+        .o_nr_side_item_label {
+            min-width: 0;
+            overflow: hidden;
+            text-overflow: ellipsis;
         }
 
-        // Sous-menus déroulants (flyout à droite de la barre latérale)
-        .dropdown-menu {
-            position: fixed !important;
-            left: calc(var(--eacta-sidebar-width, 240px) + 8px) !important;
-            border-radius: 14px !important;
-            background: #ffffff !important;
-            border: 1px solid #e2e8f0 !important;
-            box-shadow: 0 18px 40px rgba(15, 23, 42, 0.20), 0 4px 12px rgba(15, 23, 42, 0.08) !important;
-            padding: 0.5rem !important;
-            min-width: 220px !important;
-            z-index: 1050 !important;
-            animation: nrFlyoutIn 0.16s cubic-bezier(0.16, 1, 0.3, 1) !important;
+        &:hover {
+            background: var(--eacta-side-hover);
+            color: var(--eacta-side-fg);
 
-            .dropdown-item {
-                border-radius: 8px !important;
-                padding: 0.55rem 0.85rem !important;
-                color: #1e293b !important;
-                font-weight: 500 !important;
-                font-size: 0.88rem !important;
-                display: flex !important;
-                align-items: center !important;
-                transition: all 0.15s ease !important;
+            .o_nr_side_item_icon { color: #475569; }
+        }
 
-                .o_nr_sub_icon {
-                    color: #64748b;
-                    font-size: 0.9rem;
-                    width: 18px;
-                    text-align: center;
-                }
+        &.active {
+            background: var(--eacta-side-active-bg);
+            color: var(--eacta-side-active-fg);
+            font-weight: 600;
 
-                &:hover, &:focus, &.focus {
-                    background: var(--eacta-primary-subtle, #fef2f2) !important;
-                    color: var(--eacta-primary, #8E1B3A) !important;
-                    transform: translateX(3px) !important;
-
-                    .o_nr_sub_icon {
-                        color: var(--eacta-primary, #8E1B3A);
-                    }
-                }
-            }
+            .o_nr_side_item_icon { color: var(--eacta-side-active-fg); }
         }
     }
 
-    // Systray & Profil utilisateur en bas de la barre latérale
+    .o_nr_side_empty {
+        padding: 1.5rem 0.5rem;
+        text-align: center;
+        color: var(--eacta-side-muted);
+        font-size: 0.85rem;
+    }
+
+    // Systray (messages, activités…) en ligne compacte
     .o_main_navbar .o_menu_systray {
         flex: 0 0 auto !important;
         width: 100% !important;
-        margin-top: auto !important;
+        margin-top: 0 !important;
         display: flex !important;
         flex-direction: row !important;
         flex-wrap: wrap !important;
         align-items: center !important;
         justify-content: space-evenly !important;
-        padding: 0.6rem 0.4rem !important;
-        border-top: 1px solid rgba(255, 255, 255, 0.12) !important;
-        background: rgba(0, 0, 0, 0.15) !important;
-        gap: 0.35rem !important;
+        padding: 0.35rem 0.4rem !important;
+        border-top: 1px solid var(--eacta-side-line) !important;
+        background: #ffffff !important;
+        gap: 0.25rem !important;
 
         .dropdown-toggle, .o_nav_entry {
             margin: 0 !important;
-            height: 36px !important;
-            line-height: 36px !important;
+            height: 34px !important;
+            line-height: 34px !important;
             border-radius: 8px !important;
-            color: rgba(255, 255, 255, 0.85) !important;
+            color: var(--eacta-side-muted) !important;
 
             &:hover {
-                background: rgba(255, 255, 255, 0.15) !important;
-                color: #ffffff !important;
+                background: var(--eacta-side-hover) !important;
+                color: var(--eacta-side-fg) !important;
             }
         }
+    }
+
+    // Carte utilisateur
+    .o_nr_side_user {
+        flex: 0 0 auto;
+        align-items: center;
+        gap: 0.7rem;
+        padding: 0.75rem 1rem;
+        border-top: 1px solid var(--eacta-side-line);
+        background: #ffffff;
+    }
+
+    .o_nr_side_user_avatar {
+        width: 38px;
+        height: 38px;
+        flex: 0 0 38px;
+        border-radius: 8px;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        font-size: 1.15rem;
+        font-weight: 600;
+        color: #ffffff;
+        background: var(--eacta-primary, #8E1B3A);
+    }
+
+    .o_nr_side_user_text {
+        flex: 1 1 auto;
+        min-width: 0;
+        display: flex;
+        flex-direction: column;
+        line-height: 1.25;
+    }
+
+    .o_nr_side_user_name {
+        font-weight: 700;
+        color: var(--eacta-side-fg);
+        white-space: nowrap;
+        overflow: hidden;
+        text-overflow: ellipsis;
+    }
+
+    .o_nr_side_user_company {
+        font-size: 0.82rem;
+        color: var(--eacta-side-muted);
+        white-space: nowrap;
+        overflow: hidden;
+        text-overflow: ellipsis;
+    }
+
+    .o_nr_side_user_status {
+        width: 9px;
+        height: 9px;
+        flex: 0 0 9px;
+        border-radius: 50%;
+        background: #10b981;
     }
 }
 
 // --------------------------------------------------------------------------
-// 2. Mode réduit / compact (body.o_sidebar_collapsed)
+// 2. Mode réduit / compact (body.o_sidebar_collapsed) : icônes seules
 // --------------------------------------------------------------------------
 @media (min-width: 768px) {
     body.o_sidebar_collapsed {
         .o_nr_sidebar_brand_bar {
+            flex-direction: column;
             justify-content: center !important;
-            padding: 0.8rem 0.4rem !important;
+            padding: 0.75rem 0.4rem !important;
 
             .o_nr_sidebar_brand_title {
                 display: none !important;
             }
 
             .o_nr_sidebar_toggle_btn {
-                position: absolute !important;
-                top: 48px !important;
-                left: 54px !important;
-                box-shadow: 0 2px 8px rgba(0, 0, 0, 0.25) !important;
-                z-index: 1001 !important;
+                margin: 0 !important;
             }
         }
 
-        .o_navbar_apps_menu {
-            padding: 0.5rem 0.4rem !important;
-
-            .o_nr_apps_btn {
-                justify-content: center !important;
-                padding: 0 !important;
-
-                .o_nr_apps_btn_label {
-                    display: none !important;
-                }
-            }
-        }
-
-        .o_main_navbar .o_menu_brand {
+        .o_nr_side_filter,
+        .o_nr_side_app_name,
+        .o_nr_side_chevron,
+        .o_nr_side_rows,
+        .o_nr_side_user_text,
+        .o_nr_side_user_status {
             display: none !important;
         }
 
-        .o_main_navbar .o_menu_sections {
-            padding: 0.5rem 0.35rem !important;
+        .o_nr_side_tree {
+            padding: 0.5rem 0.35rem;
+        }
 
-            .o_nr_section_entry, .o_nr_section_btn {
-                justify-content: center !important;
-                padding: 0 !important;
+        .o_nr_side_app_btn {
+            justify-content: center;
+            padding: 0;
+            height: 42px;
+        }
 
-                .o_nr_section_icon {
-                    margin: 0 !important;
-                    font-size: 1.15rem !important;
-                }
-
-                .o_nr_section_label, .o_nr_chevron {
-                    display: none !important;
-                }
-            }
+        .o_nr_side_user {
+            justify-content: center;
+            padding: 0.6rem 0.3rem;
         }
 
         .o_main_navbar .o_menu_systray {
             flex-direction: column !important;
-            padding: 0.5rem 0.2rem !important;
+            padding: 0.4rem 0.2rem !important;
             gap: 0.2rem !important;
         }
     }

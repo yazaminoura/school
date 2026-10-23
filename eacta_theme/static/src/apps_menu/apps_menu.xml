@@ -14,6 +14,66 @@
                     <i t-attf-class="fa #{nrSidebar.collapsed ? 'fa-indent' : 'fa-dedent'}"/>
                 </button>
             </div>
+
+            <!-- Filtre des menus -->
+            <div class="o_nr_side_filter d-none d-md-flex">
+                <i class="fa fa-filter" role="img" aria-label="Filtrer" title="Filtrer"/>
+                <input type="text" class="o_input" placeholder="Filtrer les menus"
+                       t-model="nrTree.filter" t-on-keydown="nrOnFilterKeydown"/>
+                <button t-if="nrTree.filter" type="button" class="o_nr_side_filter_clear"
+                        t-on-click="() => this.nrTree.filter = ''" title="Effacer">
+                    <i class="fa fa-times"/>
+                </button>
+            </div>
+
+            <!-- Menu arborescent : applications dépliables -->
+            <div class="o_nr_side_tree d-none d-md-block">
+                <t t-set="nrEntries" t-value="nrSideTree"/>
+                <div t-foreach="nrEntries" t-as="entry" t-key="entry.app.id"
+                     t-attf-class="o_nr_side_app #{entry.expanded ? 'o_expanded' : ''} #{entry.isCurrent ? 'o_current' : ''}">
+                    <button type="button" class="o_nr_side_app_btn" t-att-title="entry.app.name"
+                            t-att-data-menu-xmlid="entry.app.xmlid" t-on-click="() => this.nrOnAppClick(entry.app)">
+                        <span class="o_nr_side_app_icon">
+                            <t t-set="nrIcon" t-value="nrGetAppIcon(entry.app)"/>
+                            <i t-if="nrIcon" t-attf-class="fa #{nrIcon}"/>
+                            <img t-elif="entry.app.webIconData" t-att-src="entry.app.webIconData" alt=""/>
+                            <span t-else="" class="o_nr_side_app_initial" t-esc="nrAppInitial(entry.app)"/>
+                        </span>
+                        <span class="o_nr_side_app_name" t-esc="entry.app.name"/>
+                        <i t-if="entry.rows.length" t-attf-class="fa #{entry.expanded ? 'fa-angle-down' : 'fa-angle-right'} o_nr_side_chevron"/>
+                    </button>
+                    <div t-if="entry.expanded and entry.rows.length" class="o_nr_side_rows">
+                        <t t-foreach="entry.rows" t-as="row" t-key="row.menu.id">
+                            <div t-if="row.isHeader" class="o_nr_side_header"
+                                 t-attf-style="padding-left: #{1.1 + row.depth * 0.9}rem"
+                                 t-esc="row.menu.name"/>
+                            <a t-else="" t-att-href="getMenuItemHref(row.menu)"
+                               t-attf-class="o_nr_side_item #{nrTree.activeId === row.menu.id ? 'active' : ''}"
+                               t-attf-style="padding-left: #{1.25 + row.depth * 0.9}rem"
+                               t-att-data-menu-xmlid="row.menu.xmlid" t-att-title="row.menu.name"
+                               t-on-click="(ev) => this.nrOnLinkClick(ev, row.menu)">
+                                <i t-attf-class="fa #{nrGetSideItemIcon(row.menu)} o_nr_side_item_icon"/>
+                                <span class="o_nr_side_item_label" t-esc="row.menu.name"/>
+                            </a>
+                        </t>
+                    </div>
+                </div>
+                <div t-if="!nrEntries.length" class="o_nr_side_empty">
+                    Aucun menu ne correspond à « <t t-esc="nrTree.filter"/> »
+                </div>
+            </div>
+        </xpath>
+
+        <!-- Carte utilisateur en bas de la barre latérale -->
+        <xpath expr="//nav[hasclass('o_main_navbar')]" position="inside">
+            <div class="o_nr_side_user d-none d-md-flex" t-att-title="nrUser.name">
+                <span class="o_nr_side_user_avatar" t-esc="nrUser.initial"/>
+                <span class="o_nr_side_user_text">
+                    <span class="o_nr_side_user_name" t-esc="nrUser.name"/>
+                    <span class="o_nr_side_user_company" t-esc="nrUser.company"/>
+                </span>
+                <span class="o_nr_side_user_status" title="En ligne"/>
+            </div>
         </xpath>
     </t>
 
