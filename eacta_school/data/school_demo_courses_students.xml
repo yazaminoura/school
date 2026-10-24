@@ -162,7 +162,6 @@
             <field name="class_ids" eval="[(4, ref('eacta_school.class_1a_2023')), (4, ref('eacta_school.class_6a_2026'))]"/>
             <field name="transport_line_id" ref="demo_transport_line_1"/>
             <field name="transport_stop_id" ref="demo_transport_stop_1"/>
-            <field name="image_128">iVBORw0KGgoAAAANSUhEUgAAAIAAAACACAIAAABMXPacAAABLElEQVR4nO3RQREAIAzAMIZ/zyAjjzUKetd5J9LVAds1AGsA1gCsAVgDsAZgDcAagDUAawDWAKwBWAOwBmANwBqANQBrANYArAFYA7AGYA3AGoA1AGsA1gCsAVgDsAZgDcAagDUAawDWAKwBWAOwBmANwBqANQBrANYArAFYA7AGYA3AGoA1AGsA1gCsAVgDsAZgDcAagDUAawDWAKwBWAOwBmANwBqANQBrANYArAFYA7AGYA3AGoA1AGsA1gCsAVgDsAZgDcAagDUAawDWAKwBWAOwBmANwBqANQBrANYArAFYA7AGYA3AGoA1AGsA1gCsAVgDsAZgDcAagDUAawDWAKwBWAOwBmANwBqANQBrANYArAFYA7AGYA3AGoA1AGsA1gCsAVgDsAZgH8/hAf+bYtS1AAAAAElFTkSuQmCC</field>
         </record>
 
         <record id="eacta_school.student_emma" model="eacta.student">

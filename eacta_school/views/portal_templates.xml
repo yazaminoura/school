@@ -35,27 +35,25 @@
     <!-- Composant Sélecteur d'enfant (Espace Parents Multi-Enfants) -->
     <template id="portal_student_child_switcher" name="Sélecteur d'enfant Portail">
         <t t-if="portal_students and len(portal_students) &gt; 1">
-            <div class="card bg-white border-0 shadow-sm mb-4">
-                <div class="card-body py-2 px-3 d-flex flex-wrap align-items-center justify-content-between gap-2">
-                    <div class="d-flex align-items-center gap-2">
-                        <span class="badge bg-primary-subtle text-primary p-2 rounded-circle">
-                            <i class="fa fa-users"></i>
-                        </span>
-                        <div>
-                            <strong class="d-block text-dark small">Espace Famille / فضاء الأولياء</strong>
-                            <span class="text-muted small">Changer d'enfant :</span>
-                        </div>
+            <div class="child-switcher-container d-flex flex-wrap align-items-center justify-content-between gap-2">
+                <div class="d-flex align-items-center gap-2">
+                    <span class="badge bg-primary text-white p-2 rounded-circle" style="background: var(--school-primary) !important;">
+                        <i class="fa fa-users"></i>
+                    </span>
+                    <div>
+                        <strong class="d-block text-dark small">Espace Famille / فضاء الأولياء</strong>
+                        <span class="text-muted small">Sélectionnez un enfant :</span>
                     </div>
-                    <div class="btn-group btn-group-sm flex-wrap">
-                        <t t-foreach="portal_students" t-as="sib">
-                            <a t-attf-href="/my/school/student/#{sib.id}#{('/' + subpage_slug) if subpage_slug else ''}"
-                               t-attf-class="btn #{'btn-primary active' if sib.id == student.id else 'btn-outline-secondary'}">
-                                <i class="fa fa-user me-1"></i>
-                                <t t-out="sib.name"/>
-                                <span class="badge bg-light text-dark ms-1" t-if="sib.current_class_id"><t t-out="sib.current_class_id.name"/></span>
-                            </a>
-                        </t>
-                    </div>
+                </div>
+                <div class="btn-group btn-group-sm flex-wrap gap-1">
+                    <t t-foreach="portal_students" t-as="sib">
+                        <a t-attf-href="/my/school/student/#{sib.id}#{('/' + subpage_slug) if subpage_slug else ''}"
+                           t-attf-class="btn child-switcher-btn #{'active' if sib.id == student.id else 'btn-outline-secondary'}">
+                            <i class="fa fa-user me-1"></i>
+                            <t t-out="sib.name"/>
+                            <span class="badge bg-light text-dark ms-1" t-if="sib.current_class_id"><t t-out="sib.current_class_id.name"/></span>
+                        </a>
+                    </t>
                 </div>
             </div>
         </t>
@@ -65,35 +63,44 @@
     <template id="portal_my_school" name="Espace Scolaire - Enfants">
         <t t-call="portal.portal_layout">
             <div class="container py-4">
-                <div class="d-flex justify-content-between align-items-center mb-4">
-                    <div>
-                        <h2 class="mb-1 text-primary">Espace Scolaire / الفضاء المدرسي</h2>
-                        <p class="text-muted mb-0">Suivi pédagogique, assiduité, notes et facturation des élèves.</p>
+                <!-- Hero Banner -->
+                <div class="school-hero-banner">
+                    <div class="d-flex flex-wrap justify-content-between align-items-center gap-3">
+                        <div>
+                            <div class="d-flex align-items-center gap-2 mb-2">
+                                <span class="school-hero-badge"><i class="fa fa-graduation-cap me-1"/> NR School</span>
+                                <span class="school-hero-badge"><i class="fa fa-check-circle me-1 text-warning"/> Année 2026-2027</span>
+                            </div>
+                            <h2 class="h1 mb-1 text-white">Espace Scolaire / الفضاء المدرسي</h2>
+                            <p class="text-white-50 mb-0">
+                                Suivi pédagogique, assiduité, notes, devoirs et scolarité en temps réel.
+                            </p>
+                        </div>
                     </div>
                 </div>
 
                 <!-- Bannière Espace Famille si plusieurs enfants -->
                 <t t-if="is_family">
-                    <div class="card border-0 bg-primary-subtle text-primary-emphasis shadow-sm mb-4">
+                    <div class="card border-0 shadow-sm mb-4" style="background: linear-gradient(135deg, rgba(142, 27, 58, 0.07) 0%, rgba(224, 166, 48, 0.12) 100%); border-radius: 18px; border: 1px solid rgba(142, 27, 58, 0.2) !important;">
                         <div class="card-body p-4">
                             <div class="d-flex flex-wrap align-items-center justify-content-between gap-3">
                                 <div>
-                                    <span class="badge bg-primary text-white mb-2"><i class="fa fa-users me-1"/> Espace Famille / فضاء الأولياء</span>
-                                    <h4 class="mb-1 text-primary">Tableau de bord de la fratrie</h4>
+                                    <span class="badge text-white mb-2 py-1 px-3 rounded-pill" style="background: var(--school-primary) !important;"><i class="fa fa-users me-1"/> Espace Famille / فضاء الأولياء</span>
+                                    <h4 class="mb-1 text-dark fw-bold">Tableau de bord de la fratrie</h4>
                                     <p class="mb-0 text-muted small">
                                         Suivi global et accès direct au dossier scolaire de vos <strong><t t-out="len(students)"/></strong> enfants scolarisés.
                                     </p>
                                 </div>
                                 <div class="d-flex gap-3">
-                                    <div class="bg-white rounded p-3 shadow-sm text-center" style="min-width: 140px;">
-                                        <small class="text-muted d-block">Enfants scolarisés</small>
-                                        <h4 class="mb-0 text-primary fw-bold"><t t-out="len(students)"/></h4>
+                                    <div class="bg-white rounded-4 p-3 shadow-sm text-center border" style="min-width: 140px;">
+                                        <small class="text-muted d-block font-weight-bold">Enfants inscrits</small>
+                                        <h3 class="mb-0 fw-bold" style="color: var(--school-primary);"><t t-out="len(students)"/></h3>
                                     </div>
-                                    <div class="bg-white rounded p-3 shadow-sm text-center" style="min-width: 170px;">
-                                        <small class="text-muted d-block">Solde familial à régler</small>
-                                        <h4 t-attf-class="mb-0 fw-bold #{'text-danger' if family_total_due &gt; 0 else 'text-success'}">
+                                    <div class="bg-white rounded-4 p-3 shadow-sm text-center border" style="min-width: 170px;">
+                                        <small class="text-muted d-block font-weight-bold">Solde restant</small>
+                                        <h3 t-attf-class="mb-0 fw-bold #{'text-danger' if family_total_due &gt; 0 else 'text-success'}">
                                             <t t-out="'%.2f' % family_total_due"/> DH
-                                        </h4>
+                                        </h3>
                                     </div>
                                 </div>
                             </div>
@@ -102,35 +109,49 @@
                 </t>
 
                 <t t-if="not students">
-                    <div class="alert alert-info py-4 text-center">
-                        <i class="fa fa-info-circle fa-2x mb-2 text-info"></i>
-                        <h5>Aucun dossier élève associé à ce compte.</h5>
-                        <p class="mb-0 text-muted">Si vous êtes parent d'élève, veuillez contacter l'administration de l'établissement pour associer votre adresse email à la fiche de votre enfant.</p>
+                    <div class="card border-0 shadow-sm text-center py-5 rounded-4 bg-white">
+                        <div class="card-body">
+                            <i class="fa fa-graduation-cap fa-3x mb-3 text-muted"></i>
+                            <h4 class="fw-bold text-dark">Aucun dossier élève associé à ce compte.</h4>
+                            <p class="mb-0 text-muted">Si vous êtes parent d'élève, veuillez contacter l'administration pour rattacher votre adresse email.</p>
+                        </div>
                     </div>
                 </t>
 
                 <div t-if="students" class="row g-4">
                     <t t-foreach="students" t-as="std">
                         <div class="col-md-6 col-lg-4">
-                            <div class="card h-100 shadow-sm border-0 border-top border-4 border-primary">
-                                <div class="card-body text-center p-4">
-                                    <div class="mb-3">
-                                        <img t-if="std.image_128" t-att-src="image_data_uri(std.image_128)" class="rounded-circle shadow-sm" style="width: 96px; height: 96px; object-fit: cover;" alt="Photo"/>
-                                        <div t-else="" class="rounded-circle bg-light text-primary d-inline-flex align-items-center justify-content-center shadow-sm" style="width: 96px; height: 96px;">
-                                            <i class="fa fa-user fa-3x"></i>
+                            <div class="student-card h-100">
+                                <div class="student-card-header-accent"/>
+                                <div class="p-4 text-center">
+                                    <div class="mb-3 position-relative d-inline-block">
+                                        <img t-if="std.image_128" t-att-src="image_data_uri(std.image_128)" class="student-avatar-ring" alt="Photo"/>
+                                        <div t-else="" class="student-avatar-monogram">
+                                            <t t-out="''.join([part[0] for part in std.name.split()[:2]]).upper() or 'E'"/>
                                         </div>
                                     </div>
-                                    <h4 class="card-title mb-1 text-dark"><t t-out="std.name"/></h4>
-                                    <p class="badge bg-primary-subtle text-primary mb-2">
-                                        <t t-out="std.current_class_id.name or 'Sans classe'"/>
-                                        <t t-if="std.code"> - Matricule: <t t-out="std.code"/></t>
-                                    </p>
-                                    <div class="text-muted small mb-3">
-                                        <span>Année académique : <strong><t t-out="std.academic_year_id.name or 'En cours'"/></strong></span>
+                                    <h3 class="student-card-name"><t t-out="std.name"/></h3>
+                                    <div class="d-flex flex-wrap justify-content-center gap-2 mb-3">
+                                        <span class="student-badge-pill primary">
+                                            <i class="fa fa-graduation-cap"/> <t t-out="std.current_class_id.name or 'Sans classe'"/>
+                                        </span>
+                                        <span class="student-badge-pill" t-if="std.code">
+                                            <i class="fa fa-id-card-o"/> <t t-out="std.code"/>
+                                        </span>
                                     </div>
-                                    <div class="d-grid gap-2">
-                                        <a t-attf-href="/my/school/student/#{std.id}" class="btn btn-outline-primary btn-sm">
-                                            <i class="fa fa-dashboard me-1"></i> Tableau de bord de l'élève
+                                    <div class="bg-light rounded-3 p-3 mb-3 border text-start small">
+                                        <div class="d-flex justify-content-between mb-1">
+                                            <span class="text-muted"><i class="fa fa-calendar me-1" style="color: var(--school-primary);"/> Année scolaire :</span>
+                                            <strong><t t-out="std.academic_year_id.name or '2026-2027'"/></strong>
+                                        </div>
+                                        <div class="d-flex justify-content-between">
+                                            <span class="text-muted"><i class="fa fa-book me-1 text-info"/> Cours suivis :</span>
+                                            <strong><t t-out="len(std.course_ids)"/> matières</strong>
+                                        </div>
+                                    </div>
+                                    <div class="d-grid">
+                                        <a t-attf-href="/my/school/student/#{std.id}" class="btn btn-school-primary">
+                                            <i class="fa fa-dashboard me-2"/> Tableau de bord de l'élève
                                         </a>
                                     </div>
                                 </div>
@@ -150,23 +171,33 @@
                 <t t-call="eacta_school.portal_student_child_switcher"/>
 
                 <!-- En-tête de l'élève -->
-                <div class="card shadow-sm border-0 mb-4">
-                    <div class="card-body p-4">
-                        <div class="d-flex flex-wrap align-items-center gap-3">
-                            <img t-if="student.image_128" t-att-src="image_data_uri(student.image_128)" class="rounded-circle shadow-sm" style="width: 80px; height: 80px; object-fit: cover;"/>
-                            <div t-else="" class="rounded-circle bg-light text-primary d-inline-flex align-items-center justify-content-center shadow-sm" style="width: 80px; height: 80px;">
-                                <i class="fa fa-user fa-2x"></i>
-                            </div>
-                            <div class="flex-grow-1">
-                                <h3 class="mb-1 text-dark"><t t-out="student.name"/></h3>
-                                <p class="text-muted mb-0">
-                                    Classe : <strong class="text-primary"><t t-out="student.current_class_id.name or 'N/A'"/></strong>
-                                    <t t-if="student.code"> | Matricule : <strong><t t-out="student.code"/></strong></t>
-                                    | Année : <strong><t t-out="student.academic_year_id.name or 'N/A'"/></strong>
-                                </p>
+                <div class="student-card mb-4">
+                    <div class="student-card-header-accent"/>
+                    <div class="p-4">
+                        <div class="d-flex flex-wrap align-items-center justify-content-between gap-3">
+                            <div class="d-flex align-items-center gap-3">
+                                <img t-if="student.image_128" t-att-src="image_data_uri(student.image_128)" class="student-avatar-ring" style="width: 80px; height: 80px;" alt="Photo"/>
+                                <div t-else="" class="student-avatar-monogram" style="width: 80px; height: 80px; font-size: 1.7rem;">
+                                    <t t-out="''.join([part[0] for part in student.name.split()[:2]]).upper() or 'E'"/>
+                                </div>
+                                <div>
+                                    <h2 class="mb-1 fw-bold text-dark"><t t-out="student.name"/></h2>
+                                    <div class="d-flex flex-wrap gap-2 align-items-center">
+                                        <span class="student-badge-pill primary">
+                                            <i class="fa fa-graduation-cap"/> <t t-out="student.current_class_id.name or 'Sans classe'"/>
+                                        </span>
+                                        <span class="student-badge-pill" t-if="student.code">
+                                            <i class="fa fa-id-card-o"/> <t t-out="student.code"/>
+                                        </span>
+                                        <span class="student-badge-pill">
+                                            <i class="fa fa-calendar"/> <t t-out="student.academic_year_id.name or '2026-2027'"/>
+                                        </span>
+                                    </div>
+                                </div>
                             </div>
                             <div>
-                                <span t-attf-class="badge #{'bg-success' if student.state == 'enrolled' else 'bg-secondary'} fs-6 px-3 py-2">
+                                <span t-attf-class="badge #{'bg-success' if student.state == 'enrolled' else 'bg-secondary'} fs-6 px-3 py-2 rounded-pill">
+                                    <i class="fa fa-circle me-1" style="font-size: 0.6rem; vertical-align: middle;"/>
                                     <t t-out="dict(student._fields['state'].selection).get(student.state)"/>
                                 </span>
                             </div>
@@ -179,9 +210,11 @@
                     <!-- Emploi du temps -->
                     <div class="col-sm-6 col-lg-3">
                         <a t-attf-href="/my/school/student/#{student.id}/timetable" class="text-decoration-none">
-                            <div class="card h-100 shadow-sm border-0 hover-shadow transition p-3 text-center">
-                                <i class="fa fa-calendar fa-2x text-primary mb-2"></i>
-                                <h5 class="card-title text-dark mb-1">Emploi du temps</h5>
+                            <div class="portal-action-card">
+                                <div class="portal-action-icon-wrapper icon-blue">
+                                    <i class="fa fa-calendar fa-2x"></i>
+                                </div>
+                                <h5 class="fw-bold text-dark mb-1">Emploi du temps</h5>
                                 <p class="text-muted small mb-0">استعمال الزمن</p>
                             </div>
                         </a>
@@ -189,9 +222,11 @@
                     <!-- Assiduité -->
                     <div class="col-sm-6 col-lg-3">
                         <a t-attf-href="/my/school/student/#{student.id}/attendance" class="text-decoration-none">
-                            <div class="card h-100 shadow-sm border-0 hover-shadow transition p-3 text-center">
-                                <i class="fa fa-check-square-o fa-2x text-warning mb-2"></i>
-                                <h5 class="card-title text-dark mb-1">Assiduité</h5>
+                            <div class="portal-action-card">
+                                <div class="portal-action-icon-wrapper icon-amber">
+                                    <i class="fa fa-check-square-o fa-2x"></i>
+                                </div>
+                                <h5 class="fw-bold text-dark mb-1">Assiduité</h5>
                                 <span class="badge bg-warning-subtle text-warning mb-0"><t t-out="absences_count"/> Absences</span>
                             </div>
                         </a>
@@ -199,9 +234,11 @@
                     <!-- Notes & Bulletins -->
                     <div class="col-sm-6 col-lg-3">
                         <a t-attf-href="/my/school/student/#{student.id}/grades" class="text-decoration-none">
-                            <div class="card h-100 shadow-sm border-0 hover-shadow transition p-3 text-center">
-                                <i class="fa fa-graduation-cap fa-2x text-success mb-2"></i>
-                                <h5 class="card-title text-dark mb-1">Notes &amp; Bulletins</h5>
+                            <div class="portal-action-card">
+                                <div class="portal-action-icon-wrapper icon-emerald">
+                                    <i class="fa fa-graduation-cap fa-2x"></i>
+                                </div>
+                                <h5 class="fw-bold text-dark mb-1">Notes &amp; Bulletins</h5>
                                 <span class="badge bg-success-subtle text-success mb-0"><t t-out="grades_count"/> Notes publiées</span>
                             </div>
                         </a>
@@ -209,9 +246,11 @@
                     <!-- Frais de scolarité -->
                     <div class="col-sm-6 col-lg-3">
                         <a t-attf-href="/my/school/student/#{student.id}/fees" class="text-decoration-none">
-                            <div class="card h-100 shadow-sm border-0 hover-shadow transition p-3 text-center">
-                                <i class="fa fa-credit-card fa-2x text-danger mb-2"></i>
-                                <h5 class="card-title text-dark mb-1">Frais &amp; Solde</h5>
+                            <div class="portal-action-card">
+                                <div class="portal-action-icon-wrapper icon-rose">
+                                    <i class="fa fa-credit-card fa-2x"></i>
+                                </div>
+                                <h5 class="fw-bold text-dark mb-1">Frais &amp; Solde</h5>
                                 <span t-attf-class="badge #{'bg-danger-subtle text-danger' if balance_due &gt; 0 else 'bg-success-subtle text-success'} mb-0">
                                     Reste dû : <t t-out="'%.2f' % balance_due"/> DH
                                 </span>

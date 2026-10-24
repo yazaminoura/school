@@ -85,4 +85,38 @@
             </t>
         </xpath>
     </template>
+
+    <!-- 4. Polices & Assets pour le portail (web.frontend_layout) -->
+    <template id="eacta_theme_portal_fonts" name="NR School Portal Fonts &amp; Favicon" inherit_id="web.frontend_layout" priority="25">
+        <xpath expr="//head" position="inside">
+            <link rel="preconnect" href="https://fonts.googleapis.com"/>
+            <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin=""/>
+            <link href="https://fonts.googleapis.com/css2?family=Cairo:wght@400;500;600;700;800&amp;family=Plus+Jakarta+Sans:wght@400;500;600;700;800&amp;display=swap" rel="stylesheet"/>
+        </xpath>
+    </template>
+
+    <!-- 5. Branding de l'en-tête et pied de page du portail (portal.frontend_layout) -->
+    <template id="eacta_theme_portal_navbar" name="NR School Portal Navbar &amp; Brand" inherit_id="portal.frontend_layout" priority="25">
+        <xpath expr="//a[hasclass('navbar-brand')]" position="replace">
+            <a href="/my/school" class="navbar-brand d-flex align-items-center gap-2 text-decoration-none">
+                <img src="/eacta_school/static/src/img/nr_school_icon.png" alt="NR School Logo" style="height: 38px; width: 38px; object-fit: contain; border-radius: 8px;"/>
+                <div class="d-flex flex-column leading-tight">
+                    <span class="fw-bold text-white fs-5" style="letter-spacing: -0.02em;">NR School</span>
+                    <span class="small text-white-50" style="font-size: 0.72rem;">Portail Scolaire / الفضاء المدرسي</span>
+                </div>
+            </a>
+        </xpath>
+        <xpath expr="//footer" position="replace">
+            <footer class="o_footer text-center py-3" style="background: #0F172A; color: #94A3B8; border-top: 3px solid #8E1B3A;">
+                <div class="container d-flex flex-wrap justify-content-between align-items-center gap-2 small">
+                    <div>
+                        <strong class="text-white">NR School</strong> • Système Numérique de Gestion Pédagogique &amp; Vie Scolaire
+                    </div>
+                    <div>
+                        <span>Année scolaire 2026-2027 • Portail Familles &amp; Élèves</span>
+                    </div>
+                </div>
+            </footer>
+        </xpath>
+    </template>
 </odoo>

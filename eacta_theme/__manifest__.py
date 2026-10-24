@@ -31,6 +31,9 @@ Thème NR School
             'eacta_theme/static/src/apps_menu/apps_menu.js',
             'eacta_theme/static/src/apps_menu/apps_menu.xml',
         ],
+        'web.assets_frontend': [
+            'eacta_theme/static/src/scss/portal_theme.scss',
+        ],
     },
     'images': ['static/description/icon.png'],
     'installable': True,

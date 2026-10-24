@@ -1,0 +1,322 @@
+/* ==========================================================================
+   NR SCHOOL - THEME PORTAIL & ESPACE SCOLAIRE (FAMILLES & ÉLÈVES)
+   ========================================================================== */
+
+:root {
+    --school-primary: #8E1B3A;
+    --school-primary-light: #B83256;
+    --school-ink: #3B0A18;
+    --school-secondary: #E0A630;
+    --school-accent: #F2784B;
+    --school-bg: #F8FAFC;
+    --school-card-bg: #FFFFFF;
+    --school-text: #1E293B;
+    --school-text-muted: #64748B;
+    --school-border: #E2E8F0;
+    --school-radius: 18px;
+    --school-shadow: 0 4px 20px -2px rgba(59, 10, 24, 0.06), 0 2px 6px -1px rgba(0, 0, 0, 0.04);
+    --school-shadow-hover: 0 20px 35px -8px rgba(59, 10, 24, 0.15), 0 4px 12px rgba(0, 0, 0, 0.05);
+}
+
+/* 1. Global Portal Styling */
+body.o_portal {
+    background-color: var(--school-bg) !important;
+    color: var(--school-text);
+    font-family: "Plus Jakarta Sans", "Cairo", -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif !important;
+    -webkit-font-smoothing: antialiased;
+}
+
+#wrapwrap {
+    background-color: var(--school-bg) !important;
+}
+
+/* 2. Top Navigation Bar (Branded Navbar) */
+.o_portal header .navbar,
+header #top .navbar,
+.o_header_standard .navbar {
+    background: linear-gradient(135deg, #3B0A18 0%, #611227 60%, #8E1B3A 100%) !important;
+    border-bottom: 3px solid var(--school-secondary) !important;
+    box-shadow: 0 4px 20px rgba(59, 10, 24, 0.25) !important;
+    padding-top: 10px !important;
+    padding-bottom: 10px !important;
+}
+
+.o_portal header .navbar .navbar-brand,
+header #top .navbar-brand {
+    color: #FFFFFF !important;
+    font-weight: 800 !important;
+    font-size: 1.25rem !important;
+    letter-spacing: -0.02em;
+    display: flex;
+    align-items: center;
+    gap: 12px;
+}
+
+.o_portal header .navbar .nav-link,
+header #top .navbar .nav-link {
+    color: rgba(255, 255, 255, 0.9) !important;
+    font-weight: 600 !important;
+    font-size: 0.95rem !important;
+    transition: all 0.2s ease;
+}
+
+.o_portal header .navbar .nav-link:hover,
+header #top .navbar .nav-link:hover {
+    color: var(--school-secondary) !important;
+    transform: translateY(-1px);
+}
+
+.o_portal header .navbar .dropdown-menu {
+    border-radius: 12px !important;
+    border: 1px solid var(--school-border) !important;
+    box-shadow: 0 10px 25px rgba(0, 0, 0, 0.1) !important;
+}
+
+/* 3. Hero Banner (Espace Scolaire) */
+.school-hero-banner {
+    background: linear-gradient(135deg, #3B0A18 0%, #611227 45%, #8E1B3A 100%);
+    color: #FFFFFF;
+    border-radius: var(--school-radius);
+    padding: 32px 36px;
+    margin-bottom: 28px;
+    box-shadow: 0 10px 30px -5px rgba(59, 10, 24, 0.3);
+    position: relative;
+    overflow: hidden;
+}
+
+.school-hero-banner::after {
+    content: "";
+    position: absolute;
+    top: -50px;
+    right: -50px;
+    width: 260px;
+    height: 260px;
+    background: radial-gradient(circle, rgba(224, 166, 48, 0.25) 0%, rgba(224, 166, 48, 0) 70%);
+    border-radius: 50%;
+    pointer-events: none;
+}
+
+.school-hero-banner h1, 
+.school-hero-banner h2 {
+    color: #FFFFFF !important;
+    font-weight: 800 !important;
+    letter-spacing: -0.02em;
+}
+
+.school-hero-badge {
+    background: rgba(255, 255, 255, 0.15);
+    border: 1px solid rgba(255, 255, 255, 0.3);
+    color: #FFFFFF;
+    border-radius: 999px;
+    padding: 6px 14px;
+    font-size: 0.85rem;
+    font-weight: 600;
+    backdrop-filter: blur(8px);
+}
+
+/* 4. Student & Parent Cards */
+.student-card {
+    background: var(--school-card-bg);
+    border-radius: var(--school-radius);
+    border: 1px solid var(--school-border);
+    box-shadow: var(--school-shadow);
+    transition: all 0.3s cubic-bezier(0.16, 1, 0.3, 1);
+    position: relative;
+    overflow: hidden;
+}
+
+.student-card:hover {
+    transform: translateY(-6px);
+    box-shadow: var(--school-shadow-hover);
+    border-color: rgba(142, 27, 58, 0.3);
+}
+
+.student-card-header-accent {
+    height: 6px;
+    background: linear-gradient(90deg, var(--school-primary), var(--school-secondary));
+    width: 100%;
+}
+
+.student-avatar-ring {
+    width: 96px;
+    height: 96px;
+    border-radius: 50%;
+    border: 4px solid #FFFFFF;
+    box-shadow: 0 8px 18px rgba(59, 10, 24, 0.15);
+    object-fit: cover;
+}
+
+.student-avatar-monogram {
+    width: 96px;
+    height: 96px;
+    border-radius: 50%;
+    background: linear-gradient(135deg, #8E1B3A 0%, #C2410C 100%);
+    color: #FFFFFF;
+    font-size: 2rem;
+    font-weight: 800;
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    border: 4px solid #FFFFFF;
+    box-shadow: 0 8px 18px rgba(59, 10, 24, 0.18);
+    letter-spacing: 1px;
+}
+
+.student-card-name {
+    font-size: 1.35rem;
+    font-weight: 800;
+    color: #0F172A;
+    margin-bottom: 4px;
+}
+
+.student-badge-pill {
+    background: #F1F5F9;
+    color: #334155;
+    font-size: 0.85rem;
+    font-weight: 600;
+    border-radius: 999px;
+    padding: 5px 12px;
+    border: 1px solid #E2E8F0;
+    display: inline-flex;
+    align-items: center;
+    gap: 6px;
+}
+
+.student-badge-pill.primary {
+    background: rgba(142, 27, 58, 0.08);
+    color: var(--school-primary);
+    border-color: rgba(142, 27, 58, 0.2);
+}
+
+.btn-school-primary {
+    background: linear-gradient(135deg, #8E1B3A 0%, #611227 100%) !important;
+    border: none !important;
+    color: #FFFFFF !important;
+    font-weight: 700 !important;
+    border-radius: 12px !important;
+    padding: 10px 18px !important;
+    box-shadow: 0 4px 12px rgba(142, 27, 58, 0.25) !important;
+    transition: all 0.2s ease !important;
+}
+
+.btn-school-primary:hover {
+    background: linear-gradient(135deg, #A62B4C 0%, #7A1732 100%) !important;
+    box-shadow: 0 8px 20px rgba(142, 27, 58, 0.35) !important;
+    transform: translateY(-2px);
+    color: #FFFFFF !important;
+}
+
+/* 5. Child Switcher Bar */
+.child-switcher-container {
+    background: #FFFFFF;
+    border-radius: 16px;
+    border: 1px solid var(--school-border);
+    box-shadow: var(--school-shadow);
+    padding: 12px 18px;
+    margin-bottom: 24px;
+}
+
+.child-switcher-btn {
+    border-radius: 999px !important;
+    font-weight: 600 !important;
+    padding: 6px 16px !important;
+    transition: all 0.2s ease !important;
+}
+
+.child-switcher-btn.active {
+    background: var(--school-primary) !important;
+    color: #FFFFFF !important;
+    border-color: var(--school-primary) !important;
+    box-shadow: 0 4px 12px rgba(142, 27, 58, 0.3) !important;
+}
+
+/* 6. Feature Action Cards (Timetable, Grades, Attendance, Fees, Devoirs, Vie scolaire) */
+.portal-action-card {
+    background: #FFFFFF;
+    border-radius: 16px;
+    border: 1px solid var(--school-border);
+    box-shadow: var(--school-shadow);
+    padding: 24px 20px;
+    text-align: center;
+    transition: all 0.25s cubic-bezier(0.16, 1, 0.3, 1);
+    height: 100%;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+}
+
+.portal-action-card:hover {
+    transform: translateY(-5px);
+    box-shadow: var(--school-shadow-hover);
+    border-color: rgba(142, 27, 58, 0.3);
+}
+
+.portal-action-icon-wrapper {
+    width: 60px;
+    height: 60px;
+    border-radius: 16px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    margin-bottom: 14px;
+    transition: transform 0.25s ease;
+}
+
+.portal-action-card:hover .portal-action-icon-wrapper {
+    transform: scale(1.12);
+}
+
+.icon-blue { background: rgba(59, 130, 246, 0.12); color: #2563EB; }
+.icon-amber { background: rgba(245, 158, 11, 0.12); color: #D97706; }
+.icon-emerald { background: rgba(16, 185, 129, 0.12); color: #059669; }
+.icon-rose { background: rgba(225, 29, 72, 0.12); color: #E11D48; }
+.icon-teal { background: rgba(20, 184, 166, 0.12); color: #0D9488; }
+.icon-purple { background: rgba(139, 92, 246, 0.12); color: #7C3AED; }
+
+/* 7. Tables & Details */
+.school-table-card {
+    background: #FFFFFF;
+    border-radius: 16px;
+    border: 1px solid var(--school-border);
+    box-shadow: var(--school-shadow);
+    overflow: hidden;
+}
+
+.school-table-card .card-header {
+    background: #FFFFFF;
+    border-bottom: 1px solid var(--school-border);
+    padding: 16px 22px;
+}
+
+.school-table-card table thead th {
+    background: #F8FAFC !important;
+    color: #475569 !important;
+    font-size: 0.8rem !important;
+    font-weight: 700 !important;
+    text-transform: uppercase !important;
+    letter-spacing: 0.05em !important;
+    border-bottom: 1px solid var(--school-border) !important;
+    padding: 12px 18px !important;
+}
+
+.school-table-card table tbody td {
+    padding: 14px 18px !important;
+    vertical-align: middle !important;
+}
+
+/* 8. Branded School Footer */
+footer.o_footer,
+#bottom.o_footer {
+    background: #0F172A !important;
+    color: #94A3B8 !important;
+    border-top: 3px solid var(--school-primary) !important;
+    padding: 24px 0 !important;
+    font-size: 0.88rem !important;
+}
+
+footer.o_footer a,
+#bottom.o_footer a {
+    color: var(--school-secondary) !important;
+    text-decoration: none !important;
+}
