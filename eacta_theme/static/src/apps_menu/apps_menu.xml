@@ -10,7 +10,7 @@
                     <img src="/eacta_school/static/src/img/nr_school_icon.png" class="o_nr_sidebar_logo" alt="NR School"/>
                     <span class="o_nr_sidebar_brand_title">NR School</span>
                 </a>
-                <button type="button" class="o_nr_sidebar_toggle_btn ms-auto" t-on-click="nrToggleSidebar" title="Réduire / Agrandir le menu">
+                <button type="button" t-attf-class="o_nr_sidebar_toggle_btn #{nrSidebar.collapsed ? '' : 'ms-auto'}" t-on-click="nrToggleSidebar" title="Réduire / Agrandir le menu">
                     <i t-attf-class="fa #{nrSidebar.collapsed ? 'fa-indent' : 'fa-dedent'}"/>
                 </button>
             </div>

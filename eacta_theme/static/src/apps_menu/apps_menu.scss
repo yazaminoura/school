@@ -29,21 +29,23 @@ body.o_sidebar_collapsed {
             min-width: var(--eacta-sidebar-width) !important;
             max-width: var(--eacta-sidebar-width) !important;
             height: 100vh !important;
+            overflow: hidden !important;
+            box-sizing: border-box !important;
             transition: width .22s cubic-bezier(0.16, 1, 0.3, 1),
                         min-width .22s cubic-bezier(0.16, 1, 0.3, 1),
-                        max-width .22s cubic-bezier(0.16, 1, 0.3, 1) !important;
-            z-index: 1000 !important;
+                        max-width .22s cubic-bezier(0.16, 1, 0.3, 1),
+                        flex-basis .22s cubic-bezier(0.16, 1, 0.3, 1) !important;
+            z-index: 100 !important;
         }
 
         > .o_action_manager {
-            flex: 1 1 auto !important;
+            flex: 1 1 0% !important;
             min-width: 0 !important;
-            width: calc(100vw - var(--eacta-sidebar-width)) !important;
-            max-width: calc(100vw - var(--eacta-sidebar-width)) !important;
+            width: auto !important;
+            max-width: 100% !important;
             height: 100vh !important;
             overflow: hidden !important;
-            transition: width .22s cubic-bezier(0.16, 1, 0.3, 1),
-                        max-width .22s cubic-bezier(0.16, 1, 0.3, 1) !important;
+            box-sizing: border-box !important;
         }
     }
 
@@ -56,6 +58,8 @@ body.o_sidebar_collapsed {
         --eacta-side-active-fg: var(--eacta-primary, #8E1B3A);
 
         width: 100% !important;
+        min-width: 0 !important;
+        max-width: 100% !important;
         height: 100vh !important;
         max-height: 100vh !important;
         display: flex !important;
@@ -66,13 +70,46 @@ body.o_sidebar_collapsed {
         border-right: 1px solid var(--eacta-side-line) !important;
         box-shadow: none !important;
         padding: 0 !important;
-        overflow: hidden !important;
+        overflow-x: hidden !important;
+        overflow-y: hidden !important;
+        box-sizing: border-box !important;
 
         // L'arbre remplace le lanceur d'applications, le titre et les sections
         .o_navbar_apps_menu,
         .o_menu_brand,
         .o_menu_sections {
             display: none !important;
+        }
+    }
+
+    // Espacement et clarté du contenu (panneau de contrôle, formulaires, kanban & listes)
+    .o_action_manager {
+        .o_control_panel {
+            padding-left: 1.25rem !important;
+            padding-right: 1.25rem !important;
+            background: #ffffff !important;
+            border-bottom: 1px solid var(--eacta-side-line, #e5e7eb) !important;
+        }
+
+        .o_content {
+            background: #f8fafc;
+        }
+
+        .o_kanban_renderer.o_kanban_ungrouped {
+            padding-left: 0.75rem !important;
+            padding-right: 0.75rem !important;
+        }
+
+        .o_list_renderer {
+            padding-left: 0.75rem !important;
+            padding-right: 0.75rem !important;
+        }
+
+        .o_form_view {
+            .o_form_sheet_bg {
+                padding-left: 1rem;
+                padding-right: 1rem;
+            }
         }
     }
 
@@ -419,10 +456,25 @@ body.o_sidebar_collapsed {
 // --------------------------------------------------------------------------
 @media (min-width: 768px) {
     body.o_sidebar_collapsed {
+        .o_web_client > .o_navbar {
+            width: var(--eacta-sidebar-collapsed-width) !important;
+            min-width: var(--eacta-sidebar-collapsed-width) !important;
+            max-width: var(--eacta-sidebar-collapsed-width) !important;
+            flex: 0 0 var(--eacta-sidebar-collapsed-width) !important;
+        }
+
         .o_nr_sidebar_brand_bar {
-            flex-direction: column;
+            flex-direction: column !important;
+            align-items: center !important;
             justify-content: center !important;
-            padding: 0.75rem 0.4rem !important;
+            padding: 0.65rem 0.25rem !important;
+            gap: 0.4rem !important;
+
+            .o_nr_sidebar_brand_link {
+                justify-content: center !important;
+                margin: 0 !important;
+                padding: 0 !important;
+            }
 
             .o_nr_sidebar_brand_title {
                 display: none !important;
@@ -430,6 +482,7 @@ body.o_sidebar_collapsed {
 
             .o_nr_sidebar_toggle_btn {
                 margin: 0 !important;
+                margin-left: 0 !important;
             }
         }
 
@@ -443,24 +496,70 @@ body.o_sidebar_collapsed {
         }
 
         .o_nr_side_tree {
-            padding: 0.5rem 0.35rem;
+            padding: 0.5rem 0.25rem;
+            width: 100% !important;
+            overflow-x: hidden !important;
         }
 
         .o_nr_side_app_btn {
-            justify-content: center;
-            padding: 0;
+            justify-content: center !important;
+            padding: 0 !important;
             height: 42px;
+            width: 100% !important;
         }
 
         .o_nr_side_user {
-            justify-content: center;
-            padding: 0.6rem 0.3rem;
+            justify-content: center !important;
+            padding: 0.6rem 0.2rem !important;
+            width: 100% !important;
+            overflow: hidden !important;
+
+            .o_nr_side_user_avatar {
+                margin: 0 auto !important;
+            }
         }
 
         .o_main_navbar .o_menu_systray {
             flex-direction: column !important;
             padding: 0.4rem 0.2rem !important;
-            gap: 0.2rem !important;
+            gap: 0.25rem !important;
+            align-items: center !important;
+            width: 100% !important;
+            max-width: 100% !important;
+            overflow: hidden !important;
+
+            .o_switch_company_menu {
+                max-width: 100% !important;
+                overflow: hidden !important;
+
+                .oe_topbar_name {
+                    display: none !important;
+                }
+
+                .fa-building {
+                    display: inline-block !important;
+                    font-size: 0.95rem !important;
+                }
+
+                button {
+                    width: 36px !important;
+                    height: 34px !important;
+                    display: flex !important;
+                    align-items: center !important;
+                    justify-content: center !important;
+                    padding: 0 !important;
+                }
+            }
+
+            .dropdown-toggle, .o_nav_entry {
+                width: 36px !important;
+                height: 34px !important;
+                display: flex !important;
+                align-items: center !important;
+                justify-content: center !important;
+                padding: 0 !important;
+                margin: 0 !important;
+            }
         }
     }
 }
@@ -483,9 +582,9 @@ body.o_sidebar_collapsed {
 
     @media (min-width: 768px) {
         position: fixed !important;
-        left: calc(var(--eacta-sidebar-width, 240px) + 12px) !important;
+        left: calc(var(--eacta-sidebar-width, 270px) + 12px) !important;
         top: 14px !important;
-        max-width: calc(100vw - var(--eacta-sidebar-width, 240px) - 28px) !important;
+        max-width: calc(100vw - var(--eacta-sidebar-width, 270px) - 28px) !important;
     }
 
     @media (max-width: 767px) {
