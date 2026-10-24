@@ -79,3 +79,19 @@ class ResConfigSettings(models.TransientModel):
     pass_mark = fields.Float(
         string="Seuil de passage / admission (/20)", default=10.0,
         config_parameter='eacta_school.pass_mark')
+
+    # ------------------------------------------------------------------
+    # Notifications WhatsApp & SMS
+    # ------------------------------------------------------------------
+    whatsapp_country_prefix = fields.Char(
+        string="Indicatif pays WhatsApp", default="212",
+        config_parameter='eacta_school.whatsapp_country_prefix',
+        help="Préfixe téléphonique international par défaut (ex: 212 pour le Maroc, 33 pour la France)")
+    whatsapp_school_signature = fields.Char(
+        string="Signature WhatsApp",
+        default="NR School - Administration & Vie Scolaire",
+        config_parameter='eacta_school.whatsapp_school_signature')
+    whatsapp_auto_chatter_log = fields.Boolean(
+        string="Tracer les envois WhatsApp dans le chatter", default=True,
+        config_parameter='eacta_school.whatsapp_auto_chatter_log',
+        help="Enregistre automatiquement une note dans le fil de discussion lors de l'envoi WhatsApp")

@@ -29,6 +29,13 @@ export class SchoolDashboard extends Component {
         return Math.max(1, ...this.state.data.distribution.map((b) => b.count));
     }
 
+    get maxCycleAbsences() {
+        if (!this.state.data.cycle_absences || !this.state.data.cycle_absences.length) {
+            return 1;
+        }
+        return Math.max(1, ...this.state.data.cycle_absences.map((c) => c.absences));
+    }
+
     get genderTotal() {
         const g = this.state.data.gender;
         return g.male + g.female + g.other;
@@ -79,6 +86,36 @@ export class SchoolDashboard extends Component {
 
     openAction(xmlId) {
         this.action.doAction(xmlId);
+    }
+
+    openFeesOverdue() {
+        this.action.doAction({
+            type: "ir.actions.act_window",
+            name: "Frais de scolarité en retard",
+            res_model: "eacta.student.fee",
+            views: [[false, "list"], [false, "form"]],
+            domain: [["is_overdue", "=", true]],
+        });
+    }
+
+    openStrugglingStudents() {
+        this.action.doAction({
+            type: "ir.actions.act_window",
+            name: "Élèves en difficulté (Moyenne < 10)",
+            res_model: "eacta.student",
+            views: [[false, "list"], [false, "kanban"], [false, "form"]],
+            domain: [["grade_count", ">", 0], ["average", "<", 10.0]],
+        });
+    }
+
+    openHonorStudents() {
+        this.action.doAction({
+            type: "ir.actions.act_window",
+            name: "Tableau d'honneur (Moyenne ≥ 14)",
+            res_model: "eacta.student",
+            views: [[false, "list"], [false, "kanban"], [false, "form"]],
+            domain: [["average", ">=", 14.0]],
+        });
     }
 }
 

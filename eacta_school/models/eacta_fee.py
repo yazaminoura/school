@@ -2,7 +2,7 @@ import logging
 
 from dateutil.relativedelta import relativedelta
 
-from odoo import api, fields, models
+from odoo import api, fields, models, _
 from odoo.exceptions import UserError, ValidationError
 
 _logger = logging.getLogger(__name__)
@@ -382,6 +382,21 @@ class EactaStudentFee(models.Model):
                 fee.message_post(
                     body=f"Relance d'impayé #{fee.reminder_count} envoyée au parent {parent.name} ({parent_email}) pour un reste dû de {fee.amount_due:.2f} {fee.currency_id.symbol or 'DH'}."
                 )
+
+    def action_send_whatsapp_reminder(self):
+        """Ouvre l'assistant WhatsApp pour envoyer une relance d'impayé au parent."""
+        self.ensure_one()
+        return {
+            'name': _("Relance WhatsApp - %s") % (self.student_id.name or 'Élève'),
+            'type': 'ir.actions.act_window',
+            'res_model': 'eacta.whatsapp.composer',
+            'view_mode': 'form',
+            'target': 'new',
+            'context': {
+                'active_model': 'eacta.student.fee',
+                'active_id': self.id,
+            },
+        }
 
 
 class EactaFeePayment(models.Model):

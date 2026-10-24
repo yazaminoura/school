@@ -9,8 +9,10 @@
                 <header>
                     <button name="action_generate_grade_sheet" string="Générer la feuille de notes" type="object"
                             class="btn-primary" invisible="state in ('done', 'cancel') or grade_count"/>
+                    <button name="action_open_fast_grade_grid" string="Grille de saisie rapide" type="object"
+                            class="btn-primary" icon="fa-table" invisible="state in ('done', 'cancel')"/>
                     <button name="action_open_grade_sheet" string="Saisir les notes" type="object"
-                            class="btn-primary" icon="fa-pencil" invisible="state in ('done', 'cancel') or not grade_count"/>
+                            class="btn-secondary" icon="fa-pencil" invisible="state in ('done', 'cancel') or not grade_count"/>
                     <button name="action_generate_grade_sheet" string="Ajouter les élèves manquants" type="object"
                             invisible="state in ('done', 'cancel') or not grade_count"/>
                     <button name="action_done" string="Clôturer" type="object" invisible="state != 'grading'"/>

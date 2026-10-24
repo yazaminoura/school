@@ -1,0 +1,54 @@
+<?xml version="1.0" encoding="utf-8"?>
+<odoo>
+
+    <record id="view_eacta_whatsapp_composer_form" model="ir.ui.view">
+        <field name="name">eacta.whatsapp.composer.form</field>
+        <field name="model">eacta.whatsapp.composer</field>
+        <field name="arch" type="xml">
+            <form string="Envoyer un message WhatsApp">
+                <sheet>
+                    <div class="alert alert-info d-flex align-items-center" role="alert">
+                        <i class="fa fa-whatsapp fa-2x text-success me-3"/>
+                        <div>
+                            <strong>Notification instantanée WhatsApp</strong><br/>
+                            Ce message sera pré-rempli dans WhatsApp Web ou sur l'application mobile de votre appareil. Un clic sur <em>Ouvrir WhatsApp</em> lance la conversation avec le parent ou tuteur.
+                        </div>
+                    </div>
+                    <group>
+                        <group string="Destinataire">
+                            <field name="student_id" readonly="1" options="{'no_open': True}"/>
+                            <field name="recipient_partner_id" options="{'no_create': True}"/>
+                            <field name="recipient_name" placeholder="Nom complet du parent / tuteur"/>
+                            <field name="mobile" widget="phone" placeholder="ex: 06 12 34 56 78 ou +212 6..."/>
+                        </group>
+                        <group string="Contexte &amp; Type">
+                            <field name="message_type" widget="radio"/>
+                            <field name="attendance_id" readonly="1" invisible="message_type != 'absence'"/>
+                            <field name="fee_id" readonly="1" invisible="message_type != 'fee'"/>
+                            <field name="grade_id" readonly="1" invisible="message_type != 'grade'"/>
+                        </group>
+                    </group>
+                    <group string="Texte du message">
+                        <field name="body" nolabel="1" placeholder="Rédigez ou personnalisez votre message ici..." rows="7"/>
+                    </group>
+                    <group string="Lien wa.me direct" invisible="not preview_url">
+                        <field name="preview_url" widget="url" readonly="1" text="Tester le lien direct WhatsApp"/>
+                    </group>
+                </sheet>
+                <footer>
+                    <button name="action_send_whatsapp" string="Ouvrir WhatsApp (wa.me)" type="object"
+                            class="btn-success" icon="fa-whatsapp"/>
+                    <button string="Annuler" class="btn-secondary" special="cancel"/>
+                </footer>
+            </form>
+        </field>
+    </record>
+
+    <record id="action_eacta_whatsapp_composer" model="ir.actions.act_window">
+        <field name="name">Envoyer un message WhatsApp</field>
+        <field name="res_model">eacta.whatsapp.composer</field>
+        <field name="view_mode">form</field>
+        <field name="target">new</field>
+    </record>
+
+</odoo>

@@ -103,6 +103,22 @@
                             </setting>
                         </div>
                     </block>
+                                    <block title="Communications WhatsApp &amp; SMS" id="school_whatsapp_settings">
+                        <div class="row mt16 o_settings_container">
+                            <setting id="whatsapp_country_setting" string="Indicatif téléphonique international"
+                                     help="Indicatif pays par défaut pour les numéros mobiles sans indicatif (ex: 212 pour le Maroc, 33 pour la France)">
+                                <field name="whatsapp_country_prefix" class="oe_inline"/>
+                            </setting>
+                            <setting id="whatsapp_signature_setting" string="Signature par défaut des alertes WhatsApp"
+                                     help="Mention ajoutée en bas de chaque message WhatsApp envoyé aux familles">
+                                <field name="whatsapp_school_signature"/>
+                            </setting>
+                            <setting id="whatsapp_chatter_setting" string="Traçabilité dans le chatter"
+                                     help="Consigne automatiquement une entrée d'historique lors de chaque préparation de message WhatsApp">
+                                <field name="whatsapp_auto_chatter_log"/>
+                            </setting>
+                        </div>
+                    </block>
                 </app>
             </xpath>
         </field>

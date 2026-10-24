@@ -45,6 +45,8 @@
                 <button name="action_register_payment" type="object" string="Encaisser" icon="fa-money"
                         class="btn-link" invisible="state not in ('unpaid', 'partial')"
                         groups="eacta_school.group_eacta_school_manager,eacta_school.group_eacta_school_finance"/>
+                <button name="action_send_whatsapp_reminder" type="object" icon="fa-whatsapp"
+                        class="btn-link text-success p-0" title="Relance WhatsApp" invisible="state in ('paid', 'cancelled')"/>
             </list>
         </field>
     </record>
@@ -58,6 +60,8 @@
                     <button name="action_register_payment" string="Enregistrer un paiement" type="object"
                             class="btn-primary" icon="fa-money" invisible="not id or state not in ('unpaid', 'partial')"
                             groups="eacta_school.group_eacta_school_manager,eacta_school.group_eacta_school_finance"/>
+                    <button name="action_send_whatsapp_reminder" string="Relance WhatsApp" type="object"
+                            class="btn-outline-success" icon="fa-whatsapp" invisible="state in ('paid', 'cancelled')"/>
                     <button name="action_create_invoice" string="Créer facture client" type="object"
                             class="btn-secondary" icon="fa-file-text-o" invisible="move_id or not id or is_cancelled"
                             groups="eacta_school.group_eacta_school_manager,eacta_school.group_eacta_school_finance"/>

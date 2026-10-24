@@ -9,19 +9,23 @@
             <div t-else="" class="o_eacta_dash_inner">
                 <t t-set="d" t-value="state.data"/>
 
-                <!-- En-tête -->
+                <!-- En-tête Hero -->
                 <div class="o_eacta_dash_hero">
                     <div>
-                        <h1>Tableau de bord scolaire</h1>
-                        <p>Vue d'ensemble des effectifs, des examens et des résultats.</p>
+                        <h1>Tableau de bord de direction &amp; Scolarité</h1>
+                        <p>Pilotage pédagogique, suivi de l'assiduité et performance financière.</p>
                     </div>
                     <div class="o_eacta_dash_actions">
                         <button class="btn btn-light" t-on-click="() => this.load()">
                             <i class="fa fa-refresh me-1"/>Actualiser
                         </button>
                         <button class="btn btn-primary"
-                                t-on-click="() => this.openAction('eacta_school.action_eacta_student')">
-                            <i class="fa fa-user-plus me-1"/>Élèves
+                                t-on-click="() => this.openAction('eacta_school.action_eacta_grade_sheet_wizard')">
+                            <i class="fa fa-table me-1"/>Saisie rapide des notes
+                        </button>
+                        <button class="btn btn-primary"
+                                t-on-click="() => this.openAction('eacta_school.action_eacta_attendance_wizard')">
+                            <i class="fa fa-check-square-o me-1"/>Faire l'appel
                         </button>
                         <button class="btn btn-primary"
                                 t-on-click="() => this.openAction('eacta_school.action_eacta_exam')">
@@ -30,66 +34,60 @@
                     </div>
                 </div>
 
-                <!-- KPIs -->
+                <!-- Ligne des KPIs Exécutifs -->
                 <div class="o_eacta_dash_kpis">
                     <div class="o_eacta_dash_kpi" t-on-click="() => this.openStudents()">
                         <div class="o_eacta_dash_kpi_icon o_eacta_tone_primary"><i class="fa fa-graduation-cap"/></div>
                         <div>
                             <div class="o_eacta_dash_kpi_value" t-out="kpis.students"/>
-                            <div class="o_eacta_dash_kpi_label">Élèves</div>
-                            <div class="o_eacta_dash_kpi_hint"><t t-out="kpis.enrolled"/> inscrits · <t t-out="kpis.drafts"/> en attente</div>
+                            <div class="o_eacta_dash_kpi_label">Élèves inscrits</div>
+                            <div class="o_eacta_dash_kpi_hint"><t t-out="kpis.enrolled"/> validés · <t t-out="kpis.drafts"/> en attente</div>
                         </div>
                     </div>
+
                     <div class="o_eacta_dash_kpi" t-on-click="() => this.openAction('eacta_school.action_eacta_class')">
                         <div class="o_eacta_dash_kpi_icon o_eacta_tone_info"><i class="fa fa-users"/></div>
                         <div>
                             <div class="o_eacta_dash_kpi_value" t-out="kpis.classes"/>
-                            <div class="o_eacta_dash_kpi_label">Classes</div>
+                            <div class="o_eacta_dash_kpi_label">Classes actives</div>
                             <div class="o_eacta_dash_kpi_hint"><t t-out="kpis.courses"/> cours · <t t-out="kpis.teachers"/> enseignants</div>
                         </div>
                     </div>
+
                     <div class="o_eacta_dash_kpi" t-on-click="() => this.openAction('eacta_school.action_eacta_grade_analysis')">
                         <div class="o_eacta_dash_kpi_icon o_eacta_tone_success"><i class="fa fa-line-chart"/></div>
                         <div>
                             <div class="o_eacta_dash_kpi_value"><t t-out="kpis.average.toFixed(2)"/><small>/20</small></div>
                             <div class="o_eacta_dash_kpi_label">Moyenne générale</div>
-                            <div class="o_eacta_dash_kpi_hint"><t t-out="kpis.grades"/> notes enregistrées</div>
+                            <div class="o_eacta_dash_kpi_hint">Taux réussite : <t t-out="kpis.success_rate"/>% (≥ 10)</div>
                         </div>
                     </div>
-                    <div class="o_eacta_dash_kpi" t-on-click="() => this.openAction('eacta_school.action_eacta_grade_analysis')">
+
+                    <div class="o_eacta_dash_kpi" t-on-click="() => this.openHonorStudents()">
                         <div class="o_eacta_dash_kpi_icon o_eacta_tone_accent"><i class="fa fa-trophy"/></div>
                         <div>
-                            <div class="o_eacta_dash_kpi_value"><t t-out="kpis.success_rate"/><small>%</small></div>
-                            <div class="o_eacta_dash_kpi_label">Taux de réussite</div>
-                            <div class="o_eacta_dash_kpi_hint">notes ≥ 10/20</div>
+                            <div class="o_eacta_dash_kpi_value"><t t-out="kpis.honor_count"/><small> élève(s)</small></div>
+                            <div class="o_eacta_dash_kpi_label">Tableau d'honneur (≥14)</div>
+                            <div class="o_eacta_dash_kpi_hint"><t t-out="kpis.honor_rate"/>% honneur · <t t-out="kpis.warning_count"/> en difficulté</div>
                         </div>
                     </div>
-                    <div class="o_eacta_dash_kpi"
-                         t-on-click="() => this.openList('eacta.exam', 'Examens à corriger', [['state', '=', 'grading']], {}, ['list', 'form'])">
-                        <div class="o_eacta_dash_kpi_icon o_eacta_tone_warning"><i class="fa fa-pencil"/></div>
+
+                    <div class="o_eacta_dash_kpi" t-on-click="() => this.openAction('eacta_school.action_eacta_attendance')">
+                        <div class="o_eacta_dash_kpi_icon o_eacta_tone_danger"><i class="fa fa-calendar-check-o"/></div>
                         <div>
-                            <div class="o_eacta_dash_kpi_value" t-out="kpis.exams_to_grade"/>
-                            <div class="o_eacta_dash_kpi_label">En correction</div>
-                            <div class="o_eacta_dash_kpi_hint"><t t-out="kpis.exams_upcoming"/> examen(s) à venir</div>
+                            <div class="o_eacta_dash_kpi_value"><t t-out="kpis.attendance_rate"/><small>%</small></div>
+                            <div class="o_eacta_dash_kpi_label">Taux d'assiduité</div>
+                            <div class="o_eacta_dash_kpi_hint"><t t-out="kpis.today_absences"/> absence(s) aujourd'hui (<t t-out="kpis.unjustified_absences"/> NJ)</div>
                         </div>
                     </div>
-                    <div class="o_eacta_dash_kpi"
-                         t-on-click="() => this.openAction('eacta_school.action_eacta_attendance')">
-                        <div class="o_eacta_dash_kpi_icon o_eacta_tone_danger"><i class="fa fa-calendar-times-o"/></div>
-                        <div>
-                            <div class="o_eacta_dash_kpi_value" t-out="kpis.today_absences"/>
-                            <div class="o_eacta_dash_kpi_label">Absences du jour</div>
-                            <div class="o_eacta_dash_kpi_hint"><t t-out="kpis.unjustified_absences"/> non justifiée(s)</div>
-                        </div>
-                    </div>
+
                     <div t-if="kpis.finance" class="o_eacta_dash_kpi" t-on-click="() => this.openAction('eacta_school.action_eacta_student_fee')">
                         <div class="o_eacta_dash_kpi_icon o_eacta_tone_accent"><i class="fa fa-money"/></div>
                         <div>
-                            <div class="o_eacta_dash_kpi_value"><t t-out="Math.round(kpis.fees_due).toLocaleString('fr-FR')"/><small> <t t-out="kpis.currency"/></small></div>
-                            <div class="o_eacta_dash_kpi_label">Frais à encaisser</div>
+                            <div class="o_eacta_dash_kpi_value"><t t-out="kpis.collection_rate"/><small>%</small></div>
+                            <div class="o_eacta_dash_kpi_label">Taux de recouvrement</div>
                             <div class="o_eacta_dash_kpi_hint">
-                                <t t-out="Math.round(kpis.fees_overdue).toLocaleString('fr-FR')"/> en retard ·
-                                <t t-out="Math.round(kpis.fees_collected_month).toLocaleString('fr-FR')"/> encaissés ce mois
+                                <t t-out="Math.round(kpis.total_collected).toLocaleString('fr-FR')"/> / <t t-out="Math.round(kpis.total_invoiced).toLocaleString('fr-FR')"/> <t t-out="kpis.currency"/>
                             </div>
                         </div>
                     </div>
@@ -98,7 +96,7 @@
                 <div class="o_eacta_dash_grid">
                     <!-- Distribution des notes -->
                     <section class="o_eacta_panel o_eacta_span_2">
-                        <header><h3>Répartition des notes</h3><span class="text-muted small">sur 20</span></header>
+                        <header><h3>Répartition des notes par tranche</h3><span class="text-muted small">sur 20</span></header>
                         <div t-if="kpis.grades" class="o_eacta_histogram">
                             <div t-foreach="d.distribution" t-as="bucket" t-key="bucket.label" class="o_eacta_histogram_col">
                                 <span class="o_eacta_histogram_count" t-out="bucket.count"/>
@@ -110,6 +108,98 @@
                             </div>
                         </div>
                         <div t-else="" class="o_eacta_empty">Aucune note enregistrée pour le moment.</div>
+                    </section>
+
+                    <!-- Baromètre Financier -->
+                    <section t-if="kpis.finance" class="o_eacta_panel">
+                        <header>
+                            <h3>Recouvrement financier</h3>
+                            <a href="#" t-on-click.prevent="() => this.openAction('eacta_school.action_eacta_student_fee')">Gérer</a>
+                        </header>
+                        <div class="d-flex justify-content-between align-items-center mb-2">
+                            <span class="text-muted small">Progression globale</span>
+                            <span class="fw-bold text-success fs-6"><t t-out="kpis.collection_rate"/>%</span>
+                        </div>
+                        <div class="o_eacta_meter_track mb-3" style="height: 10px; background: #e2e8f0; border-radius: 5px; overflow: hidden;">
+                            <div class="h-100" t-attf-style="width: #{kpis.collection_rate}%; background: linear-gradient(90deg, #10b981, #059669);"/>
+                        </div>
+
+                        <div class="d-flex flex-column gap-2 small">
+                            <div class="d-flex justify-content-between p-2 rounded bg-light">
+                                <span class="text-muted">Total facturé :</span>
+                                <strong class="text-dark"><t t-out="Math.round(kpis.total_invoiced).toLocaleString('fr-FR')"/> <t t-out="kpis.currency"/></strong>
+                            </div>
+                            <div class="d-flex justify-content-between p-2 rounded bg-light">
+                                <span class="text-muted">Total encaissé :</span>
+                                <strong class="text-success"><t t-out="Math.round(kpis.total_collected).toLocaleString('fr-FR')"/> <t t-out="kpis.currency"/></strong>
+                            </div>
+                            <div class="d-flex justify-content-between p-2 rounded bg-light">
+                                <span class="text-muted">Reste à payer :</span>
+                                <strong class="text-primary"><t t-out="Math.round(kpis.fees_due).toLocaleString('fr-FR')"/> <t t-out="kpis.currency"/></strong>
+                            </div>
+                            <div class="d-flex justify-content-between p-2 rounded bg-light o_eacta_clickable"
+                                 t-on-click="() => this.openFeesOverdue()">
+                                <span class="text-danger"><i class="fa fa-exclamation-triangle me-1"/>En retard d'échéance :</span>
+                                <strong class="text-danger"><t t-out="Math.round(kpis.fees_overdue).toLocaleString('fr-FR')"/> <t t-out="kpis.currency"/></strong>
+                            </div>
+                        </div>
+                    </section>
+
+                    <!-- Synthèse d'Excellence & Soutien -->
+                    <section class="o_eacta_panel">
+                        <header>
+                            <h3>Niveau &amp; Soutien scolaire</h3>
+                            <a href="#" t-on-click.prevent="() => this.openStrugglingStudents()">Élèves en difficulté</a>
+                        </header>
+                        <div class="d-flex flex-column gap-3">
+                            <div>
+                                <div class="d-flex justify-content-between small mb-1">
+                                    <span class="text-success"><i class="fa fa-trophy me-1"/>Honneur (≥ 14)</span>
+                                    <strong><t t-out="kpis.honor_count"/> (<t t-out="kpis.honor_rate"/>%)</strong>
+                                </div>
+                                <div class="o_eacta_meter_track" style="height: 8px; background: #e2e8f0; border-radius: 4px; overflow: hidden;">
+                                    <div class="h-100 bg-success" t-attf-style="width: #{kpis.honor_rate}%;"/>
+                                </div>
+                            </div>
+                            <div>
+                                <div class="d-flex justify-content-between small mb-1">
+                                    <span class="text-info"><i class="fa fa-check me-1"/>Satisfaisant (10 à 14)</span>
+                                    <strong><t t-out="kpis.satisfactory_count"/></strong>
+                                </div>
+                                <div class="o_eacta_meter_track" style="height: 8px; background: #e2e8f0; border-radius: 4px; overflow: hidden;">
+                                    <div class="h-100 bg-info" t-attf-style="width: #{pct(kpis.satisfactory_count, kpis.total_evaluated_students)}%;"/>
+                                </div>
+                            </div>
+                            <div>
+                                <div class="d-flex justify-content-between small mb-1">
+                                    <span class="text-danger"><i class="fa fa-warning me-1"/>À soutenir (&lt; 10)</span>
+                                    <strong class="text-danger"><t t-out="kpis.warning_count"/> (<t t-out="kpis.warning_rate"/>%)</strong>
+                                </div>
+                                <div class="o_eacta_meter_track" style="height: 8px; background: #e2e8f0; border-radius: 4px; overflow: hidden;">
+                                    <div class="h-100 bg-danger" t-attf-style="width: #{kpis.warning_rate}%;"/>
+                                </div>
+                            </div>
+                        </div>
+                    </section>
+
+                    <!-- Assiduité par Cycle -->
+                    <section t-if="d.cycle_absences and d.cycle_absences.length" class="o_eacta_panel">
+                        <header>
+                            <h3>Absences par Cycle scolaire</h3>
+                            <a href="#" t-on-click.prevent="() => this.openAction('eacta_school.action_eacta_attendance')">Voir l'appel</a>
+                        </header>
+                        <div class="o_eacta_rows">
+                            <div t-foreach="d.cycle_absences" t-as="cycle" t-key="cycle.id" class="o_eacta_row mb-2">
+                                <div class="d-flex justify-content-between small mb-1">
+                                    <strong t-out="cycle.name"/>
+                                    <span class="text-muted"><t t-out="cycle.absences"/> absence(s) · <t t-out="cycle.student_count"/> élèves</span>
+                                </div>
+                                <div class="o_eacta_meter_track" style="height: 8px; background: #e2e8f0; border-radius: 4px; overflow: hidden;">
+                                    <div class="h-100"
+                                         t-attf-style="width: #{cycle.absences ? Math.max(8, 100 * cycle.absences / maxCycleAbsences) : 0}%; background: #{cycle.absences &gt; 10 ? '#ef4444' : '#f59e0b'};"/>
+                                </div>
+                            </div>
+                        </div>
                     </section>
 
                     <!-- Statuts + genre -->
@@ -135,7 +225,7 @@
                         </div>
                     </section>
 
-                    <!-- Classes -->
+                    <!-- Remplissage des classes -->
                     <section class="o_eacta_panel">
                         <header>
                             <h3>Remplissage des classes</h3>

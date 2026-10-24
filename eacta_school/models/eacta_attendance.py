@@ -1,6 +1,6 @@
 from dateutil.relativedelta import relativedelta
 
-from odoo import api, fields, models
+from odoo import api, fields, models, _
 from odoo.exceptions import ValidationError
 
 
@@ -256,3 +256,17 @@ class EactaAttendance(models.Model):
             'justification_date': False,
         })
 
+    def action_send_whatsapp_alert(self):
+        """Ouvre l'assistant WhatsApp pour alerter les parents d'une absence ou d'un retard."""
+        self.ensure_one()
+        return {
+            'name': _("Alerte WhatsApp - %s") % (self.student_id.name or 'Élève'),
+            'type': 'ir.actions.act_window',
+            'res_model': 'eacta.whatsapp.composer',
+            'view_mode': 'form',
+            'target': 'new',
+            'context': {
+                'active_model': 'eacta.attendance',
+                'active_id': self.id,
+            },
+        }

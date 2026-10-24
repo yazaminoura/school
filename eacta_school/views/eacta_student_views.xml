@@ -185,6 +185,8 @@
                             class="btn-primary" invisible="state != 'draft'"/>
                     <button name="action_declare_attendance" string="Signaler absence / retard" type="object"
                             class="btn-secondary" icon="fa-clock-o" invisible="state == 'draft'"/>
+                    <button name="action_open_whatsapp_composer" string="Message WhatsApp" type="object"
+                            class="btn-outline-success" icon="fa-whatsapp"/>
                     <button name="action_generate_student_fees" string="Facturer la scolarité" type="object"
                             class="btn-secondary" icon="fa-money" invisible="not current_class_id"/>
                     <button name="action_graduate" string="Diplômer" type="object" class="btn-primary"

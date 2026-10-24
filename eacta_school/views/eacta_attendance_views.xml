@@ -23,6 +23,8 @@
                 <field name="reason" optional="show"/>
                 <field name="justification_note" optional="hide"/>
                 <field name="notification_sent" string="Alerte envoyée" optional="show"/>
+                <button name="action_send_whatsapp_alert" type="object" icon="fa-whatsapp"
+                        class="btn-link text-success p-0" title="Alerte WhatsApp" invisible="attendance_type == 'present'"/>
             </list>
         </field>
     </record>
@@ -38,6 +40,8 @@
                              class="btn-primary" invisible="justified"/>
                     <button name="action_mark_unjustified" string="Marquer non justifié" type="object"
                             class="btn-secondary" invisible="not justified"/>
+                    <button name="action_send_whatsapp_alert" string="Alerte WhatsApp" type="object"
+                            class="btn-outline-success" icon="fa-whatsapp" invisible="attendance_type == 'present'"/>
                 </header>
                 <sheet>
                     <field name="student_image" widget="image" class="oe_avatar" options="{'zoom': true}"/>

@@ -154,6 +154,22 @@ class EactaExam(models.Model):
                 exam.state = 'grading'
         return self.action_open_grade_sheet() if len(self) == 1 else True
 
+    
+    def action_open_fast_grade_grid(self):
+        """Ouvre la grille rapide de saisie des notes pré-remplie pour cet examen."""
+        self.ensure_one()
+        return {
+            'name': f"Grille de saisie rapide - {self.name}",
+            'type': 'ir.actions.act_window',
+            'res_model': 'eacta.grade.sheet.wizard',
+            'view_mode': 'form',
+            'target': 'new',
+            'context': {
+                'active_model': 'eacta.exam',
+                'active_id': self.id,
+            },
+        }
+
     def action_open_grade_sheet(self):
         self.ensure_one()
         return {

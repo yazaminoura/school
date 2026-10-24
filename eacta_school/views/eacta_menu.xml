@@ -50,6 +50,9 @@
               action="action_eacta_course" sequence="10"/>
     <menuitem id="menu_eacta_exam" name="Examens" parent="menu_eacta_school_pedagogie"
               action="action_eacta_exam" sequence="20"/>
+    <menuitem id="menu_eacta_fast_grade_grid" name="Saisie rapide des notes" parent="menu_eacta_school_pedagogie"
+              action="action_eacta_grade_sheet_wizard" sequence="25"/>
+
     <menuitem id="menu_eacta_course_grade" name="Notes" parent="menu_eacta_school_pedagogie"
               action="action_eacta_course_grade" sequence="30"/>
     <menuitem id="menu_eacta_student_result" name="Bulletins &amp; Résultats" parent="menu_eacta_school_pedagogie"

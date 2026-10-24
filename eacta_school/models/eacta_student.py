@@ -1,6 +1,6 @@
 from dateutil.relativedelta import relativedelta
 
-from odoo import api, fields, models
+from odoo import api, fields, models, _
 from odoo.exceptions import UserError, ValidationError
 
 from .eacta_course_grade import APPRECIATIONS, appreciation_for
@@ -628,18 +628,33 @@ class EactaStudent(models.Model):
         if not Fee.has_access('read'):
             return {'finance': False}
         today = fields.Date.context_today(self)
-        open_fees = Fee.search([('state', 'in', ('unpaid', 'partial'))])
+        all_fees = Fee.search([('is_cancelled', '=', False)])
+        open_fees = all_fees.filtered(lambda f: f.state in ('unpaid', 'partial'))
+        overdue_fees = open_fees.filtered(lambda f: f.due_date and f.due_date < today)
+
+        total_invoiced = sum(all_fees.mapped('amount_total'))
+        total_collected = sum(all_fees.mapped('amount_paid'))
+        collection_rate = round(100.0 * total_collected / total_invoiced, 1) if total_invoiced > 0 else 0.0
+
         month_start = today.replace(day=1)
         month_payments = self.env['eacta.fee.payment'].search([('date', '>=', month_start)])
-        collected = sum(month_payments.filtered(lambda p: p.payment_type == 'payment').mapped('amount')) \
+        collected_month = sum(month_payments.filtered(lambda p: p.payment_type == 'payment').mapped('amount')) \
             - sum(month_payments.filtered(lambda p: p.payment_type == 'refund').mapped('amount'))
+
+        fees_due = round(sum(open_fees.mapped('amount_due')), 2)
+        fees_overdue = round(sum(overdue_fees.mapped('amount_due')), 2)
+        overdue_rate = round(100.0 * fees_overdue / fees_due, 1) if fees_due > 0 else 0.0
+
         return {
             'finance': True,
-            'fees_due': round(sum(open_fees.mapped('amount_due')), 2),
-            'fees_overdue': round(sum(open_fees.filtered(lambda f: f.due_date and f.due_date < today)
-                                      .mapped('amount_due')), 2),
-            'fees_collected_month': round(collected, 2),
-            'currency': open_fees[:1].currency_id.symbol or self.env.company.currency_id.symbol or '',
+            'fees_due': fees_due,
+            'fees_overdue': fees_overdue,
+            'fees_collected_month': round(collected_month, 2),
+            'total_invoiced': round(total_invoiced, 2),
+            'total_collected': round(total_collected, 2),
+            'collection_rate': collection_rate,
+            'overdue_rate': overdue_rate,
+            'currency': (all_fees[:1].currency_id.symbol if all_fees else False) or self.env.company.currency_id.symbol or 'MAD',
         }
 
     @api.model
@@ -671,8 +686,35 @@ class EactaStudent(models.Model):
         top = Student.search([('grade_count', '>', 0)], order='average desc', limit=6)
         courses = self.env['eacta.course'].search([('grade', '>', 0)], order='grade desc')
         Attendance = self.env['eacta.attendance']
+        Level = self.env['eacta.school.level']
         today_absences = Attendance.search_count([('date', '=', today), ('attendance_type', '=', 'absent')])
         unjustified_total = Attendance.search_count([('attendance_type', '=', 'absent'), ('justified', '=', False)])
+        total_attendances = Attendance.search_count([])
+        present_count = Attendance.search_count([('attendance_type', '=', 'present')])
+        attendance_rate = round(100.0 * present_count / total_attendances, 1) if total_attendances else 100.0
+
+        cycle_absences = []
+        for lvl in Level.search([], order='sequence, id'):
+            lvl_classes = Class.search([('level_id', '=', lvl.id)])
+            if lvl_classes:
+                abs_cnt = Attendance.search_count([
+                    ('class_id', 'in', lvl_classes.ids),
+                    ('attendance_type', '=', 'absent'),
+                ])
+                cycle_absences.append({
+                    'id': lvl.id,
+                    'name': lvl.name,
+                    'absences': abs_cnt,
+                    'student_count': sum(lvl_classes.mapped('student_count')),
+                })
+
+        graded_students = Student.search([('grade_count', '>', 0), ('state', 'in', ('draft', 'enrolled'))])
+        honor_count = len(graded_students.filtered(lambda s: s.average >= 14.0))
+        satisfactory_count = len(graded_students.filtered(lambda s: 10.0 <= s.average < 14.0))
+        warning_count = len(graded_students.filtered(lambda s: s.average < 10.0))
+        total_eval = len(graded_students)
+        honor_rate = round(100.0 * honor_count / total_eval, 1) if total_eval else 0.0
+        warning_rate = round(100.0 * warning_count / total_eval, 1) if total_eval else 0.0
 
         return {
             'kpis': {
@@ -689,8 +731,16 @@ class EactaStudent(models.Model):
                 'grades': len(values),
                 'today_absences': today_absences,
                 'unjustified_absences': unjustified_total,
+                'attendance_rate': attendance_rate,
+                'honor_count': honor_count,
+                'satisfactory_count': satisfactory_count,
+                'warning_count': warning_count,
+                'honor_rate': honor_rate,
+                'warning_rate': warning_rate,
+                'total_evaluated_students': total_eval,
                 **self._get_dashboard_finance(),
             },
+            'cycle_absences': cycle_absences,
             'states': [
                 {'key': key, 'label': state_labels[key], 'count': by_state.get(key, 0)}
                 for key in state_labels
@@ -719,6 +769,21 @@ class EactaStudent(models.Model):
                              for c in courses[:5]],
             'worst_courses': [{'id': c.id, 'name': c.name, 'average': c.grade, 'success': c.success_rate}
                               for c in courses.sorted('grade')[:5]],
+        }
+
+    def action_open_whatsapp_composer(self):
+        """Ouvre l'assistant WhatsApp pour contacter la famille."""
+        self.ensure_one()
+        return {
+            'name': _("Message WhatsApp - %s") % self.name,
+            'type': 'ir.actions.act_window',
+            'res_model': 'eacta.whatsapp.composer',
+            'view_mode': 'form',
+            'target': 'new',
+            'context': {
+                'active_model': 'eacta.student',
+                'active_id': self.id,
+            },
         }
 
 

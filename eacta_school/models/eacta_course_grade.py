@@ -1,4 +1,4 @@
-from odoo import api, fields, models
+from odoo import api, fields, models, _
 from odoo.exceptions import UserError, ValidationError
 
 MAX_GRADE = 20.0
@@ -244,3 +244,17 @@ class CourseGrade(models.Model):
                     raise UserError("Impossible de supprimer une note validée ou publiée. Repassez-la d'abord en brouillon.")
         return super().unlink()
 
+    def action_send_whatsapp_grade(self):
+        """Ouvre l'assistant WhatsApp pour notifier les parents de la note."""
+        self.ensure_one()
+        return {
+            'name': _("Notification WhatsApp - %s") % (self.student_id.name or 'Élève'),
+            'type': 'ir.actions.act_window',
+            'res_model': 'eacta.whatsapp.composer',
+            'view_mode': 'form',
+            'target': 'new',
+            'context': {
+                'active_model': 'eacta.course.grade',
+                'active_id': self.id,
+            },
+        }

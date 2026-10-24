@@ -54,6 +54,8 @@ NR School - Gestion scolaire
         'wizard/eacta_promotion_wizard_views.xml',
         'wizard/eacta_attendance_wizard_views.xml',
         'wizard/eacta_class_deliberation_wizard_views.xml',
+        'wizard/eacta_whatsapp_composer_views.xml',
+        'wizard/eacta_grade_sheet_wizard_views.xml',
         'views/eacta_lesson_views.xml',
         'views/eacta_discipline_views.xml',
         'views/eacta_announcement_views.xml',
