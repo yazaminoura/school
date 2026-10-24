@@ -91,6 +91,7 @@
             <field name="name">Mohammed Alami</field>
             <field name="login">parent.alami@demo.nrschool.com</field>
             <field name="email">parent.alami@demo.nrschool.com</field>
+            <field name="password">password123</field>
             <field name="partner_id" ref="demo_partner_parent_alami"/>
             <field name="groups_id" eval="[(4, ref('base.group_portal'))]"/>
         </record>
@@ -105,6 +106,7 @@
             <field name="name">Fatima Bennani</field>
             <field name="login">parent.bennani@demo.nrschool.com</field>
             <field name="email">parent.bennani@demo.nrschool.com</field>
+            <field name="password">password123</field>
             <field name="partner_id" ref="demo_partner_parent_bennani"/>
             <field name="groups_id" eval="[(4, ref('base.group_portal'))]"/>
         </record>
@@ -118,6 +120,7 @@
             <field name="name">David Moreau</field>
             <field name="login">david.moreau@demo.nrschool.com</field>
             <field name="email">david.moreau@demo.nrschool.com</field>
+            <field name="password">password123</field>
             <field name="partner_id" ref="demo_partner_student_david"/>
             <field name="groups_id" eval="[(4, ref('base.group_portal')), (4, ref('eacta_school.group_eacta_school_student'))]"/>
         </record>
