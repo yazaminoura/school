@@ -3,11 +3,122 @@
 
     <!-- 1. Entrée dans l'accueil du portail (/my) -->
     <template id="portal_my_home_school" name="Entrée Espace Scolaire Portail" inherit_id="portal.portal_my_home" priority="30">
+        <xpath expr="//div[hasclass('o_portal_docs')]" position="before">
+            <!-- 1.1 Hero Banner de Bienvenue -->
+            <div class="portal-home-hero mb-4">
+                <div class="d-flex flex-column flex-md-row align-items-md-center justify-content-between gap-3 position-relative" style="z-index: 2;">
+                    <div>
+                        <div class="d-flex align-items-center flex-wrap gap-2 mb-2">
+                            <span class="portal-badge-gold">
+                                <i class="fa fa-graduation-cap me-1"></i> NR School
+                            </span>
+                            <span class="portal-badge-glass">
+                                <t t-if="user_id.partner_id.is_school_parent">Portail Famille &amp; Parents</t>
+                                <t t-elif="portal_students">Portail Élève</t>
+                                <t t-else="">Portail Membre</t>
+                            </span>
+                            <span class="portal-badge-glass d-none d-sm-inline-block">
+                                <i class="fa fa-calendar me-1"></i> Année 2026-2027
+                            </span>
+                        </div>
+                        <h2 class="portal-hero-greeting mb-1">
+                            Bienvenue, <t t-out="user_id.name"/> !
+                        </h2>
+                        <p class="portal-hero-subtext mb-0">
+                            Accédez à votre espace scolaire, consultez les notes, les emplois du temps et le suivi pédagogique en toute simplicité.
+                        </p>
+                    </div>
+                    <div class="d-flex flex-wrap gap-2 flex-shrink-0">
+                        <a href="/my/school" class="btn btn-portal-gold shadow-sm">
+                            <i class="fa fa-graduation-cap me-2"></i> Tableau de bord scolaire <i class="fa fa-arrow-right ms-1"></i>
+                        </a>
+                    </div>
+                </div>
+            </div>
+
+            <!-- 1.2 Carte Majeure Espace Scolaire & Raccourcis Élèves -->
+            <div class="portal-school-hub-card mb-4">
+                <div class="portal-school-hub-header d-flex flex-wrap align-items-center justify-content-between gap-3 p-3 p-md-4">
+                    <div class="d-flex align-items-center gap-3">
+                        <div class="portal-hub-icon-box">
+                            <i class="fa fa-graduation-cap"></i>
+                        </div>
+                        <div>
+                            <div class="d-flex align-items-center gap-2 mb-1">
+                                <h4 class="mb-0 fw-bold text-dark">Espace Scolaire / الفضاء المدرسي</h4>
+                                <span t-if="portal_students" class="badge rounded-pill bg-wine-subtle text-wine px-3 py-1 fw-bold">
+                                    <t t-out="len(portal_students)"/> <t t-if="len(portal_students) &gt; 1">élèves</t><t t-else="">élève</t>
+                                </span>
+                            </div>
+                            <p class="text-muted small mb-0">
+                                Suivi pédagogique, bulletins de notes, assiduité, devoirs et emploi du temps
+                            </p>
+                        </div>
+                    </div>
+                    <a href="/my/school" class="btn btn-school-primary px-3 py-2 fw-bold text-white">
+                        <span>Accéder à l'espace</span> <i class="fa fa-arrow-right ms-2"></i>
+                    </a>
+                </div>
+
+                <!-- Liste rapide des enfants associés -->
+                <div t-if="portal_students" class="portal-school-hub-students border-top p-3 p-md-4 bg-light-subtle">
+                    <div class="row g-3">
+                        <t t-foreach="portal_students" t-as="st">
+                            <div class="col-12 col-md-6">
+                                <div class="student-mini-hub-card p-3 rounded-3 bg-white border d-flex flex-column gap-2 h-100 shadow-sm">
+                                    <div class="d-flex align-items-center gap-3">
+                                        <div class="student-mini-avatar flex-shrink-0">
+                                            <t t-if="st.image_128">
+                                                <img t-att-src="image_data_uri(st.image_128)" class="rounded-circle object-fit-cover" style="width: 46px; height: 46px; border: 2px solid #E0A630;" alt="Photo"/>
+                                            </t>
+                                            <t t-else="">
+                                                <div class="student-mini-monogram">
+                                                    <t t-out="''.join([part[0].upper() for part in (st.name or 'E').split()[:2]])"/>
+                                                </div>
+                                            </t>
+                                        </div>
+                                        <div class="flex-grow-1 overflow-hidden">
+                                            <div class="fw-bold text-dark text-truncate fs-6"><t t-out="st.name"/></div>
+                                            <div class="text-muted small">
+                                                <span class="badge bg-secondary-subtle text-secondary me-1"><t t-out="st.current_class_id.name or 'Non assigné'"/></span>
+                                                <span t-if="st.code" class="text-muted small"><i class="fa fa-id-badge me-1"></i><t t-out="st.code"/></span>
+                                            </div>
+                                        </div>
+                                        <a t-attf-href="/my/school/student/#{st.id}" class="btn btn-sm btn-outline-primary rounded-circle" title="Voir la fiche">
+                                            <i class="fa fa-chevron-right"></i>
+                                        </a>
+                                    </div>
+                                    <!-- Boutons de raccourcis directs -->
+                                    <div class="d-flex flex-wrap gap-1 mt-1 pt-2 border-top">
+                                        <a t-attf-href="/my/school/student/#{st.id}/timetable" class="btn btn-sm student-quick-btn" title="Emploi du temps">
+                                            <i class="fa fa-calendar-alt text-primary me-1"></i> Emploi du temps
+                                        </a>
+                                        <a t-attf-href="/my/school/student/#{st.id}/grades" class="btn btn-sm student-quick-btn" title="Notes &amp; Bulletins">
+                                            <i class="fa fa-chart-line text-success me-1"></i> Notes
+                                        </a>
+                                        <a t-attf-href="/my/school/student/#{st.id}/attendance" class="btn btn-sm student-quick-btn" title="Assiduité &amp; Absences">
+                                            <i class="fa fa-user-check text-warning me-1"></i> Assiduité
+                                        </a>
+                                        <a t-attf-href="/my/school/student/#{st.id}/fees" class="btn btn-sm student-quick-btn" title="Frais de scolarité">
+                                            <i class="fa fa-credit-card text-danger me-1"></i> Frais
+                                        </a>
+                                    </div>
+                                </div>
+                            </div>
+                        </t>
+                    </div>
+                </div>
+            </div>
+        </xpath>
+
         <xpath expr="//div[hasclass('o_portal_docs')]" position="inside">
             <t t-call="portal.portal_docs_entry">
+                <t t-set="icon" t-value="'/eacta_school/static/src/img/nr_school_icon.png'"/>
                 <t t-set="title">Espace Scolaire / الفضاء المدرسي</t>
+                <t t-set="text">Suivi pédagogique complet, notes, devoirs et démarches</t>
                 <t t-set="url" t-value="'/my/school'"/>
                 <t t-set="placeholder_count" t-value="'school_student_count'"/>
+                <t t-set="config_card" t-value="True"/>
             </t>
         </xpath>
     </template>

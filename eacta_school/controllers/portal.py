@@ -19,7 +19,9 @@ class SchoolCustomerPortal(CustomerPortal):
     def _prepare_portal_layout_values(self):
         values = super()._prepare_portal_layout_values()
         # Élèves accessibles par l'utilisateur connecté (ses enfants s'il est parent, ou son profil si élève)
-        values['portal_students'] = request.env['eacta.student'].search([])
+        students = request.env['eacta.student'].search([])
+        values['portal_students'] = students
+        values['school_student_count'] = len(students)
         return values
 
     def _get_student_or_forbidden(self, student_id):

@@ -119,4 +119,130 @@
             </footer>
         </xpath>
     </template>
+
+    <!-- 6. Titre et En-tête Mon Compte (portal.portal_layout) -->
+    <template id="eacta_theme_portal_layout_header" name="NR School Portal Header" inherit_id="portal.portal_layout" priority="25">
+        <xpath expr="//div[hasclass('wrapper')]//h3" position="replace">
+            <div class="portal-main-heading d-flex align-items-center gap-3 my-3">
+                <div class="portal-heading-icon">
+                    <i class="fa fa-user-circle"></i>
+                </div>
+                <div>
+                    <h3 class="mb-0 fw-bold portal-title-text">Mon Compte &amp; Espaces</h3>
+                    <span class="text-muted small">Gestion de votre compte et accès aux services scolaires</span>
+                </div>
+            </div>
+        </xpath>
+    </template>
+
+    <!-- 7. Carte Profil Utilisateur Latérale (portal.side_content) -->
+    <template id="eacta_theme_portal_side_content" name="NR School Portal Profile Sidebar" inherit_id="portal.side_content" priority="25">
+        <xpath expr="//div[contains(@t-attf-class, 'offcanvas-body') or contains(@t-attf-class, 'mt-3')]" position="replace">
+            <div t-attf-class="{{'offcanvas-body' if isOffcanvas else 'mt-3 mw-100'}} portal-profile-sidebar-card">
+                <!-- En-tête Profil avec Avatar Cerclé &amp; Statut -->
+                <div class="portal-profile-header text-center pb-3 mb-3 border-bottom">
+                    <div class="portal-profile-avatar-container mb-3 position-relative d-inline-block">
+                        <t t-set="p_partner" t-value="user_id.partner_id"/>
+                        <img class="portal-profile-avatar rounded-circle object-fit-cover shadow-sm"
+                             t-att-src="image_data_uri(p_partner.avatar_128)"
+                             alt="Avatar"
+                             width="84" height="84"
+                             style="border: 3.5px solid #E0A630; background: #FFF;"/>
+                        <span class="portal-avatar-status-badge" title="Compte actif vérifié">
+                            <i class="fa fa-check-circle"></i>
+                        </span>
+                    </div>
+                    <h5 class="fw-bold mb-1 text-dark" t-out="user_id.name"/>
+                    <div class="portal-profile-badges d-flex justify-content-center flex-wrap gap-1 mb-2">
+                        <span t-if="p_partner.is_school_parent" class="badge rounded-pill bg-wine-subtle text-wine px-2 py-1 small">
+                            <i class="fa fa-users me-1"></i> Parent d'élève
+                        </span>
+                        <span t-elif="portal_students" class="badge rounded-pill bg-wine-subtle text-wine px-2 py-1 small">
+                            <i class="fa fa-graduation-cap me-1"></i> Profil Élève
+                        </span>
+                        <span t-else="" class="badge rounded-pill bg-secondary-subtle text-secondary px-2 py-1 small">
+                            <i class="fa fa-user me-1"></i> Utilisateur Portail
+                        </span>
+                        <span class="badge rounded-pill bg-light text-dark border px-2 py-1 small">
+                            <i class="fa fa-shield text-success me-1"></i> Vérifié
+                        </span>
+                    </div>
+                    <p class="text-muted small mb-0">
+                        <i class="fa fa-university me-1 text-warning"></i>
+                        <t t-out="p_partner.company_id.name or 'NR School Casablanca'"/>
+                    </p>
+                </div>
+
+                <!-- Coordonnées Détaillées avec Icônes Stylisées -->
+                <div class="portal-contact-info-list mb-4">
+                    <div class="portal-contact-info-item d-flex align-items-center gap-3 py-2">
+                        <div class="portal-info-icon-circle">
+                            <i class="fa fa-envelope text-primary"></i>
+                        </div>
+                        <div class="flex-grow-1 overflow-hidden">
+                            <div class="text-muted text-uppercase fw-bold" style="font-size: 0.68rem; letter-spacing: 0.05em;">Adresse Email</div>
+                            <div class="text-dark fw-semibold small text-truncate" t-att-title="p_partner.email or 'Non renseignée'">
+                                <t t-out="p_partner.email or 'Non renseignée'"/>
+                            </div>
+                        </div>
+                    </div>
+
+                    <div class="portal-contact-info-item d-flex align-items-center gap-3 py-2">
+                        <div class="portal-info-icon-circle">
+                            <i class="fa fa-phone text-success"></i>
+                        </div>
+                        <div class="flex-grow-1 overflow-hidden">
+                            <div class="text-muted text-uppercase fw-bold" style="font-size: 0.68rem; letter-spacing: 0.05em;">Téléphone</div>
+                            <div class="text-dark fw-semibold small">
+                                <t t-out="p_partner.phone or p_partner.mobile or 'Non renseigné'"/>
+                            </div>
+                        </div>
+                    </div>
+
+                    <div class="portal-contact-info-item d-flex align-items-start gap-3 py-2">
+                        <div class="portal-info-icon-circle mt-1">
+                            <i class="fa fa-map-marker text-danger"></i>
+                        </div>
+                        <div class="flex-grow-1">
+                            <div class="text-muted text-uppercase fw-bold" style="font-size: 0.68rem; letter-spacing: 0.05em;">Adresse</div>
+                            <div class="text-dark small">
+                                <t t-if="p_partner.street or p_partner.city">
+                                    <t t-out="p_partner.street"/><t t-if="p_partner.street and p_partner.city">, </t><t t-out="p_partner.city"/>
+                                    <t t-if="p_partner.country_id"> (<t t-out="p_partner.country_id.name"/>)</t>
+                                </t>
+                                <t t-else="">Casablanca, Maroc</t>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Actions du Profil -->
+                <div class="d-grid gap-2 mb-4">
+                    <a role="button" href="/my/account" class="btn btn-outline-school fw-semibold">
+                        <i class="fa fa-pencil-square-o me-2"></i> Modifier mes informations
+                    </a>
+                    <a role="button" href="/my/security" class="btn btn-light border text-muted fw-semibold small">
+                        <i class="fa fa-lock me-2"></i> Sécurité &amp; Mot de passe
+                    </a>
+                </div>
+
+                <!-- Boîte d'Assistance Scolarité -->
+                <div class="portal-sidebar-helpbox p-3 rounded-3 text-center">
+                    <div class="fw-bold text-dark small mb-1">
+                        <i class="fa fa-headset text-warning me-1"></i> Assistance Scolarité
+                    </div>
+                    <p class="text-muted mb-2" style="font-size: 0.78rem;">
+                        Une question sur la scolarité ou vos démarches ?
+                    </p>
+                    <a href="mailto:contact@nrschool.ma" class="btn btn-sm btn-light border rounded-pill px-3 py-1 text-dark fw-bold" style="font-size: 0.75rem;">
+                        <i class="fa fa-paper-plane me-1 text-primary"></i> Contacter l'établissement
+                    </a>
+                </div>
+
+                <div name="portal_contact" class="o_my_contact mt-3" t-if="sales_user">
+                    <t t-call="portal.portal_contact"/>
+                </div>
+            </div>
+        </xpath>
+    </template>
 </odoo>

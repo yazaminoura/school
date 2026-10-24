@@ -320,3 +320,350 @@ footer.o_footer a,
     color: var(--school-secondary) !important;
     text-decoration: none !important;
 }
+
+/* ==========================================================================
+   9. NR SCHOOL - REDESIGN PORTAIL ACCUEIL (/my & Mon Compte)
+   ========================================================================== */
+
+/* Subtils badges de couleur */
+.bg-wine-subtle {
+    background: rgba(142, 27, 58, 0.08) !important;
+}
+
+.text-wine {
+    color: var(--school-primary) !important;
+}
+
+.bg-gold-subtle {
+    background: rgba(224, 166, 48, 0.15) !important;
+}
+
+.text-gold {
+    color: #B45309 !important;
+}
+
+/* Titre principal de la page Mon Compte */
+.portal-main-heading {
+    .portal-heading-icon {
+        width: 46px;
+        height: 46px;
+        border-radius: 14px;
+        background: rgba(142, 27, 58, 0.1);
+        color: var(--school-primary);
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        font-size: 1.5rem;
+        flex-shrink: 0;
+        box-shadow: 0 4px 10px rgba(142, 27, 58, 0.12);
+    }
+
+    .portal-title-text {
+        font-size: 1.55rem;
+        font-weight: 800;
+        color: #0F172A;
+        letter-spacing: -0.02em;
+    }
+}
+
+/* 9.1 Hero Banner Accueil (/my) */
+.portal-home-hero {
+    background: linear-gradient(135deg, #3B0A18 0%, #611227 45%, #8E1B3A 100%);
+    border-radius: 20px;
+    padding: 28px 32px;
+    position: relative;
+    overflow: hidden;
+    box-shadow: 0 10px 30px -5px rgba(59, 10, 24, 0.28);
+
+    &::after {
+        content: "";
+        position: absolute;
+        top: -60px;
+        right: -60px;
+        width: 280px;
+        height: 280px;
+        background: radial-gradient(circle, rgba(224, 166, 48, 0.25) 0%, rgba(224, 166, 48, 0) 70%);
+        border-radius: 50%;
+        pointer-events: none;
+    }
+
+    .portal-badge-gold {
+        background: #E0A630;
+        color: #1E293B;
+        font-weight: 700;
+        border-radius: 999px;
+        padding: 4px 14px;
+        font-size: 0.8rem;
+        letter-spacing: 0.02em;
+    }
+
+    .portal-badge-glass {
+        background: rgba(255, 255, 255, 0.16);
+        color: #FFFFFF;
+        border: 1px solid rgba(255, 255, 255, 0.3);
+        border-radius: 999px;
+        padding: 4px 14px;
+        font-size: 0.8rem;
+        backdrop-filter: blur(8px);
+    }
+
+    .portal-hero-greeting {
+        font-size: 1.65rem;
+        font-weight: 800;
+        color: #FFFFFF;
+        letter-spacing: -0.02em;
+    }
+
+    .portal-hero-subtext {
+        color: rgba(255, 255, 255, 0.88);
+        font-size: 0.95rem;
+        line-height: 1.5;
+        max-width: 680px;
+    }
+
+    .btn-portal-gold {
+        background: linear-gradient(135deg, #E0A630 0%, #F59E0B 100%) !important;
+        color: #1E293B !important;
+        font-weight: 700 !important;
+        border-radius: 12px !important;
+        padding: 10px 22px !important;
+        border: none !important;
+        box-shadow: 0 4px 14px rgba(224, 166, 48, 0.35) !important;
+        transition: all 0.25s cubic-bezier(0.16, 1, 0.3, 1) !important;
+
+        &:hover {
+            background: linear-gradient(135deg, #F59E0B 0%, #D97706 100%) !important;
+            color: #000000 !important;
+            transform: translateY(-2px);
+            box-shadow: 0 8px 22px rgba(224, 166, 48, 0.48) !important;
+        }
+    }
+}
+
+/* 9.2 Carte Majeure Espace Scolaire Hub */
+.portal-school-hub-card {
+    background: #FFFFFF;
+    border-radius: 20px;
+    border: 1px solid var(--school-border);
+    border-top: 4px solid var(--school-primary);
+    box-shadow: 0 6px 24px -2px rgba(59, 10, 24, 0.07);
+    overflow: hidden;
+    transition: all 0.3s cubic-bezier(0.16, 1, 0.3, 1);
+
+    &:hover {
+        box-shadow: 0 12px 32px -4px rgba(59, 10, 24, 0.12);
+    }
+
+    .portal-hub-icon-box {
+        width: 52px;
+        height: 52px;
+        border-radius: 16px;
+        background: linear-gradient(135deg, #8E1B3A 0%, #611227 100%);
+        color: #E0A630;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        font-size: 1.45rem;
+        box-shadow: 0 4px 12px rgba(142, 27, 58, 0.25);
+        flex-shrink: 0;
+    }
+
+    .student-mini-hub-card {
+        background: #FFFFFF;
+        border: 1px solid var(--school-border);
+        border-radius: 14px;
+        transition: all 0.2s cubic-bezier(0.16, 1, 0.3, 1);
+
+        &:hover {
+            border-color: rgba(142, 27, 58, 0.35);
+            transform: translateY(-3px);
+            box-shadow: 0 8px 20px rgba(59, 10, 24, 0.08) !important;
+        }
+
+        .student-mini-monogram {
+            width: 46px;
+            height: 46px;
+            border-radius: 50%;
+            background: linear-gradient(135deg, #8E1B3A 0%, #C2410C 100%);
+            color: #FFFFFF;
+            font-weight: 800;
+            font-size: 1.1rem;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            border: 2.5px solid #E0A630;
+            box-shadow: 0 4px 10px rgba(59, 10, 24, 0.15);
+        }
+
+        .student-quick-btn {
+            font-size: 0.78rem;
+            font-weight: 600;
+            border-radius: 8px;
+            padding: 5px 10px;
+            background: #F8FAFC;
+            border: 1px solid #E2E8F0;
+            color: #334155;
+            text-decoration: none;
+            transition: all 0.15s ease;
+
+            &:hover {
+                background: var(--school-primary);
+                color: #FFFFFF !important;
+                border-color: var(--school-primary);
+
+                i {
+                    color: #FFFFFF !important;
+                }
+            }
+        }
+    }
+}
+
+/* 9.3 Carte Profil Utilisateur Latérale (Side Content) */
+.portal-profile-sidebar-card {
+    background: #FFFFFF;
+    border-radius: 20px;
+    border: 1px solid var(--school-border);
+    box-shadow: 0 6px 24px -2px rgba(59, 10, 24, 0.07);
+    padding: 24px 22px;
+    width: 100%;
+
+    .portal-profile-avatar-container {
+        display: inline-block;
+        position: relative;
+
+        .portal-profile-avatar {
+            border: 3.5px solid #E0A630;
+            box-shadow: 0 6px 18px rgba(224, 166, 48, 0.25);
+        }
+
+        .portal-avatar-status-badge {
+            position: absolute;
+            bottom: 2px;
+            right: 2px;
+            background: #10B981;
+            color: #FFFFFF;
+            width: 24px;
+            height: 24px;
+            border-radius: 50%;
+            border: 2.5px solid #FFFFFF;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 0.75rem;
+            box-shadow: 0 2px 6px rgba(0, 0, 0, 0.15);
+        }
+    }
+
+    .portal-info-icon-circle {
+        width: 38px;
+        height: 38px;
+        border-radius: 10px;
+        background: rgba(142, 27, 58, 0.07);
+        color: var(--school-primary);
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        flex-shrink: 0;
+        font-size: 0.95rem;
+    }
+
+    .btn-outline-school {
+        border: 1.5px solid var(--school-primary) !important;
+        color: var(--school-primary) !important;
+        font-weight: 700 !important;
+        border-radius: 12px !important;
+        padding: 9px 18px !important;
+        background: transparent;
+        transition: all 0.2s ease !important;
+
+        &:hover {
+            background: var(--school-primary) !important;
+            color: #FFFFFF !important;
+            transform: translateY(-1px);
+            box-shadow: 0 6px 16px rgba(142, 27, 58, 0.25) !important;
+        }
+    }
+
+    .portal-sidebar-helpbox {
+        background: linear-gradient(135deg, #F8FAFC 0%, #F1F5F9 100%);
+        border: 1.5px dashed #CBD5E1;
+        border-radius: 14px;
+    }
+}
+
+/* 9.4 Stylisation des Cartes Négociées Standard Odoo (.o_portal_docs) */
+.o_portal_docs {
+    .o_portal_index_card a {
+        background: #FFFFFF !important;
+        border: 1px solid var(--school-border) !important;
+        border-radius: 16px !important;
+        box-shadow: var(--school-shadow) !important;
+        transition: all 0.25s cubic-bezier(0.16, 1, 0.3, 1) !important;
+        text-decoration: none !important;
+
+        &:hover {
+            transform: translateY(-4px) !important;
+            box-shadow: var(--school-shadow-hover) !important;
+            border-color: rgba(142, 27, 58, 0.3) !important;
+        }
+    }
+
+    .o_portal_icon {
+        display: flex !important;
+        width: 44px;
+        height: 44px;
+        border-radius: 12px;
+        background: rgba(142, 27, 58, 0.08);
+        align-items: center;
+        justify-content: center;
+        flex-shrink: 0;
+
+        img {
+            max-height: 24px;
+            max-width: 24px;
+            object-fit: contain;
+        }
+    }
+}
+
+/* 9.5 Page d'édition des coordonnées (/my/account) */
+.o_portal_details {
+    background: #FFFFFF;
+    border-radius: 20px;
+    border: 1px solid var(--school-border);
+    box-shadow: var(--school-shadow);
+    padding: 28px;
+    margin-bottom: 2rem;
+
+    .form-control, .form-select {
+        border-radius: 10px;
+        border-color: var(--school-border);
+        padding: 9px 14px;
+
+        &:focus {
+            border-color: var(--school-primary);
+            box-shadow: 0 0 0 3px rgba(142, 27, 58, 0.15);
+        }
+    }
+
+    .col-form-label {
+        font-weight: 600;
+        color: #334155;
+        font-size: 0.9rem;
+    }
+
+    .btn-primary {
+        background: var(--school-primary) !important;
+        border-color: var(--school-primary) !important;
+        border-radius: 12px;
+        font-weight: 700;
+        padding: 10px 24px;
+        box-shadow: 0 4px 12px rgba(142, 27, 58, 0.25);
+
+        &:hover {
+            background: var(--school-primary-light) !important;
+            transform: translateY(-1px);
+        }
+    }
+}
