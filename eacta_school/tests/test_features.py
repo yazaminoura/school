@@ -210,7 +210,6 @@ class TestNewFeatures(TransactionCase):
 
     def test_05_executive_dashboard_kpis(self):
         """Vérifie les métriques calculées pour le tableau de bord exécutif."""
-        # Ajouter une note et un frais
         fee = self.env['eacta.student.fee'].create({
             'student_id': self.student_2.id,
             'class_id': self.klass.id,
@@ -231,3 +230,23 @@ class TestNewFeatures(TransactionCase):
         self.assertIn('honor_count', dash_data['kpis'])
         self.assertIn('warning_count', dash_data['kpis'])
         self.assertIn('cycle_absences', dash_data)
+
+    def test_06_student_timetable_portal(self):
+        """Vérifie l'accès à l'emploi du temps (استعمال الزمن) pour l'élève."""
+        slot = self.env['eacta.timetable.slot'].create({
+            'class_id': self.klass.id,
+            'course_id': self.course.id,
+            'teacher_id': self.teacher.id,
+            'weekday': '0',
+            'hour_from': 8.5,
+            'hour_to': 10.5,
+            'room': 'Salle 101',
+        })
+        slots = self.env['eacta.timetable.slot'].search([
+            ('class_id', '=', self.student_1.current_class_id.id),
+        ], order='weekday, hour_from')
+        self.assertIn(slot, slots)
+        self.assertEqual(slot.weekday, '0')
+        self.assertEqual(slot.hour_from, 8.5)
+        self.assertEqual(slot.hour_to, 10.5)
+        self.assertEqual(slot.room, 'Salle 101')

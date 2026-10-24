@@ -184,7 +184,7 @@ class SchoolCustomerPortal(CustomerPortal):
         student = self._get_student_or_forbidden(student_id)
         slots = request.env['eacta.timetable.slot'].search([
             ('class_id', '=', student.current_class_id.id),
-        ], order='day_of_week, time_start') if student.current_class_id else request.env['eacta.timetable.slot']
+        ], order='weekday, hour_from') if student.current_class_id else request.env['eacta.timetable.slot']
 
         values = self._prepare_portal_layout_values()
         values.update({

@@ -189,8 +189,8 @@
                         <tbody>
                             <t t-foreach="slots" t-as="slot">
                                 <tr>
-                                    <td><span class="badge bg-light text-dark border"><t t-out="dict(slot._fields['day_of_week'].selection).get(slot.day_of_week)"/></span></td>
-                                    <td><strong><t t-out="'%.2f' % slot.time_start"/>h - <t t-out="'%.2f' % slot.time_end"/>h</strong></td>
+                                    <td><span class="badge bg-light text-dark border"><t t-out="dict(slot._fields['weekday'].selection).get(slot.weekday)"/></span></td>
+                                    <td><strong><t t-out="'%02d:%02d' % (int(slot.hour_from), int(round((slot.hour_from % 1) * 60)))"/> - <t t-out="'%02d:%02d' % (int(slot.hour_to), int(round((slot.hour_to % 1) * 60)))"/></strong></td>
                                     <td><strong class="text-primary"><t t-out="slot.course_id.name"/></strong></td>
                                     <td><t t-out="slot.teacher_id.name or 'Non assigné'"/></td>
                                     <td><t t-out="slot.room or '-'"/></td>
