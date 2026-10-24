@@ -250,3 +250,28 @@ class TestNewFeatures(TransactionCase):
         self.assertEqual(slot.hour_from, 8.5)
         self.assertEqual(slot.hour_to, 10.5)
         self.assertEqual(slot.room, 'Salle 101')
+
+    def test_07_portal_multi_child_and_profile_history(self):
+        """Vérifie l'espace élève (historique des classes, cours) et l'espace parent (fratrie multi-enfants)."""
+        # 1. Espace Élève : profil et historique des classes
+        self.assertIn(self.klass, self.student_1.class_ids, "La classe doit figurer dans l'historique des classes")
+        self.assertIn(self.course, self.student_1.course_ids, "Le cours de la classe doit être suivi par l'élève")
+
+        # 2. Espace Parent : Utilisateur portail parent avec 2 enfants
+        user_parent = self.env['res.users'].create({
+            'name': 'Parent User Benali TF',
+            'login': 'parent_benali_tf',
+            'email': 'parent.user.benali.tf@example.com',
+            'partner_id': self.parent.id,
+            'groups_id': [(6, 0, [self.env.ref('base.group_portal').id])],
+        })
+
+        # Le parent accède à tous ses enfants via les règles de sécurité ir.rule
+        students_portal = self.env['eacta.student'].with_user(user_parent).search([])
+        self.assertEqual(len(students_portal), 2, "Le parent avec 2 enfants doit voir les 2 dossiers")
+        self.assertIn(self.student_1, students_portal)
+        self.assertIn(self.student_2, students_portal)
+
+        # 3. Vérification de la fratrie (remise fratrie applicable au cadet)
+        self.assertTrue(self.student_1._is_eldest_sibling())
+        self.assertFalse(self.student_2._is_eldest_sibling(), "Le deuxième enfant n'est pas l'aîné (éligible remise)")

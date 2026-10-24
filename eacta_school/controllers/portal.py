@@ -16,6 +16,12 @@ class SchoolCustomerPortal(CustomerPortal):
             values['school_student_count'] = request.env['eacta.student'].search_count([])
         return values
 
+    def _prepare_portal_layout_values(self):
+        values = super()._prepare_portal_layout_values()
+        # Élèves accessibles par l'utilisateur connecté (ses enfants s'il est parent, ou son profil si élève)
+        values['portal_students'] = request.env['eacta.student'].search([])
+        return values
+
     def _get_student_or_forbidden(self, student_id):
         """
         Contrôle d'accès strict sans raccourci sudo() :
@@ -45,9 +51,22 @@ class SchoolCustomerPortal(CustomerPortal):
         read_ids = request.env['eacta.announcement.read'].sudo().search([
             ('announcement_id', 'in', announcements.ids), ('partner_id', '=', request.env.user.partner_id.id),
         ]).announcement_id.ids
+        is_family = len(students) > 1
+        family_total_due = 0.0
+        family_total_paid = 0.0
+        if is_family:
+            fees = request.env['eacta.student.fee'].search([
+                ('student_id', 'in', students.ids),
+                ('is_cancelled', '=', False),
+            ])
+            family_total_due = sum(fees.mapped('amount_due'))
+            family_total_paid = sum(fees.mapped('amount_paid'))
         values = self._prepare_portal_layout_values()
         values.update({
             'students': students,
+            'is_family': is_family,
+            'family_total_due': family_total_due,
+            'family_total_paid': family_total_paid,
             'announcements': announcements,
             'read_announcement_ids': read_ids,
             'page_name': 'school_dashboard',
@@ -122,6 +141,7 @@ class SchoolCustomerPortal(CustomerPortal):
             'student': student,
             'upcoming': upcoming,
             'past': past,
+            'subpage_slug': 'homework',
             'page_name': 'student_homework',
         })
         return request.render('eacta_school.portal_student_homework', values)
@@ -139,6 +159,7 @@ class SchoolCustomerPortal(CustomerPortal):
         values.update({
             'student': student,
             'incidents': incidents,
+            'subpage_slug': 'life',
             'page_name': 'student_life',
         })
         return request.render('eacta_school.portal_student_life', values)
@@ -172,6 +193,7 @@ class SchoolCustomerPortal(CustomerPortal):
             'grades_count': grades_count,
             'absences_count': absences_count,
             'balance_due': balance_due,
+            'subpage_slug': '',
             'page_name': 'student_detail',
         })
         return request.render('eacta_school.portal_student_detail', values)
@@ -190,6 +212,7 @@ class SchoolCustomerPortal(CustomerPortal):
         values.update({
             'student': student,
             'slots': slots,
+            'subpage_slug': 'timetable',
             'page_name': 'student_timetable',
         })
         return request.render('eacta_school.portal_student_timetable', values)
@@ -211,6 +234,7 @@ class SchoolCustomerPortal(CustomerPortal):
             'absent_count': len(attendances.filtered(lambda a: a.attendance_type == 'absent')),
             'late_count': len(attendances.filtered(lambda a: a.attendance_type == 'late')),
             'justified_count': len(attendances.filtered(lambda a: a.justified)),
+            'subpage_slug': 'attendance',
             'page_name': 'student_attendance',
         })
         return request.render('eacta_school.portal_student_attendance', values)
@@ -236,6 +260,7 @@ class SchoolCustomerPortal(CustomerPortal):
             'student': student,
             'grades': grades,
             'results': results,
+            'subpage_slug': 'grades',
             'page_name': 'student_grades',
         })
         return request.render('eacta_school.portal_student_grades', values)
@@ -292,6 +317,7 @@ class SchoolCustomerPortal(CustomerPortal):
             'total_paid': total_paid,
             'total_due': total_due,
             'currency': fees[:1].currency_id if fees else False,
+            'subpage_slug': 'fees',
             'page_name': 'student_fees',
         })
         return request.render('eacta_school.portal_student_fees', values)
