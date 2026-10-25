@@ -245,4 +245,122 @@
             </div>
         </xpath>
     </template>
+
+    <!-- 8. En-tête Connexion & Sécurité (portal.portal_my_security) -->
+    <template id="eacta_theme_portal_my_security" name="NR School Connexion &amp; Sécurité" inherit_id="portal.portal_my_security" priority="25">
+        <xpath expr="//div[hasclass('d-flex') and hasclass('gap-2') and hasclass('my-3')]" position="replace">
+            <div class="portal-security-hero mb-4">
+                <div class="d-flex flex-wrap align-items-center justify-content-between gap-3 position-relative" style="z-index: 2;">
+                    <div class="d-flex align-items-center gap-3">
+                        <a href="/my" class="btn btn-portal-back" title="Retour au portail">
+                            <i class="fa fa-arrow-left"></i>
+                        </a>
+                        <div class="portal-security-icon-box">
+                            <i class="fa fa-shield"></i>
+                        </div>
+                        <div>
+                            <div class="d-flex align-items-center flex-wrap gap-2 mb-1">
+                                <span class="portal-badge-gold">
+                                    <i class="fa fa-lock me-1"></i> Espace Sécurisé
+                                </span>
+                                <span class="portal-badge-glass d-none d-sm-inline-block">
+                                    NR School Casablanca
+                                </span>
+                            </div>
+                            <h2 class="portal-security-title mb-0">Connexion &amp; Sécurité</h2>
+                            <p class="portal-security-subtext mb-0">
+                                Gestion des mots de passe, sessions actives et authentification
+                            </p>
+                        </div>
+                    </div>
+                    <div>
+                        <a href="/my" class="btn btn-portal-gold shadow-sm">
+                            <i class="fa fa-user me-1"></i> Mon Compte
+                        </a>
+                    </div>
+                </div>
+            </div>
+        </xpath>
+    </template>
+
+    <!-- 9. En-tête et Cadre Informations & Coordonnées (portal.portal_my_details) -->
+    <template id="eacta_theme_portal_my_details" name="NR School Coordonnées &amp; Informations" inherit_id="portal.portal_my_details" priority="25">
+        <xpath expr="//form[@action='/my/account']" position="before">
+            <div class="portal-account-hero mb-4">
+                <div class="d-flex flex-wrap align-items-center justify-content-between gap-3 position-relative" style="z-index: 2;">
+                    <div class="d-flex align-items-center gap-3">
+                        <a href="/my" class="btn btn-portal-back" title="Retour au portail">
+                            <i class="fa fa-arrow-left"></i>
+                        </a>
+                        <div class="portal-account-icon-box">
+                            <i class="fa fa-user-circle"></i>
+                        </div>
+                        <div>
+                            <div class="d-flex align-items-center flex-wrap gap-2 mb-1">
+                                <span class="portal-badge-gold">
+                                    <i class="fa fa-id-card me-1"></i> Coordonnées
+                                </span>
+                                <span class="portal-badge-glass d-none d-sm-inline-block">
+                                    NR School Casablanca
+                                </span>
+                            </div>
+                            <h2 class="portal-account-title mb-0">Informations &amp; Coordonnées</h2>
+                            <p class="portal-account-subtext mb-0">
+                                Mise à jour de vos données pour la réception des bulletins et alertes scolaires
+                            </p>
+                        </div>
+                    </div>
+                    <div>
+                        <a href="/my" class="btn btn-portal-gold shadow-sm">
+                            <i class="fa fa-arrow-left me-1"></i> Mon Compte
+                        </a>
+                    </div>
+                </div>
+            </div>
+        </xpath>
+        <xpath expr="//div[hasclass('o_portal_details')]" position="attributes">
+            <attribute name="class">row o_portal_details g-4</attribute>
+        </xpath>
+        <xpath expr="//div[hasclass('o_portal_details')]/div[hasclass('col-lg-8')]" position="after">
+            <div class="col-lg-4">
+                <div class="portal-account-sidecard p-4 rounded-4 bg-white border shadow-sm">
+                    <div class="d-flex align-items-center gap-2 mb-3 pb-2 border-bottom">
+                        <span class="portal-info-icon-circle">
+                            <i class="fa fa-info-circle text-primary"></i>
+                        </span>
+                        <h5 class="mb-0 fw-bold text-dark">Utilisation de vos données</h5>
+                    </div>
+                    <div class="d-flex flex-column gap-3 small">
+                        <div class="d-flex gap-2">
+                            <span class="text-success fs-5 flex-shrink-0"><i class="fa fa-whatsapp"></i></span>
+                            <div>
+                                <strong class="d-block text-dark">Alertes SMS &amp; WhatsApp</strong>
+                                <span class="text-muted">Votre téléphone portable reçoit instantanément les alertes de retard, absences et urgences.</span>
+                            </div>
+                        </div>
+                        <div class="d-flex gap-2">
+                            <span class="text-primary fs-5 flex-shrink-0"><i class="fa fa-envelope-open"></i></span>
+                            <div>
+                                <strong class="d-block text-dark">Bulletins &amp; Relevés</strong>
+                                <span class="text-muted">Votre email reçoit automatiquement les relevés de notes et convocations officielles.</span>
+                            </div>
+                        </div>
+                        <div class="d-flex gap-2">
+                            <span class="text-warning fs-5 flex-shrink-0"><i class="fa fa-lock"></i></span>
+                            <div>
+                                <strong class="d-block text-dark">Confidentialité CNDP</strong>
+                                <span class="text-muted">Données strictement protégées et confidentielles, réservées à l'usage scolaire exclusif.</span>
+                            </div>
+                        </div>
+                    </div>
+                    <div class="mt-4 pt-3 border-top text-center">
+                        <span class="small text-muted d-block mb-2">Besoin de modifier le nom officiel d'un élève ?</span>
+                        <a href="mailto:contact@nrschool.ma" class="btn btn-sm btn-outline-school rounded-pill px-3">
+                            <i class="fa fa-paper-plane me-1"></i> Contacter l'administration
+                        </a>
+                    </div>
+                </div>
+            </div>
+        </xpath>
+    </template>
 </odoo>
