@@ -71,6 +71,63 @@ class EactaSchoolEvent(models.Model):
                                       currency_field='currency_id')
     is_past = fields.Boolean(compute='_compute_is_past')
 
+    # ------------------------------------------------------------------
+    # NOUVEAU : Budget, Dépenses & Résultat Financier
+    # ------------------------------------------------------------------
+    expense_ids = fields.One2many('eacta.school.event.expense', 'event_id', string='Dépenses & Achats')
+    total_expenses = fields.Monetary(string='Total Dépenses', compute='_compute_financials', store=True,
+                                     currency_field='currency_id')
+    net_margin = fields.Monetary(string='Solde net / Résultat', compute='_compute_financials', store=True,
+                                 currency_field='currency_id')
+    financial_result_status = fields.Selection([
+        ('profit', 'Excédentaire'),
+        ('balanced', 'À l\'équilibre'),
+        ('deficit', 'Déficitaire'),
+    ], string='Situation financière', compute='_compute_financials', store=True)
+
+    # ------------------------------------------------------------------
+    # NOUVEAU : Logistique, Transport & Sécurité sur le terrain
+    # ------------------------------------------------------------------
+    transport_type = fields.Selection([
+        ('none', 'Aucun (sur place dans l\'établissement)'),
+        ('school_bus', 'Bus officiel de l\'école'),
+        ('charter_bus', 'Autocar de tourisme affrété'),
+        ('train', 'Train / Transport ferroviaire'),
+        ('walking', 'Déplacement pédestre / Proximité'),
+        ('public', 'Transport en commun'),
+    ], string='Mode de transport', default='none', tracking=True)
+    transport_company = fields.Char(string='Société de transport / Prestataire')
+    driver_contact = fields.Char(string='Chauffeur & Téléphone')
+    vehicle_plate = fields.Char(string='Immatriculation du car')
+    departure_meeting_point = fields.Char(string='Point de rassemblement & Départ')
+    return_estimated_time = fields.Char(string='Heure estimée de retour')
+
+    emergency_contact = fields.Char(string='Référent d\'urgence sur place')
+    emergency_phone = fields.Char(string='Téléphone d\'urgence')
+    first_aid_kit = fields.Boolean(string='Trousse de premiers secours vérifiée', default=True)
+    safety_briefing_done = fields.Boolean(string='Consignes de sécurité transmises aux élèves')
+    supervisor_ratio = fields.Float(string='Élèves par encadrant', compute='_compute_supervisor_ratio', store=True)
+
+    # ------------------------------------------------------------------
+    # NOUVEAU : Alertes Médicales & Synthèse PAI / Allergies
+    # ------------------------------------------------------------------
+    medical_alert_count = fields.Integer(string='Élèves avec alertes médicales', compute='_compute_medical_alerts')
+    medical_alert_summary = fields.Text(string='Synthèse des allergies & PAI', compute='_compute_medical_alerts')
+
+    # ------------------------------------------------------------------
+    # NOUVEAU : Bilan & Clôture Pédagogique
+    # ------------------------------------------------------------------
+    rating = fields.Selection([
+        ('1', '★☆☆☆☆ - Insuffisant'),
+        ('2', '★★☆☆☆ - Moyen'),
+        ('3', '★★★☆☆ - Satisfaisant'),
+        ('4', '★★★★☆ - Très bien'),
+        ('5', '★★★★★ - Excellent'),
+    ], string='Évaluation globale', tracking=True)
+    pedagogical_objectives_met = fields.Boolean(string='Objectifs pédagogiques atteints', default=True)
+    debrief_notes = fields.Html(string='Bilan & compte-rendu pédagogique')
+    incident_notes = fields.Text(string='Incidents ou remarques spécifiques')
+
     @api.model
     def _group_expand_states(self, states, domain):
         return [key for key, _label in self._fields['state'].selection]
@@ -109,6 +166,52 @@ class EactaSchoolEvent(models.Model):
         now = fields.Datetime.now()
         for event in self:
             event.is_past = bool(event.date_end or event.date_start) and (event.date_end or event.date_start) < now
+
+    @api.depends('amount_collected', 'expense_ids.amount', 'expense_ids.state')
+    def _compute_financials(self):
+        for event in self:
+            active_expenses = event.expense_ids.filtered(lambda e: e.state != 'cancelled')
+            total_exp = sum(active_expenses.mapped('amount'))
+            event.total_expenses = total_exp
+            margin = event.amount_collected - total_exp
+            event.net_margin = margin
+            if total_exp == 0 and event.amount_collected == 0:
+                event.financial_result_status = 'balanced'
+            elif margin > 0:
+                event.financial_result_status = 'profit'
+            elif margin < 0:
+                event.financial_result_status = 'deficit'
+            else:
+                event.financial_result_status = 'balanced'
+
+    @api.depends('participant_count', 'organizer_id', 'supervisor_ids')
+    def _compute_supervisor_ratio(self):
+        for event in self:
+            nb_adults = (1 if event.organizer_id else 0) + len(event.supervisor_ids)
+            if nb_adults > 0 and event.participant_count > 0:
+                event.supervisor_ratio = round(event.participant_count / nb_adults, 1)
+            else:
+                event.supervisor_ratio = 0.0
+
+    @api.depends('registration_ids.student_id', 'registration_ids.state')
+    def _compute_medical_alerts(self):
+        for event in self:
+            students = event.registration_ids.filtered(lambda r: r.state != 'cancelled').student_id
+            alert_students = students.filtered(lambda s: s.allergies or s.medical_notes)
+            event.medical_alert_count = len(alert_students)
+            if alert_students:
+                lines = []
+                for s in alert_students:
+                    parts = []
+                    if s.allergies:
+                        parts.append(f"Allergies: {s.allergies}")
+                    if s.medical_notes:
+                        parts.append(f"PAI: {s.medical_notes}")
+                    c_name = s.current_class_id.name if s.current_class_id else 'Sans classe'
+                    lines.append(f"• {s.name} ({c_name}): {', '.join(parts)}")
+                event.medical_alert_summary = "\n".join(lines)
+            else:
+                event.medical_alert_summary = "Aucune alerte médicale ou allergie déclarée pour les élèves inscrits."
 
     @api.onchange('date_start')
     def _onchange_date_start(self):
@@ -264,6 +367,69 @@ class EactaSchoolEvent(models.Model):
             raise UserError("Aucun élève inscrit.")
         return self.env.ref('eacta_event.action_report_event_authorization').report_action(regs)
 
+    def action_send_parent_reminders(self):
+        """Relance les parents ayant des autorisations ou paiements en attente."""
+        self.ensure_one()
+        unauth_regs = self.registration_ids.filtered(lambda r: r.state != 'cancelled' and not r.authorized and self.requires_authorization)
+        unpaid_regs = self.registration_ids.filtered(lambda r: r.state != 'cancelled' and not r.paid and self.fee_amount > 0)
+        target_regs = unauth_regs | unpaid_regs
+
+        if not target_regs:
+            return {
+                'type': 'ir.actions.client',
+                'tag': 'display_notification',
+                'params': {
+                    'title': "Tous les dossiers sont complets !",
+                    'message': "Toutes les autorisations parentales et participations sont à jour.",
+                    'type': 'info',
+                    'sticky': False,
+                }
+            }
+
+        notified = len(target_regs)
+        msg = f"📢 <b>Relance automatique envoyée aux familles ({notified} élève(s)) :</b><br/>"
+        if unauth_regs:
+            msg += f"• <b>{len(unauth_regs)}</b> autorisation(s) parentale(s) en attente<br/>"
+        if unpaid_regs:
+            msg += f"• <b>{len(unpaid_regs)}</b> participation(s) financière(s) à régler"
+        self.message_post(body=msg, subtype_xmlid='mail.mt_note')
+
+        return {
+            'type': 'ir.actions.client',
+            'tag': 'display_notification',
+            'params': {
+                'title': "Rappels envoyés aux parents",
+                'message': f"{notified} dossier(s) en attente ont été relancés avec succès.",
+                'type': 'success',
+                'sticky': False,
+            }
+        }
+
+    def action_view_medical_sheet(self):
+        """Ouvre la liste détaillée des alertes médicales pour les encadrants de la sortie."""
+        self.ensure_one()
+        students = self.registration_ids.filtered(lambda r: r.state != 'cancelled').student_id
+        alert_students = students.filtered(lambda s: s.allergies or s.medical_notes)
+        return {
+            'name': f"Fiche Médicale & PAI - {self.name}",
+            'type': 'ir.actions.act_window',
+            'res_model': 'eacta.student',
+            'view_mode': 'list,form',
+            'domain': [('id', 'in', alert_students.ids)],
+            'context': {'create': False, 'delete': False},
+        }
+
+    def action_view_expenses(self):
+        self.ensure_one()
+        return {
+            'name': f"Dépenses - {self.name}",
+            'type': 'ir.actions.act_window',
+            'res_model': 'eacta.school.event.expense',
+            'view_mode': 'list,form',
+            'domain': [('event_id', '=', self.id)],
+            'context': {'default_event_id': self.id},
+        }
+
     @api.model
     def _generate_demo_events(self):
         if not sample_data_step(self.env, 'events', 'eacta.school.event'):
@@ -335,6 +501,11 @@ class EactaSchoolEventRegistration(models.Model):
     ], string='Statut', default='registered', required=True)
     authorized = fields.Boolean(string='Autorisation parentale')
     authorization_date = fields.Date(string="Reçue le")
+    authorization_method = fields.Selection([
+        ('paper', 'Formulaire papier signé'),
+        ('portal', 'Signature électronique portail'),
+    ], string="Mode d'autorisation", default='paper')
+    authorized_by_parent_id = fields.Many2one('res.partner', string="Parent signataire")
     fee_id = fields.Many2one('eacta.student.fee', string='Frais facturé', ondelete='set null')
     fee_state = fields.Selection(related='fee_id.state', string='État des frais')
     paid = fields.Boolean(string='Payé', compute='_compute_paid', store=True, readonly=False)
@@ -392,3 +563,22 @@ class EactaSchoolEventRegistration(models.Model):
     def action_toggle_paid(self):
         for reg in self:
             reg.paid = not reg.paid
+
+    def action_authorize_online(self, parent_partner=None):
+        """Enregistre l'autorisation parentale électronique depuis le portail."""
+        self.ensure_one()
+        vals = {
+            'authorized': True,
+            'authorization_date': fields.Date.context_today(self),
+            'authorization_method': 'portal',
+        }
+        if parent_partner:
+            vals['authorized_by_parent_id'] = parent_partner.id
+            vals['parent_id'] = parent_partner.id
+        self.write(vals)
+        parent_name = parent_partner.name if parent_partner else "Parent d'élève"
+        self.event_id.message_post(
+            body=f"✍️ <b>Autorisation parentale signée en ligne</b> pour l'élève <b>{self.student_id.name}</b> par <i>{parent_name}</i>.",
+            subtype_xmlid='mail.mt_note'
+        )
+        return True

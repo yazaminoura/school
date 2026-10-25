@@ -222,7 +222,15 @@ class TestSchoolEvent(common.TransactionCase):
         self.assertIn(event_1, events_t1)
         self.assertNotIn(event_2, events_t1)
 
-        # Parent ne doit voir que l'inscription de son enfant
+        # Avant confirmation, les parents ne voient pas les événements en brouillon
+        regs_parent_draft = self.env['eacta.school.event.registration'].with_user(self.user_parent).search([])
+        self.assertFalse(regs_parent_draft.filtered(lambda r: r.student_id == self.student_child))
+
+        # Confirmation des événements
+        event_1.action_confirm()
+        event_2.action_confirm()
+
+        # Après confirmation, le parent ne doit voir que l'inscription de son propre enfant
         regs_parent = self.env['eacta.school.event.registration'].with_user(self.user_parent).search([])
         child_regs = regs_parent.filtered(lambda r: r.student_id == self.student_child)
         other_regs = regs_parent.filtered(lambda r: r.student_id == self.student_other)
@@ -234,3 +242,141 @@ class TestSchoolEvent(common.TransactionCase):
             ('id', 'in', [event_1.id, event_2.id])
         ])
         self.assertEqual(len(events_mgr), 2)
+
+    def test_05_event_expenses_and_financial_margin(self):
+        """Vérifie la gestion des dépenses et le calcul du bilan financier (marge nette, surplus/déficit)."""
+        event = self.env['eacta.school.event'].create({
+            'name': 'Excursion Musée',
+            'event_type': 'outing',
+            'fee_amount': 100.0,
+            'capacity': 10,
+            'class_ids': [(6, 0, [self.class_1.id])],
+        })
+        event.action_register_classes()
+        # 1 élève inscrit, mettons-le en payé
+        reg = event.registration_ids[0]
+        reg.write({'paid': True})
+
+        self.assertEqual(event.amount_collected, 100.0)
+        self.assertEqual(event.total_expenses, 0.0)
+        self.assertEqual(event.net_margin, 100.0)
+        self.assertEqual(event.financial_result_status, 'profit')
+
+        # Ajout d'une dépense de transport
+        self.env['eacta.school.event.expense'].create({
+            'event_id': event.id,
+            'name': 'Location Autocar',
+            'expense_type': 'transport',
+            'amount': 70.0,
+            'state': 'planned',
+        })
+        self.assertEqual(event.total_expenses, 70.0)
+        self.assertEqual(event.net_margin, 30.0)
+        self.assertEqual(event.financial_result_status, 'profit')
+
+        # Ajout d'une dépense imprévue rendant l'événement déficitaire
+        self.env['eacta.school.event.expense'].create({
+            'event_id': event.id,
+            'name': 'Guides Supplémentaires',
+            'expense_type': 'tickets',
+            'amount': 50.0,
+            'state': 'paid',
+        })
+        self.assertEqual(event.total_expenses, 120.0)
+        self.assertEqual(event.net_margin, -20.0)
+        self.assertEqual(event.financial_result_status, 'deficit')
+
+        # Action d'ouverture des dépenses
+        action = event.action_view_expenses()
+        self.assertEqual(action['res_model'], 'eacta.school.event.expense')
+
+    def test_06_field_trip_logistics_and_safety_ratios(self):
+        """Vérifie les paramètres logistiques, les vérifications de sécurité et le ratio d'encadrement."""
+        event = self.env['eacta.school.event'].create({
+            'name': 'Sortie Montagne',
+            'event_type': 'outing',
+            'transport_type': 'charter_bus',
+            'transport_company': 'Trans Atlas SARL',
+            'driver_contact': 'Mohamed (+212 600000000)',
+            'vehicle_plate': '12345-A-1',
+            'departure_meeting_point': 'Portail Principal Collège',
+            'emergency_contact': 'Mme Direction',
+            'emergency_phone': '+212 522000000',
+            'first_aid_kit': True,
+            'safety_briefing_done': True,
+            'organizer_id': self.user_teacher_1.id,
+            'supervisor_ids': [(6, 0, [self.user_teacher_2.id])],
+            'class_ids': [(6, 0, [self.class_1.id, self.class_2.id])],
+        })
+        event.action_register_classes()
+        # 2 élèves inscrits, 2 encadrants (1 organisateur + 1 accompagnateur) -> ratio 1.0 élève par encadrant
+        self.assertEqual(event.participant_count, 2)
+        self.assertAlmostEqual(event.supervisor_ratio, 1.0, places=1)
+
+    def test_07_medical_alerts_and_pai_surfacing(self):
+        """Vérifie la détection et la consolidation des alertes médicales / PAI pour les sorties."""
+        # Définition d'une allergie sur l'élève
+        self.student_child.write({
+            'allergies': 'Arachides sévère (Emporte EpiPen)',
+            'medical_notes': 'Protocole PAI actif - contacter infirmière.',
+        })
+
+        event = self.env['eacta.school.event'].create({
+            'name': 'Visite Ferme Pédagogique',
+            'event_type': 'outing',
+            'class_ids': [(6, 0, [self.class_1.id])],
+        })
+        event.action_register_classes()
+
+        self.assertGreaterEqual(event.medical_alert_count, 1)
+        self.assertIn('Arachides', event.medical_alert_summary)
+        self.assertIn(self.student_child.name, event.medical_alert_summary)
+
+        # Action d'ouverture de la fiche médicale
+        action = event.action_view_medical_sheet()
+        self.assertEqual(action['res_model'], 'eacta.student')
+
+    def test_08_portal_online_parental_authorization_and_reminders(self):
+        """Vérifie l'autorisation parentale en ligne via le portail et les relances automatiques."""
+        event = self.env['eacta.school.event'].create({
+            'name': 'Sortie Musée Mohammed VI',
+            'event_type': 'cultural',
+            'requires_authorization': True,
+            'class_ids': [(6, 0, [self.class_1.id])],
+        })
+        event.action_register_classes()
+        reg = event.registration_ids.filtered(lambda r: r.student_id == self.student_child)
+        self.assertFalse(reg.authorized)
+        self.assertEqual(reg.authorization_method, 'paper')
+
+        # Le parent valide l'autorisation en ligne
+        reg.action_authorize_online(parent_partner=self.partner_parent)
+        self.assertTrue(reg.authorized)
+        self.assertEqual(reg.authorization_method, 'portal')
+        self.assertEqual(reg.authorized_by_parent_id, self.partner_parent)
+        self.assertEqual(reg.authorization_date, fields.Date.today())
+
+        # Relance des parents pour les autorisations manquantes
+        # Inscription d'un 2e élève non autorisé via une nouvelle classe
+        student_unauth = self.env['eacta.student'].create({
+            'name': 'Élève Sans Accord',
+            'gender': 'male',
+            'state': 'enrolled',
+        })
+        class_extra = self.env['eacta.class'].create({
+            'name': 'Classe Découverte',
+            'level': 'secondary',
+            'academic_year_id': self.academic_year.id,
+            'teacher_id': self.user_teacher_1.id,
+            'student_ids': [(6, 0, [student_unauth.id])],
+        })
+        event.write({
+            'capacity': 20,
+            'class_ids': [(4, class_extra.id)],
+        })
+        event.action_register_classes()
+
+        reminder_action = event.action_send_parent_reminders()
+        self.assertEqual(reminder_action.get('type'), 'ir.actions.client')
+        self.assertEqual(reminder_action.get('tag'), 'display_notification')
+

@@ -14,6 +14,12 @@
             <field name="domain_force">['|', ('company_id', '=', False), ('company_id', 'in', company_ids)]</field>
         </record>
 
+        <record id="eacta_event_expense_company_rule" model="ir.rule">
+            <field name="name">Dépenses événements : multi-société</field>
+            <field name="model_id" ref="model_eacta_school_event_expense"/>
+            <field name="domain_force">['|', ('company_id', '=', False), ('company_id', 'in', company_ids)]</field>
+        </record>
+
         <!-- Direction & Responsable : visibilité complète -->
         <record id="eacta_event_manager_rule" model="ir.rule">
             <field name="name">Événements : Direction &amp; Responsable (Tous)</field>
@@ -44,20 +50,28 @@
             <field name="domain_force">['|', '|', ('event_id.organizer_id', '=', user.id), ('event_id.supervisor_ids', 'in', [user.id]), ('class_id.teacher_id', '=', user.id)]</field>
         </record>
 
-        <!-- Parents : uniquement les inscriptions de leurs propres enfants -->
+        <!-- Portail (Parents & Élèves) : Consultation des événements publiés/confirmés -->
+        <record id="eacta_event_portal_rule" model="ir.rule">
+            <field name="name">Événements : Portail (Consultation)</field>
+            <field name="model_id" ref="model_eacta_school_event"/>
+            <field name="groups" eval="[(4, ref('base.group_portal'))]"/>
+            <field name="domain_force">[('state', 'in', ('confirmed', 'in_progress', 'done'))]</field>
+        </record>
+
+        <!-- Parents : uniquement les inscriptions confirmées/publiées de leurs propres enfants -->
         <record id="eacta_event_registration_parent_rule" model="ir.rule">
             <field name="name">Inscriptions événements : Parents (leurs enfants)</field>
             <field name="model_id" ref="model_eacta_school_event_registration"/>
             <field name="groups" eval="[(4, ref('eacta_school.group_eacta_school_parent')), (4, ref('base.group_portal'))]"/>
-            <field name="domain_force">[('student_id.parent_ids', 'in', [user.partner_id.id])]</field>
+            <field name="domain_force">[('student_id.parent_ids', 'in', [user.partner_id.id]), ('event_id.state', 'in', ('confirmed', 'in_progress', 'done'))]</field>
         </record>
 
-        <!-- Élèves : uniquement leur propre inscription -->
+        <!-- Élèves : uniquement leur propre inscription confirmée/publiée -->
         <record id="eacta_event_registration_student_rule" model="ir.rule">
             <field name="name">Inscriptions événements : Élèves (leur inscription)</field>
             <field name="model_id" ref="model_eacta_school_event_registration"/>
             <field name="groups" eval="[(4, ref('eacta_school.group_eacta_school_student'))]"/>
-            <field name="domain_force">['|', ('student_id.user_id', '=', user.id), ('student_id.partner_id', '=', user.partner_id.id)]</field>
+            <field name="domain_force">['|', ('student_id.user_id', '=', user.id), ('student_id.partner_id', '=', user.partner_id.id), ('event_id.state', 'in', ('confirmed', 'in_progress', 'done'))]</field>
         </record>
     </data>
 </odoo>

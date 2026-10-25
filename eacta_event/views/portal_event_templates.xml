@@ -1,0 +1,246 @@
+<?xml version="1.0" encoding="utf-8"?>
+<odoo>
+
+    <!-- 1. Fil d'Ariane pour les Événements -->
+    <template id="portal_breadcrumbs_school_events" name="Fil d'ariane Événements Scolaires" inherit_id="portal.portal_breadcrumbs" priority="35">
+        <xpath expr="//ol[hasclass('o_portal_submenu')]" position="inside">
+            <li t-if="page_name == 'student_events'" class="breadcrumb-item active">Événements &amp; Sorties</li>
+        </xpath>
+    </template>
+
+    <!-- 2. Carte d'accès rapide sur le Tableau de bord de l'élève -->
+    <template id="portal_student_detail_events_card" name="Carte Événements sur Tableau de Bord" inherit_id="eacta_school.portal_student_detail" priority="35">
+        <xpath expr="//div[hasclass('row') and hasclass('g-3') and hasclass('mb-4')]" position="inside">
+            <div class="col-sm-6 col-lg-3">
+                <a t-attf-href="/my/school/student/#{student.id}/events" class="text-decoration-none">
+                    <div class="portal-action-card">
+                        <div class="portal-action-icon-wrapper icon-purple">
+                            <i class="fa fa-calendar-check-o fa-2x"></i>
+                        </div>
+                        <h5 class="fw-bold text-dark mb-1">Événements &amp; Sorties</h5>
+                        <span class="badge bg-primary-subtle text-primary mb-0">
+                            <t t-out="len(student.event_registration_ids.filtered(lambda r: r.state != 'cancelled'))"/> Sorties &amp; Activités
+                        </span>
+                    </div>
+                </a>
+            </div>
+        </xpath>
+    </template>
+
+    <!-- 3. Page Complète : Événements & Sorties Scolaires (/my/school/student/<id>/events) -->
+    <template id="portal_student_events" name="Événements &amp; Sorties Scolaires de l'Élève">
+        <t t-call="portal.portal_layout">
+            <div class="container py-4">
+                <!-- Sélecteur d'enfant pour les parents multi-enfants -->
+                <t t-call="eacta_school.portal_student_child_switcher"/>
+
+                <!-- Bannière d'en-tête de l'élève -->
+                <div class="student-card mb-4">
+                    <div class="student-card-header-accent"/>
+                    <div class="p-3 p-md-4">
+                        <div class="d-flex flex-wrap align-items-center justify-content-between gap-3">
+                            <div class="d-flex align-items-center gap-3">
+                                <img t-if="student.image_128" t-att-src="image_data_uri(student.image_128)"
+                                     class="student-avatar-ring" style="width: 72px; height: 72px;" alt="Photo"/>
+                                <div t-else="" class="student-mini-monogram" style="width: 72px; height: 72px; font-size: 1.6rem;">
+                                    <t t-out="''.join([part[0].upper() for part in (student.name or 'E').split()[:2]])"/>
+                                </div>
+                                <div>
+                                    <h4 class="mb-1 fw-bold text-dark"><t t-out="student.name"/></h4>
+                                    <div class="d-flex flex-wrap align-items-center gap-2 small text-muted">
+                                        <span class="badge bg-secondary-subtle text-secondary">
+                                            <i class="fa fa-graduation-cap me-1"/> <t t-out="student.current_class_id.name or 'Sans classe'"/>
+                                        </span>
+                                        <span t-if="student.code" class="badge bg-light text-dark border">
+                                            <i class="fa fa-id-card-o me-1"/> <t t-out="student.code"/>
+                                        </span>
+                                    </div>
+                                </div>
+                            </div>
+                            <div>
+                                <a t-attf-href="/my/school/student/#{student.id}" class="btn btn-outline-school">
+                                    <i class="fa fa-arrow-left me-1"/> Tableau de bord élève
+                                </a>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Alerte de confirmation d'autorisation parentale -->
+                <div t-if="authorized_success" class="alert alert-success alert-dismissible fade show d-flex align-items-center gap-3 shadow-sm rounded-3 mb-4" role="alert">
+                    <i class="fa fa-check-circle fa-2x text-success"></i>
+                    <div>
+                        <strong class="d-block">Autorisation parentale enregistrée avec succès !</strong>
+                        <span>Votre accord électronique pour la sortie scolaire a bien été transmis à la direction et aux encadrants.</span>
+                    </div>
+                    <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"></button>
+                </div>
+
+                <!-- Titre de la section -->
+                <div class="d-flex flex-wrap align-items-center justify-content-between gap-2 mb-4">
+                    <div>
+                        <h3 class="fw-bold text-dark mb-0">
+                            <i class="fa fa-calendar-check-o me-2" style="color: var(--school-primary);"/>
+                            Événements &amp; Sorties Scolaires
+                        </h3>
+                        <p class="text-muted small mb-0">
+                            Suivi des sorties pédagogiques, voyages scolaires et autorisations parentales
+                        </p>
+                    </div>
+                    <span class="badge rounded-pill bg-wine-subtle text-wine px-3 py-2 fw-bold">
+                        <t t-out="len(registrations)"/> événement(s)
+                    </span>
+                </div>
+
+                <!-- Cas : Aucun événement -->
+                <div t-if="not registrations" class="text-center py-5 bg-white rounded-4 border shadow-sm my-4">
+                    <div class="mb-3 text-muted opacity-50">
+                        <i class="fa fa-calendar-o fa-4x"></i>
+                    </div>
+                    <h5 class="fw-bold text-dark">Aucun événement programmé</h5>
+                    <p class="text-muted small mb-3">
+                        Aucune sortie pédagogique ou activité périscolaire n'est actuellement planifiée pour cette classe.
+                    </p>
+                    <a t-attf-href="/my/school/student/#{student.id}" class="btn btn-outline-school">
+                        <i class="fa fa-arrow-left me-1"/> Revenir au tableau de bord
+                    </a>
+                </div>
+
+                <!-- Grille des événements -->
+                <div t-if="registrations" class="row g-4">
+                    <t t-foreach="registrations" t-as="reg">
+                        <t t-set="ev" t-value="reg.event_id"/>
+                        <div class="col-12 col-lg-6">
+                            <div class="portal-event-card h-100 bg-white rounded-4 border shadow-sm p-4 d-flex flex-column justify-content-between position-relative overflow-hidden">
+                                <!-- Liséré supérieur selon état -->
+                                <div class="student-card-header-accent position-absolute top-0 start-0 w-100"
+                                     style="height: 5px;"/>
+
+                                <div>
+                                    <!-- En-tête : Badge type et statut -->
+                                    <div class="d-flex flex-wrap align-items-center justify-content-between gap-2 mb-3 mt-1">
+                                        <span class="badge rounded-pill bg-light text-dark border px-3 py-1 small fw-semibold">
+                                            <i class="fa fa-tag me-1 text-primary"/>
+                                            <t t-out="dict(ev._fields['event_type'].selection).get(ev.event_type)"/>
+                                        </span>
+                                        <div>
+                                            <span t-if="reg.state == 'attended'" class="badge bg-success-subtle text-success rounded-pill px-3 py-1">
+                                                <i class="fa fa-check me-1"/> Présent
+                                            </span>
+                                            <span t-elif="reg.state == 'absent'" class="badge bg-danger-subtle text-danger rounded-pill px-3 py-1">
+                                                <i class="fa fa-times me-1"/> Absent
+                                            </span>
+                                            <span t-elif="ev.state == 'confirmed'" class="badge bg-primary-subtle text-primary rounded-pill px-3 py-1">
+                                                <i class="fa fa-calendar me-1"/> Confirmé
+                                            </span>
+                                            <span t-elif="ev.state == 'in_progress'" class="badge bg-warning-subtle text-warning rounded-pill px-3 py-1">
+                                                <i class="fa fa-spinner fa-spin me-1"/> En cours
+                                            </span>
+                                            <span t-else="" class="badge bg-secondary-subtle text-secondary rounded-pill px-3 py-1">
+                                                <t t-out="dict(ev._fields['state'].selection).get(ev.state)"/>
+                                            </span>
+                                        </div>
+                                    </div>
+
+                                    <!-- Titre de l'événement -->
+                                    <h5 class="fw-bold text-dark mb-2"><t t-out="ev.name"/></h5>
+
+                                    <!-- Infos pratiques : Date et Lieu -->
+                                    <div class="d-flex flex-column gap-2 mb-3 small bg-light-subtle p-3 rounded-3 border">
+                                        <div class="d-flex align-items-center gap-2">
+                                            <i class="fa fa-calendar text-primary fa-fw"/>
+                                            <span>
+                                                <strong>Date : </strong>
+                                                <span t-field="ev.date_start" t-options="{'widget': 'datetime', 'format': 'dd MMMM yyyy HH:mm'}"/>
+                                                <t t-if="ev.date_end">
+                                                    au <span t-field="ev.date_end" t-options="{'widget': 'datetime', 'format': 'dd MMMM yyyy HH:mm'}"/>
+                                                </t>
+                                            </span>
+                                        </div>
+                                        <div class="d-flex align-items-center gap-2" t-if="ev.location">
+                                            <i class="fa fa-map-marker text-danger fa-fw"/>
+                                            <span><strong>Lieu : </strong> <t t-out="ev.location"/></span>
+                                        </div>
+                                        <div class="d-flex align-items-center gap-2" t-if="ev.transport_type and ev.transport_type != 'none'">
+                                            <i class="fa fa-bus text-success fa-fw"/>
+                                            <span><strong>Transport : </strong> <t t-out="dict(ev._fields['transport_type'].selection).get(ev.transport_type)"/>
+                                                <t t-if="ev.departure_meeting_point"> · <t t-out="ev.departure_meeting_point"/></t>
+                                            </span>
+                                        </div>
+                                        <div class="d-flex align-items-center gap-2" t-if="ev.organizer_id">
+                                            <i class="fa fa-user text-muted fa-fw"/>
+                                            <span><strong>Responsable : </strong> <t t-out="ev.organizer_id.name"/></span>
+                                        </div>
+                                    </div>
+
+                                    <!-- Description / Programme -->
+                                    <p t-if="ev.description" class="text-muted small mb-3">
+                                        <t t-out="ev.description"/>
+                                    </p>
+                                </div>
+
+                                <!-- Bas de carte : Frais & Autorisation parentale -->
+                                <div class="border-top pt-3 mt-3 d-flex flex-column gap-2">
+                                    <div class="d-flex flex-wrap align-items-center justify-content-between gap-2 small">
+                                        <!-- Frais de participation -->
+                                        <div t-if="ev.fee_amount &gt; 0">
+                                            <span class="text-muted">Participation : </span>
+                                            <strong class="text-dark"><t t-out="ev.fee_amount"/> MAD</strong>
+                                            <span t-if="reg.paid" class="badge bg-success-subtle text-success ms-1">
+                                                <i class="fa fa-check"/> Réglé
+                                            </span>
+                                            <span t-else="" class="badge bg-warning-subtle text-warning ms-1">
+                                                À régler
+                                            </span>
+                                        </div>
+
+                                        <!-- Date limite -->
+                                        <div t-if="ev.registration_deadline" class="text-muted small">
+                                            <i class="fa fa-clock-o me-1"/> Limite : <span t-field="ev.registration_deadline" t-options="{'widget': 'date', 'format': 'dd/MM/yyyy'}"/>
+                                        </div>
+                                    </div>
+
+                                    <!-- Bloc Autorisation Parentale -->
+                                    <div t-if="ev.requires_authorization" class="mt-2">
+                                        <t t-if="reg.authorized">
+                                            <div class="d-flex align-items-center justify-content-between p-2 rounded-3 bg-success-subtle border border-success-subtle">
+                                                <div class="d-flex align-items-center gap-2 small text-success fw-bold">
+                                                    <i class="fa fa-check-circle fs-5"/>
+                                                    <span>Autorisation parentale accordée</span>
+                                                </div>
+                                                <span t-if="reg.authorization_date" class="badge bg-white text-success border small">
+                                                    Signée le <span t-field="reg.authorization_date" t-options="{'widget': 'date', 'format': 'dd/MM/yyyy'}"/>
+                                                </span>
+                                            </div>
+                                        </t>
+                                        <t t-else="">
+                                            <div class="p-3 rounded-3 bg-warning-subtle border border-warning-subtle">
+                                                <div class="d-flex align-items-center gap-2 mb-2 text-warning-emphasis small">
+                                                    <i class="fa fa-exclamation-circle fs-5"/>
+                                                    <strong>Autorisation parentale obligatoire requise</strong>
+                                                </div>
+                                                <t t-if="is_parent_user">
+                                                    <a t-attf-href="/my/school/student/#{student.id}/event/#{reg.id}/authorize"
+                                                       class="btn btn-sm btn-school-primary w-100 fw-bold shadow-sm"
+                                                       onclick="return confirm('Confirmez-vous accorder votre autorisation parentale pour la participation de votre enfant à cet événement ?');">
+                                                        <i class="fa fa-pencil-square-o me-1"/> Donner mon autorisation en 1 clic
+                                                    </a>
+                                                </t>
+                                                <t t-else="">
+                                                    <span class="small text-muted d-block">
+                                                        En attente de signature électronique par vos parents depuis leur espace portail.
+                                                    </span>
+                                                </t>
+                                            </div>
+                                        </t>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    </t>
+                </div>
+            </div>
+        </t>
+    </template>
+
+</odoo>

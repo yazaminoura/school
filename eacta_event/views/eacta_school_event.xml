@@ -26,6 +26,9 @@
                             confirm="Marquer tous les élèves inscrits comme présents ?"/>
                     <button name="action_sync_school_attendance" string="Synchroniser l'assiduité" type="object"
                             icon="fa-calendar-check-o" invisible="state not in ('in_progress', 'done') or not attended_count"/>
+                    <button name="action_send_parent_reminders" string="Relancer les parents" type="object"
+                            icon="fa-bell-o" class="btn-secondary" invisible="state in ('draft', 'cancel') or not participant_count"
+                            help="Envoie un rappel automatique aux familles ayant des autorisations ou paiements en attente"/>
                     <button name="action_done" string="Clôturer" type="object" invisible="state not in ('confirmed', 'in_progress')"
                             help="Les inscrits non pointés passent en « Absent »"/>
                     <button name="action_cancel" string="Annuler" type="object" invisible="state in ('done', 'cancel')"
@@ -47,6 +50,19 @@
                         <button name="action_view_registrations" type="object" class="oe_stat_button" icon="fa-check-square-o"
                                 invisible="state != 'done'">
                             <field name="attended_count" widget="statinfo" string="Présents"/>
+                        </button>
+                        <button name="action_view_expenses" type="object" class="oe_stat_button" icon="fa-calculator">
+                            <div class="o_field_widget o_stat_info">
+                                <span class="o_stat_value"><field name="total_expenses"/></span>
+                                <span class="o_stat_text">Dépenses</span>
+                            </div>
+                        </button>
+                        <button name="action_view_medical_sheet" type="object" class="oe_stat_button" icon="fa-medkit"
+                                invisible="not medical_alert_count">
+                            <div class="o_field_widget o_stat_info">
+                                <span class="o_stat_value text-danger"><field name="medical_alert_count"/></span>
+                                <span class="o_stat_text">Alertes PAI</span>
+                            </div>
                         </button>
                     </div>
                     <widget name="web_ribbon" title="Annulé" bg_color="text-bg-danger" invisible="state != 'cancel'"/>
@@ -73,6 +89,14 @@
                             <span class="o_eacta_kpi_label">Encaissé</span>
                             <span class="o_eacta_kpi_value"><field name="amount_collected" class="oe_inline"/></span>
                             <small class="text-muted">sur <field name="amount_expected" class="oe_inline"/></small>
+                        </div>
+                        <div class="o_eacta_kpi" invisible="not total_expenses and not fee_amount">
+                            <span class="o_eacta_kpi_label">Dépenses</span>
+                            <span class="o_eacta_kpi_value"><field name="total_expenses" class="oe_inline"/></span>
+                        </div>
+                        <div class="o_eacta_kpi" invisible="not total_expenses and not amount_collected">
+                            <span class="o_eacta_kpi_label">Solde net</span>
+                            <span class="o_eacta_kpi_value"><field name="net_margin" class="oe_inline"/></span>
                         </div>
                     </div>
 
@@ -103,6 +127,12 @@
                                     <field name="parent_id" optional="show"/>
                                     <field name="authorized" widget="boolean_toggle"
                                            column_invisible="not parent.requires_authorization"/>
+                                    <field name="authorization_method" widget="badge" optional="show"
+                                           column_invisible="not parent.requires_authorization"
+                                           decoration-success="authorization_method == 'portal'"
+                                           decoration-info="authorization_method == 'paper'"/>
+                                    <field name="authorized_by_parent_id" optional="hide"
+                                           column_invisible="not parent.requires_authorization"/>
                                     <field name="paid" widget="boolean_toggle" column_invisible="not parent.fee_amount"/>
                                     <field name="fee_state" widget="badge" optional="show"
                                            decoration-success="fee_state == 'paid'" decoration-warning="fee_state == 'unpaid'"
@@ -121,6 +151,74 @@
                         <page string="Programme" name="program" icon="fa-list-ol">
                             <field name="description" placeholder="Résumé affiché sur les autorisations parentales…"/>
                             <field name="program" placeholder="Déroulé de la journée, matériel à prévoir…"/>
+                        </page>
+                        <page string="Logistique &amp; Transport" name="logistics" icon="fa-bus">
+                            <group>
+                                <group string="Déplacement &amp; Transport">
+                                    <field name="transport_type"/>
+                                    <field name="transport_company" invisible="transport_type in ('none', 'walking')"/>
+                                    <field name="driver_contact" invisible="transport_type in ('none', 'walking')"/>
+                                    <field name="vehicle_plate" invisible="transport_type in ('none', 'walking')"/>
+                                    <field name="departure_meeting_point" placeholder="ex : Cour d'honneur à 08h15"/>
+                                    <field name="return_estimated_time" placeholder="ex : 17h30"/>
+                                </group>
+                                <group string="Sécurité &amp; Encadrement">
+                                    <field name="supervisor_ratio" widget="float"/>
+                                    <field name="emergency_contact" placeholder="ex : Dr. Benjelloun / M. Directeur"/>
+                                    <field name="emergency_phone"/>
+                                    <field name="first_aid_kit" widget="boolean_toggle"/>
+                                    <field name="safety_briefing_done" widget="boolean_toggle"/>
+                                </group>
+                            </group>
+                        </page>
+                        <page string="Budget &amp; Dépenses" name="expenses" icon="fa-money">
+                            <group>
+                                <group string="Récapitulatif Financier">
+                                    <field name="amount_expected"/>
+                                    <field name="amount_collected"/>
+                                    <field name="total_expenses"/>
+                                    <field name="net_margin" decoration-danger="net_margin &lt; 0" decoration-success="net_margin &gt;= 0"/>
+                                    <field name="financial_result_status" widget="badge"
+                                           decoration-success="financial_result_status == 'profit'"
+                                           decoration-info="financial_result_status == 'balanced'"
+                                           decoration-danger="financial_result_status == 'deficit'"/>
+                                </group>
+                            </group>
+                            <separator string="Lignes de Dépenses"/>
+                            <field name="expense_ids" context="{'default_event_id': id}">
+                                <list editable="bottom">
+                                    <field name="name" placeholder="ex : Location 2 autocars"/>
+                                    <field name="expense_type"/>
+                                    <field name="amount" sum="Total"/>
+                                    <field name="vendor"/>
+                                    <field name="payment_date"/>
+                                    <field name="state" widget="badge" decoration-success="state == 'paid'" decoration-info="state == 'planned'"/>
+                                    <field name="notes" optional="hide"/>
+                                </list>
+                            </field>
+                        </page>
+                        <page string="Santé &amp; PAI" name="health_alerts" icon="fa-heartbeat" invisible="not medical_alert_count">
+                            <div class="alert alert-warning d-flex align-items-center gap-3" role="alert">
+                                <i class="fa fa-exclamation-triangle fa-2x text-warning"></i>
+                                <div>
+                                    <strong class="d-block">Attention médicale requise :</strong>
+                                    <span><field name="medical_alert_count" class="oe_inline fw-bold"/> élève(s) inscrit(s) présentent des allergies déclarées ou un protocole médical PAI.</span>
+                                </div>
+                            </div>
+                            <field name="medical_alert_summary" readonly="1" widget="text" class="p-3 bg-light rounded"/>
+                        </page>
+                        <page string="Bilan de l'activité" name="debrief" icon="fa-star" invisible="state in ('draft', 'confirmed')">
+                            <group>
+                                <group string="Évaluation globale">
+                                    <field name="rating" widget="priority"/>
+                                    <field name="pedagogical_objectives_met" widget="boolean_toggle"/>
+                                </group>
+                                <group string="Incidents éventuels">
+                                    <field name="incident_notes" placeholder="Rien à signaler ou détail de tout incident survenu…"/>
+                                </group>
+                            </group>
+                            <separator string="Compte-rendu pédagogique"/>
+                            <field name="debrief_notes" placeholder="Points forts, déroulement, réactions des élèves, axes d'amélioration pour la prochaine édition…"/>
                         </page>
                     </notebook>
                 </sheet>
@@ -395,6 +493,29 @@
         <field name="context">{'search_default_group_event': 1}</field>
     </record>
 
+    <!-- ============================ DÉPENSES ============================ -->
+    <record id="view_eacta_event_expense_tree" model="ir.ui.view">
+        <field name="name">eacta.school.event.expense.list</field>
+        <field name="model">eacta.school.event.expense</field>
+        <field name="arch" type="xml">
+            <list string="Dépenses Événements" editable="bottom">
+                <field name="event_id"/>
+                <field name="name"/>
+                <field name="expense_type"/>
+                <field name="amount" sum="Total"/>
+                <field name="vendor"/>
+                <field name="payment_date"/>
+                <field name="state" widget="badge" decoration-success="state == 'paid'" decoration-info="state == 'planned'"/>
+            </list>
+        </field>
+    </record>
+
+    <record id="action_eacta_event_expense" model="ir.actions.act_window">
+        <field name="name">Dépenses &amp; Budget</field>
+        <field name="res_model">eacta.school.event.expense</field>
+        <field name="view_mode">list,form</field>
+    </record>
+
     <!-- ============================ MENUS ============================ -->
     <!-- Application autonome Événements -->
     <menuitem id="menu_eacta_event_app_root" name="Événements" sequence="52"
@@ -407,6 +528,8 @@
               action="action_eacta_school_event_calendar" sequence="20"/>
     <menuitem id="menu_eacta_event_app_registration" name="Inscriptions" parent="menu_eacta_event_app_root"
               action="action_event_registration" sequence="30"/>
+    <menuitem id="menu_eacta_event_app_expenses" name="Dépenses &amp; Budget" parent="menu_eacta_event_app_root"
+              action="action_eacta_event_expense" sequence="35"/>
     <menuitem id="menu_eacta_event_app_reporting" name="Analyse" parent="menu_eacta_event_app_root"
               action="action_eacta_school_event_analysis" sequence="40"/>
 
@@ -416,6 +539,8 @@
               action="action_eacta_school_event" sequence="10"/>
     <menuitem id="menu_eacta_event_registration" name="Inscriptions" parent="menu_eacta_event_root"
               action="action_event_registration" sequence="20"/>
+    <menuitem id="menu_eacta_event_expenses" name="Dépenses &amp; Budget" parent="menu_eacta_event_root"
+              action="action_eacta_event_expense" sequence="25"/>
 
     <!-- Bouton et onglet « Événements » sur la fiche élève -->
     <record id="view_eacta_student_form_events" model="ir.ui.view">

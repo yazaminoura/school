@@ -15,13 +15,14 @@
     'author': 'NR School',
     'license': 'LGPL-3',
     'icon': '/eacta_event/static/description/icon.png',
-    'depends': ['base', 'mail', 'web', 'eacta_school'],
+    'depends': ['base', 'mail', 'web', 'portal', 'eacta_school'],
     'data': [
         'security/event_security.xml',
         'security/ir.model.access.csv',
         'security/event_rules.xml',
         'reports/event_reports.xml',
         'views/eacta_school_event.xml',
+        'views/portal_event_templates.xml',
         # Données d'exemple (chargées à l'installation et à la mise à jour, une seule fois)
         'data/event_demo.xml',
     ],
