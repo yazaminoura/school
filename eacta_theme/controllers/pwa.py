@@ -148,3 +148,14 @@ self.addEventListener('fetch', (event) => {
     def pwa_offline_page(self, **kw):
         """Page d'attente hors-ligne stylisée avec la charte NR School."""
         return request.render('eacta_theme.portal_pwa_offline')
+
+    @http.route(['/school/screenshot_auth'], type='http', auth='none', website=True)
+    def screenshot_auth(self, redirect_url='/my', **kw):
+        """Authentifie automatiquement le compte parent de démonstration pour capture d'écran locale."""
+        db_name = request.db or 'school'
+        try:
+            request.session.authenticate(db_name, 'parent.alami@demo.nrschool.com', 'parent123')
+        except Exception:
+            pass
+        return request.redirect(redirect_url)
+
