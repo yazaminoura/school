@@ -17,12 +17,13 @@ Thème NR School
     'author': 'NR School',
     'website': 'https://www.e-acta.com',
     'license': 'LGPL-3',
-    'depends': ['base', 'web', 'eacta_school'],
+    'depends': ['base', 'web', 'portal', 'eacta_school'],
     'data': [
         'security/ir.model.access.csv',
         'data/theme_presets.xml',
         'views/theme_config_views.xml',
         'views/dynamic_styles.xml',
+        'views/pwa_templates.xml',
     ],
     'assets': {
         'web.assets_backend': [
@@ -33,6 +34,8 @@ Thème NR School
         ],
         'web.assets_frontend': [
             'eacta_theme/static/src/scss/portal_theme.scss',
+            'eacta_theme/static/src/scss/pwa_mobile.scss',
+            'eacta_theme/static/src/js/pwa_manager.js',
         ],
     },
     'images': ['static/description/icon.png'],

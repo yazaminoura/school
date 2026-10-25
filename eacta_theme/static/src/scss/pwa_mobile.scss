@@ -1,0 +1,196 @@
+/* ==========================================================================
+   NR SCHOOL - MOBILE PWA (PROGRESSIVE WEB APP) & BOTTOM NAVIGATION
+   ========================================================================== */
+
+/* 1. Espace réservé pour éviter le chevauchement du contenu sur mobile */
+@media (max-width: 768px) {
+    body {
+        padding-bottom: calc(72px + env(safe-area-inset-bottom, 0px)) !important;
+        -webkit-tap-highlight-color: transparent;
+    }
+}
+
+/* 2. Barre de Navigation Mobile Inférieure (App-like Bottom Bar) */
+.nrschool-mobile-nav {
+    display: flex;
+    position: fixed;
+    bottom: 0;
+    left: 0;
+    right: 0;
+    height: calc(62px + env(safe-area-inset-bottom, 0px));
+    padding-bottom: env(safe-area-inset-bottom, 0px);
+    background: rgba(255, 255, 255, 0.96);
+    backdrop-filter: blur(18px);
+    -webkit-backdrop-filter: blur(18px);
+    border-top: 1px solid rgba(142, 27, 58, 0.12);
+    box-shadow: 0 -4px 24px rgba(15, 23, 42, 0.08);
+    z-index: 1040;
+    align-items: center;
+    justify-content: space-around;
+}
+
+@media (min-width: 769px) {
+    .nrschool-mobile-nav {
+        display: none !important;
+    }
+}
+
+.nrschool-mobile-nav-item {
+    flex: 1;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    text-decoration: none !important;
+    color: #64748B;
+    font-size: 0.68rem;
+    font-weight: 500;
+    height: 100%;
+    position: relative;
+    transition: all 0.2s cubic-bezier(0.16, 1, 0.3, 1);
+    padding: 6px 0;
+}
+
+.nrschool-mobile-nav-item i {
+    font-size: 1.25rem;
+    margin-bottom: 2px;
+    transition: transform 0.2s ease, color 0.2s ease;
+}
+
+.nrschool-mobile-nav-item:hover,
+.nrschool-mobile-nav-item:focus {
+    color: #8E1B3A;
+}
+
+.nrschool-mobile-nav-item.active {
+    color: #8E1B3A;
+    font-weight: 700;
+}
+
+.nrschool-mobile-nav-item.active i {
+    transform: translateY(-2px);
+    color: #8E1B3A;
+}
+
+/* Indicateur doré sur l'onglet actif */
+.nrschool-mobile-nav-item.active::before {
+    content: '';
+    position: absolute;
+    top: 0;
+    width: 24px;
+    height: 3px;
+    background: #E0A630;
+    border-radius: 0 0 3px 3px;
+    box-shadow: 0 2px 6px rgba(224, 166, 48, 0.4);
+}
+
+/* 3. Bannière d'installation PWA Flottante */
+.nrschool-pwa-banner {
+    position: fixed;
+    bottom: calc(74px + env(safe-area-inset-bottom, 0px));
+    left: 14px;
+    right: 14px;
+    z-index: 1050;
+    background: #FFFFFF;
+    border: 1px solid rgba(142, 27, 58, 0.15);
+    border-radius: 18px;
+    box-shadow: 0 16px 40px rgba(0, 0, 0, 0.16), 0 4px 12px rgba(142, 27, 58, 0.08);
+    padding: 16px;
+    transform: translateY(140%);
+    opacity: 0;
+    pointer-events: none;
+    transition: transform 0.35s cubic-bezier(0.16, 1, 0.3, 1), opacity 0.35s ease;
+}
+
+@media (min-width: 769px) {
+    .nrschool-pwa-banner {
+        left: auto;
+        right: 24px;
+        bottom: 24px;
+        width: 390px;
+    }
+}
+
+.nrschool-pwa-banner.show {
+    transform: translateY(0);
+    opacity: 1;
+    pointer-events: auto;
+}
+
+.nrschool-pwa-banner-icon {
+    width: 48px;
+    height: 48px;
+    border-radius: 12px;
+    object-fit: cover;
+    box-shadow: 0 4px 12px rgba(0, 0, 0, 0.1);
+}
+
+.nrschool-pwa-banner-title {
+    font-size: 0.92rem;
+    font-weight: 700;
+    color: #1E293B;
+    margin-bottom: 2px;
+}
+
+.nrschool-pwa-banner-desc {
+    font-size: 0.78rem;
+    color: #64748B;
+    line-height: 1.35;
+    margin-bottom: 0;
+}
+
+.btn-pwa-install {
+    background: linear-gradient(135deg, #8E1B3A 0%, #B82A4D 100%);
+    color: #FFFFFF !important;
+    font-weight: 600;
+    font-size: 0.8rem;
+    border: none;
+    border-radius: 8px;
+    padding: 6px 14px;
+    box-shadow: 0 3px 10px rgba(142, 27, 58, 0.25);
+    transition: transform 0.15s ease, box-shadow 0.15s ease;
+}
+
+.btn-pwa-install:hover {
+    transform: translateY(-1px);
+    box-shadow: 0 5px 14px rgba(142, 27, 58, 0.35);
+}
+
+.btn-pwa-dismiss {
+    background: transparent;
+    color: #94A3B8;
+    border: none;
+    font-size: 0.8rem;
+    padding: 6px 10px;
+    border-radius: 8px;
+}
+
+.btn-pwa-dismiss:hover {
+    color: #475569;
+    background: #F1F5F9;
+}
+
+/* 4. Page d'attente Hors-Ligne */
+.portal-pwa-offline-card {
+    max-width: 480px;
+    margin: 8vh auto 4vh;
+    background: #FFFFFF;
+    border-radius: 24px;
+    border: 1px solid rgba(142, 27, 58, 0.1);
+    box-shadow: 0 20px 48px rgba(0, 0, 0, 0.08);
+    padding: 2.5rem 1.75rem;
+    text-align: center;
+}
+
+.portal-pwa-offline-icon {
+    width: 80px;
+    height: 80px;
+    border-radius: 50%;
+    background: rgba(142, 27, 58, 0.08);
+    color: #8E1B3A;
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 2.4rem;
+    margin-bottom: 1.5rem;
+}
